@@ -147,11 +147,12 @@ public class MainWindowController {
 	private boolean menutrue = false;	//merker für menubtn (öffnen oder schließen)
 	private boolean settingstrue = false;
 	private String version = "0.3.5";
-	private String versionURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/version";
-	private String downloadLink = ""; 
-	private String updateDataURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/ProjectHomeFlix.jar";
+	private String versionURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/version.txt";
+	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt"; 
 	
-	private String errorUpdate;
+	private String updateDataURL;
+	private String errorUpdateD;
+	private String errorUpdateV;
 	private String infoText;
 	private String aktVersion;
 	private String path;
@@ -172,7 +173,7 @@ public class MainWindowController {
 	private ObservableList<String> locals = FXCollections.observableArrayList("english", "deutsch");
 	private Image imHF = new Image("Homeflix_Poster.png");
 	private ImageView menu_icon_black = new ImageView(new Image("menu_icon_black.png"));
-//	private ImageView menu_icon_white = new ImageView(new Image("menu_icon_white.png"));
+	private ImageView menu_icon_white = new ImageView(new Image("menu_icon_white.png"));
 	private DirectoryChooser directoryChooser = new DirectoryChooser();
 	Properties props = new Properties();
 	
@@ -522,7 +523,11 @@ public class MainWindowController {
 	        aktVersion = in.readLine();	//schreibt inputstream in String
 	        in.close();
 		} catch (IOException e1) {
-			// Auto-generated catch block
+			Alert alert = new Alert(AlertType.ERROR);
+        	alert.setTitle("Error");
+        	alert.setHeaderText("");
+        	alert.setContentText(errorUpdateV);
+        	alert.showAndWait();
 			e1.printStackTrace();
 		}
 		System.out.println("Version: "+version+", Update: "+aktVersion);
@@ -541,7 +546,7 @@ public class MainWindowController {
 			URL website;
 			URL downloadURL = new URL(downloadLink);
 			BufferedReader in = new BufferedReader(new InputStreamReader(downloadURL.openStream()));
-			//updateDataURL = in.readLine();
+			updateDataURL = in.readLine();
 			website = new URL(updateDataURL);	//Update URL
 			ReadableByteChannel rbc = Channels.newChannel(website.openStream());	//öffnet neuen Stream/Channel
 			FileOutputStream fos = new FileOutputStream("ProjectHomeFlix.jar");	//neuer fileoutputstram für ProjectHomeFLix.jar
@@ -550,12 +555,12 @@ public class MainWindowController {
 			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu
 			System.exit(0);	//beendet sich selbst
 		} catch (IOException e) {
-			//Falls ein Fehler auftritt (ungetestet)
+			//Falls ein Fehler auftritt
 			e.printStackTrace();
 			Alert alert = new Alert(AlertType.ERROR);
         	alert.setTitle("Error");
         	alert.setHeaderText("");
-        	alert.setContentText(errorUpdate);
+        	alert.setContentText(errorUpdateD);
         	alert.showAndWait();
 			e.printStackTrace();
 		}
@@ -610,8 +615,7 @@ public class MainWindowController {
 			openfolderbtn.setStyle(btnStylewhite);
 			returnBtn.setStyle(btnStylewhite);
 			forwardBtn.setStyle(btnStylewhite);
-//TODO		menubtn.setGraphic(menu_icon_white);
-			menubtn.setGraphic(menu_icon_black);
+			menubtn.setGraphic(menu_icon_white);
 		}else{
 			settingsBtn.setStyle("-fx-text-fill: BLACK;");
 			infoBtn.setStyle("-fx-text-fill: BLACK;");
@@ -641,14 +645,16 @@ public class MainWindowController {
 		infoBtn.setText(bundle.getString("info"));
 		playbtn.setText(bundle.getString("play"));
 		openfolderbtn.setText(bundle.getString("openFolder"));
-		sizelbl.setText(bundle.getString("fontSize"));
 		updateBtn.setText(bundle.getString("checkUpdates"));
+		directoryBtn.setText(bundle.getString("chooseFolder"));
+		sizelbl.setText(bundle.getString("fontSize"));
 		aulbl.setText(bundle.getString("autoUpdate"));
 		versionlbl.setText(bundle.getString("version")+" "+version);
 		columnName.setText(bundle.getString("columnName"));
 		columnRating.setText(bundle.getString("columnRating"));
 		columnDatName.setText(bundle.getString("columnDatName"));
-		errorUpdate = bundle.getString("errorUpdate");
+		errorUpdateD = bundle.getString("errorUpdateD");
+		errorUpdateV = bundle.getString("errorUpdateV");
 		infoText = bundle.getString("version")+" "+version+bundle.getString("infoText");
 	}
 	
