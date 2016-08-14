@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXTextArea?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import javafx.scene.control.TreeTableView?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="anpane" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.MainWindowController">
+	<children>
+		<VBox fx:id="topVBox" prefHeight="32.0" prefWidth="800.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+			<children>
+				<JFXButton fx:id="menubtn" onAction="#menubtnclicked" prefHeight="32.0" prefWidth="67.0" text="Menu" />
+			</children>
+		</VBox>
+		<TreeTableView fx:id="treeTableViewfilm" layoutX="14.0" layoutY="88.0" prefHeight="400.0" prefWidth="360.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="88.0" />
+		<JFXTextArea fx:id="ta1" layoutX="385.0" layoutY="42.0" maxWidth="503.0" minWidth="275.0" prefHeight="546.0" prefWidth="293.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="385.0" AnchorPane.rightAnchor="222.0" AnchorPane.topAnchor="44.0" />
+		<JFXButton fx:id="playbtn" layoutX="690.0" layoutY="363.0" onAction="#playbtnclicked" prefHeight="25.0" prefWidth="198.0" text="play" AnchorPane.bottomAnchor="212.0" AnchorPane.rightAnchor="12.0">
+         <font>
+            <Font name="System Bold" size="14.0" />
+         </font></JFXButton>
+		<JFXButton fx:id="openfolderbtn" layoutX="690.0" layoutY="404.0" onAction="#openfolderbtnclicked" prefHeight="25.0" prefWidth="198.0" text="open Folder" AnchorPane.bottomAnchor="171.0" AnchorPane.rightAnchor="12.0">
+         <font>
+            <Font name="System Bold" size="14.0" />
+         </font></JFXButton>
+		<JFXTextField fx:id="tfsearch" layoutX="12.0" layoutY="44.0" maxWidth="477.0" minWidth="359.0" prefHeight="31.0" prefWidth="359.0" promptText="Suche ..." AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="44.0">
+         <font>
+            <Font name="Arial" size="12.0" />
+         </font></JFXTextField>
+      <ImageView fx:id="image1" fitHeight="297.0" fitWidth="198.0" layoutX="481.0" layoutY="46.0" pickOnBounds="true" preserveRatio="true" AnchorPane.rightAnchor="12.0" AnchorPane.topAnchor="44.0" />
+      <JFXButton fx:id="returnBtn" layoutX="690.0" layoutY="443.0" onAction="#returnBtnclicked" prefHeight="25.0" prefWidth="90.0" text="&lt;&lt;" AnchorPane.bottomAnchor="132.0" AnchorPane.rightAnchor="120.0" />
+      <JFXButton fx:id="forwardBtn" layoutX="798.0" layoutY="443.0" onAction="#forwardBtnclicked" prefHeight="25.0" prefWidth="90.0" text="&gt;&gt;" AnchorPane.bottomAnchor="132.0" AnchorPane.rightAnchor="12.0" />
+	</children>
+</AnchorPane>

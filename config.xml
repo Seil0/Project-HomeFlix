@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Project HomeFlix settings</comment>
+<entry key="color">ee3523</entry>
+<entry key="autoUpdate">0</entry>
+<entry key="size">12.0</entry>
+<entry key="local">1</entry>
+<entry key="path">C:\Users\Jannik\Videos\Beispielfilme</entry>
+</properties>
