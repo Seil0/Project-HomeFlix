@@ -808,7 +808,7 @@ public class MainWindowController {
 				String response = object.getString("Response", "");
 				
 				if(response.equals("False")){
-					ta1.appendText("Kein Film mit diesem Titel gefunden!");
+					ta1.appendText("Kein Film mit diesem Titel gefunden!!");
 					Image im2 = new Image("http://publicdomainvectors.org/photos/jean_victor_balin_cross.png");
 					image1.setImage(im2);
 				}else{
@@ -856,5 +856,4 @@ public class MainWindowController {
 			}
 		}
 	}
-
 }
