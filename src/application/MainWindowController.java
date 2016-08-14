@@ -105,7 +105,7 @@ public class MainWindowController {
     @FXML
     private JFXButton infoBtn = new JFXButton("Info");
     @FXML
-    private JFXButton demoBtn = new JFXButton("Beheben");
+    private JFXButton demoBtn = new JFXButton("Debugging");
     @FXML
     private JFXButton settingsBtn = new JFXButton("Settings");
     @FXML
@@ -352,7 +352,7 @@ public class MainWindowController {
         demoBtn.setPrefWidth(130);
         demoBtn.setPrefHeight(32);
         demoBtn.setFont(Font.font("System", FontWeight.BOLD, 15));
-        demoBtn.setDisable(false);
+        demoBtn.setDisable(true);
         
         menubtn.setText("");
         menubtn.setMaxSize(32, 32);
