@@ -40,6 +40,8 @@ import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Scanner;
 
+import org.apache.commons.lang3.SystemUtils;
+
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.jfoenix.controls.JFXButton;
@@ -109,9 +111,9 @@ public class MainWindowController {
     @FXML
     private JFXButton settingsBtn = new JFXButton("Settings");
     @FXML
-    private JFXButton updateBtn = new JFXButton("Auf Update prüfen");
+    private JFXButton updateBtn = new JFXButton("Auf Update prï¿½fen");
     @FXML
-    private JFXButton directoryBtn = new JFXButton("Ordner auswählen");
+    private JFXButton directoryBtn = new JFXButton("Ordner auswï¿½hlen");
     @FXML
     private JFXToggleButton autoupdateBtn = new JFXToggleButton();
     @FXML
@@ -129,7 +131,7 @@ public class MainWindowController {
     @FXML
     private Label versionlbl = new Label();
     @FXML
-    private Label sizelbl = new Label("Schriftgröße:");
+    private Label sizelbl = new Label("Schriftgrï¿½ï¿½e:");
     @FXML
     private Label aulbl = new Label("beim starten nach Updates suchen:");
     @FXML
@@ -144,16 +146,19 @@ public class MainWindowController {
     @FXML
     TreeTableColumn<uiData, String> columnDatName = new TreeTableColumn<>("Datei Name");
 	
-	private boolean menutrue = false;	//merker für menubtn (öffnen oder schließen)
+	private boolean menutrue = false;	//merker fï¿½r menubtn (ï¿½ffnen oder schlieï¿½en)
 	private boolean settingstrue = false;
-	private String version = "0.3.5";
+	private String version = "0.3.6";
 	private String versionURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/version.txt";
 	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt"; 
 	
 	private String updateDataURL;
 	private String errorUpdateD;
 	private String errorUpdateV;
+	private String errorPlay;
 	private String infoText;
+	private String linuxBugText;
+	private String vlcNotInstalled;
 	private String aktVersion;
 	private String path;
 	private String color;
@@ -280,7 +285,7 @@ public class MainWindowController {
 				}
 			});
 			
-			//demoBtn clicked
+			//demoBtn clicked debbuging
 			demoBtn.setOnAction(new EventHandler<ActionEvent>(){
 	            @Override
 				public void handle(ActionEvent event) {
@@ -306,18 +311,66 @@ public class MainWindowController {
 	
 	@FXML
 	private void playbtnclicked(){
-		try {
-			Desktop.getDesktop().open(new File(getPath()+"\\"+ datPath));	//öffnt die aktuell ausgewählte Datei
-		} catch (IOException e) {
-			// Auto-generated catch block
-			e.printStackTrace();
+		if(SystemUtils.IS_OS_LINUX){
+			System.out.println("This is Linux");
+			String line;
+			String output = "";
+			Process p;
+			try {
+				p = Runtime.getRuntime().exec("which vlc");
+				BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+				while ((line = input.readLine()) != null) {
+				output = line;
+				}
+				System.out.println(output);
+				input.close();
+			} catch (IOException e1) {
+				// Auto-generated catch block
+				e1.printStackTrace();
+			}
+			if(output.contains("which: no vlc")||output == ""){
+				Alert alert = new Alert(AlertType.INFORMATION);
+				alert.setHeaderText("");
+	        	alert.setTitle("Info");
+	        	alert.setContentText(vlcNotInstalled);
+	        	alert.showAndWait();
+			}else if(datPath.contains(" ")){
+				Alert alert = new Alert(AlertType.INFORMATION);
+				alert.setHeaderText("");
+	        	alert.setTitle("Info");
+	        	alert.setContentText(linuxBugText);
+	        	alert.showAndWait();
+			}else{
+				try {
+					Runtime.getRuntime().exec("vlc "+getPath()+"/"+ datPath);
+				} catch (IOException e) {
+					Alert alert = new Alert(AlertType.ERROR);
+					alert.setHeaderText("");
+		        	alert.setTitle("Info");
+		        	alert.setContentText(errorPlay);
+		        	alert.showAndWait();
+					e.printStackTrace();
+				}
+			}
+		}else if(SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_MAC_OSX){
+			System.out.println("This is Windows or Mac OSX");
+			try {
+				Desktop.getDesktop().open(new File(getPath()+"\\"+ datPath));
+			} catch (IOException e) {
+				Alert alert = new Alert(AlertType.ERROR);
+				alert.setHeaderText("");
+	        	alert.setTitle("Info");
+	        	alert.setContentText(errorPlay);
+	        	alert.showAndWait();
+				e.printStackTrace();
+			}
 		}
 	}
 	
 	@FXML
 	private void openfolderbtnclicked(){
 		try {
-			Desktop.getDesktop().open(new File(getPath()));	//öffnet den aktuellen Pfad
+			Desktop.getDesktop().open(new File(getPath()));	//ï¿½ffnet den aktuellen Pfad
 		} catch (IOException e) {
 			// Auto-generated catch block
 			e.printStackTrace();
@@ -352,7 +405,7 @@ public class MainWindowController {
         demoBtn.setPrefWidth(130);
         demoBtn.setPrefHeight(32);
         demoBtn.setFont(Font.font("System", FontWeight.BOLD, 15));
-        demoBtn.setDisable(true);
+        demoBtn.setDisable(false);
         
         menubtn.setText("");
         menubtn.setMaxSize(32, 32);
@@ -451,7 +504,7 @@ public class MainWindowController {
     	    	}
     	    	
     	    	for(int i = 0; i < filterData.size(); i++){
-    				root.getChildren().addAll(new TreeItem<uiData>(filterData.get(i)));	//fügt daten zur Rootnode hinzu
+    				root.getChildren().addAll(new TreeItem<uiData>(filterData.get(i)));	//fï¿½gt daten zur Rootnode hinzu
     			}
     	    }
     	});
@@ -492,18 +545,18 @@ public class MainWindowController {
 
         treeTableViewfilm.getColumns().addAll(columnName, columnRating, columnDatName);
 	
-	    //Changelistener für TreeTable
+	    //Changelistener fï¿½r TreeTable
 	    treeTableViewfilm.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {
 	        	
 			@Override
 			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal) {
-				// last = selected; //für autoplay
+				// last = selected; //fï¿½r autoplay
 				selected = treeTableViewfilm.getSelectionModel().getSelectedIndex(); // holt aktuelles Item
 				last = selected - 1;
 				next = selected + 1;
 				Name = columnName.getCellData(selected); // holt Namen des Aktuelle Items aus der ColumnName
 				datPath = columnDatName.getCellData(selected); // holt den aktuellen Datei Pfad aus der ColumnDatName
-				ta1.setText(""); // löscht Text in ta1
+				ta1.setText(""); // lï¿½scht Text in ta1
 				apiAbfrage(Name); // startet die api abfrage
 				ta1.positionCaret(0); // setzt die startposition des Cursors in
 										// ta1
@@ -513,7 +566,7 @@ public class MainWindowController {
 	    treeTableViewfilm.getColumns().get(2).setVisible(false); //blendet die Column mit den Dateinamen aus (wichtig um sie abzuspielen)
 	}
 	
-	//prüft auf Update und füht es gegebenenfalls aus
+	//prï¿½ft auf Update und fï¿½ht es gegebenenfalls aus
 	private void update(){
 
 		System.out.println("check for updates ...");
@@ -532,26 +585,26 @@ public class MainWindowController {
 		}
 		System.out.println("Version: "+version+", Update: "+aktVersion);
 		
-		//vergleicht die Versionsnummern, bei aktversion > version wird ein Update durchgrführt
+		//vergleicht die Versionsnummern, bei aktversion > version wird ein Update durchgrfï¿½hrt
 		int iversion = Integer.parseInt(version.replace(".", ""));
 		int iaktVersion = Integer.parseInt(aktVersion.replace(".", ""));
 		
 		if(iversion >= iaktVersion){
-			updateBtn.setText("kein Update verfügbar");
-			System.out.println("kein Update verfügbar");
+			updateBtn.setText("kein Update verfï¿½gbar");
+			System.out.println("kein Update verfï¿½gbar");
 		}else{
-			updateBtn.setText("Update verfügbar");
-			System.out.println("Update verfügbar");
+			updateBtn.setText("Update verfï¿½gbar");
+			System.out.println("Update verfï¿½gbar");
 		try {
 			URL website;
 			URL downloadURL = new URL(downloadLink);
 			BufferedReader in = new BufferedReader(new InputStreamReader(downloadURL.openStream()));
 			updateDataURL = in.readLine();
 			website = new URL(updateDataURL);	//Update URL
-			ReadableByteChannel rbc = Channels.newChannel(website.openStream());	//öffnet neuen Stream/Channel
-			FileOutputStream fos = new FileOutputStream("ProjectHomeFlix.jar");	//neuer fileoutputstram für ProjectHomeFLix.jar
-			fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);	//holt datei von 0 bis max größe
-			fos.close();	//schließt den fos (extrem wichtig!)
+			ReadableByteChannel rbc = Channels.newChannel(website.openStream());	//ï¿½ffnet neuen Stream/Channel
+			FileOutputStream fos = new FileOutputStream("ProjectHomeFlix.jar");	//neuer fileoutputstram fï¿½r ProjectHomeFLix.jar
+			fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);	//holt datei von 0 bis max grï¿½ï¿½e
+			fos.close();	//schlieï¿½t den fos (extrem wichtig!)
 			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu
 			System.exit(0);	//beendet sich selbst
 		} catch (IOException e) {
@@ -567,7 +620,7 @@ public class MainWindowController {
 		}
 	}
 	
-	//lädt die Daten im angegeben Ordner in newDaten
+	//lï¿½dt die Daten im angegeben Ordner in newDaten
 	public void loadData(){
 		if(getPath().equals("")||getPath().equals(null)){
 			System.out.println("Kein Pfad angegeben");	//falls der Pfad null oder "" ist
@@ -579,7 +632,7 @@ public class MainWindowController {
 			newDaten.add(new uiData(5.0, titel ,data));
 		}
 		for(int i = 0; i < newDaten.size(); i++){
-			root.getChildren().add(new TreeItem<uiData>(newDaten.get(i)));	//fügt daten zur Rootnode hinzu
+			root.getChildren().add(new TreeItem<uiData>(newDaten.get(i)));	//fï¿½gt daten zur Rootnode hinzu
 		}
 		}
 	}
@@ -592,7 +645,7 @@ public class MainWindowController {
 		return str.substring(0, pos);
 	}
 	
-	//setzt die Farben für die UI-Elemente
+	//setzt die Farben fï¿½r die UI-Elemente
 	public void applyColor(){
 		String style = "-fx-background-color: #"+getColor()+";";
 		String btnStyle = "-fx-button-type: RAISED; -fx-background-color: #"+getColor()+"; -fx-text-fill: BLACK;";
@@ -634,11 +687,11 @@ public class MainWindowController {
 	
 	public void setLoaclUI(int local){
 		switch(local){
-		case 0: bundle = ResourceBundle.getBundle("application.HomeFlix-Local", Locale.US);	//us_english
+		case 0: bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//us_english
 				break;
-     	case 1:	bundle = ResourceBundle.getBundle("application.HomeFlix-Local", Locale.GERMAN);	//german
+     	case 1:	bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.GERMAN);	//german
      			break;
-     	default:bundle = ResourceBundle.getBundle("application.HomeFlix-Local", Locale.US);	//default local
+     	default:bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//default local
      			break;
 		 }
 		settingsBtn.setText(bundle.getString("settings"));
@@ -656,6 +709,9 @@ public class MainWindowController {
 		errorUpdateD = bundle.getString("errorUpdateD");
 		errorUpdateV = bundle.getString("errorUpdateV");
 		infoText = bundle.getString("version")+" "+version+bundle.getString("infoText");
+		linuxBugText = bundle.getString("linuxBug");
+		errorPlay = bundle.getString("errorPlay");
+		vlcNotInstalled = bundle.getString("vlcNotInstalled");
 	}
 	
 	//speichert die Einstellungen
@@ -676,7 +732,7 @@ public class MainWindowController {
 		}
 	}
 	
-	//lädt die Einstellungen
+	//lï¿½dt die Einstellungen
 	public void loadSettings(){
 		File configFile = new File("config.xml");
 		try {
@@ -703,7 +759,7 @@ public class MainWindowController {
 		return color;
 	}
 	
-	//entfernt 0x von dem rückgabe wert des Colorpickers
+	//entfernt 0x von dem rï¿½ckgabe wert des Colorpickers
 	private void editColor(String input){
 		StringBuilder sb = new StringBuilder(input);
 		sb.delete(0, 2);
@@ -761,7 +817,7 @@ public class MainWindowController {
 			sc = new Scanner(System.in);
 			moviename = input;
 
-			// für keinen oder "" Filmtitel
+			// fï¿½r keinen oder "" Filmtitel
 			if (moviename == null || moviename.equals("")) {
 				System.out.println("No movie found");
 			}
@@ -769,10 +825,10 @@ public class MainWindowController {
 			//entfernen ungewolter leerzeichen
 			moviename = moviename.trim();
 
-			// ersetzen der Leerzeichen durch + für api-abfrage
+			// ersetzen der Leerzeichen durch + fï¿½r api-abfrage
 			moviename = moviename.replace(" ", "+");
 
-			//URL wird zusammengestellt abfragetypen: http,json,xml (muss json sein um späteres trennen zu ermöglichen)
+			//URL wird zusammengestellt abfragetypen: http,json,xml (muss json sein um spï¿½teres trennen zu ermï¿½glichen)
 			dataurl = apiurl + "t=" + moviename + "&plot=full&r=json";
 
 			url = new URL(dataurl);
@@ -781,7 +837,7 @@ public class MainWindowController {
 
 			// lesen der Daten aus dem Antwort Stream
 			while ((retdata = dis.readLine()) != null) {
-				//retdata in json object parsen und anschließend das json Objekt "zerschneiden"
+				//retdata in json object parsen und anschlieï¿½end das json Objekt "zerschneiden"
 				System.out.println(retdata);
 				JsonObject object = Json.parse(retdata).asObject();
 				String titel = object.getString("Title", "");
@@ -816,7 +872,7 @@ public class MainWindowController {
 				ta1.appendText("Titel: "+titel+"\n");
 				ta1.appendText("Jahr: "+ year+"\n");
 				ta1.appendText("Einstufung: "+rated+"\n");
-				ta1.appendText("Veröffentlicht am: "+released+"\n");
+				ta1.appendText("Verï¿½ffentlicht am: "+released+"\n");
 				ta1.appendText("Laufzeit: "+runtime+"\n");
 				ta1.appendText("Genre: "+genre+"\n");
 				ta1.appendText("Regisseur: "+director+"\n");
@@ -839,7 +895,7 @@ public class MainWindowController {
 			System.out.println(e);
 		} finally {
 			try {
-				//schließt datainputStream, InputStream,Scanner
+				//schlieï¿½t datainputStream, InputStream,Scanner
 				if (dis != null) {
 					dis.close();
 				}
