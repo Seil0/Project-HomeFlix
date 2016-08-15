@@ -4,8 +4,9 @@ Project HomeFlix is a Kellerkinder Project. HomeFlix is a Programm that alowes y
 saved movies in clean UI.
 
 Librarys used in this Project:  
-JFoenix  https://github.com/jfoenixadmin/JFoenix   
-minimal-json  https://github.com/ralfstx/minimal-json
+JFoenix: https://github.com/jfoenixadmin/JFoenix   
+minimal-json: https://github.com/ralfstx/minimal-json   
+Commons Lang: https://commons.apache.org/proper/commons-lang/
 
 ## Installation
 
