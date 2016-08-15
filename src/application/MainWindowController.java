@@ -171,9 +171,9 @@ public class MainWindowController {
 	private ObservableList<uiData> newDaten = FXCollections.observableArrayList();
 	private ObservableList<uiData> filterData = FXCollections.observableArrayList();
 	private ObservableList<String> locals = FXCollections.observableArrayList("english", "deutsch");
-	private Image imHF = new Image("Homeflix_Poster.png");
-	private ImageView menu_icon_black = new ImageView(new Image("menu_icon_black.png"));
-	private ImageView menu_icon_white = new ImageView(new Image("menu_icon_white.png"));
+	private Image imHF = new Image("recources/Homeflix_Poster.png");
+	private ImageView menu_icon_black = new ImageView(new Image("recources/menu_icon_black.png"));
+	private ImageView menu_icon_white = new ImageView(new Image("recources/menu_icon_white.png"));
 	private DirectoryChooser directoryChooser = new DirectoryChooser();
 	Properties props = new Properties();
 	

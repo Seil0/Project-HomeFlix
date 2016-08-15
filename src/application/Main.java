@@ -66,7 +66,7 @@ public class Main extends Application {
 		primaryStage.setMinWidth(900.00);
 		primaryStage.setResizable(false);
 		primaryStage.setTitle("Project HomeFlix");
-		primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/Homeflix_Icon_64x64.png"))); //fügt Anwendungsicon hinzu
+		primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/recources/Homeflix_Icon_64x64.png"))); //fügt Anwendungsicon hinzu
 
 		
 		mainWindowController = loader.getController();	//verknüpfung von FXMLController und Controller Klasse
