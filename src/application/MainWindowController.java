@@ -184,9 +184,8 @@ public class MainWindowController {
 	
 	//wenn menubtn clicked
 	/**
-	 * TODO fix directory bug under linux
 	 * TODO change value of Text-color change
-	 * TODO menu icon white
+	 * TODO animation of side menu
 	 */
 	@FXML
 	private void menubtnclicked(){
