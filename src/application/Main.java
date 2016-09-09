@@ -44,10 +44,14 @@ public class Main extends Application {
 	
 	public Stage primaryStage;
 	private String path;
+	private String streamingPath = System.getProperty("user.home") + "\\Documents\\HomeFlix";
 	private String color = "ee3523";
 	private String autoUpdate = "0";
+	private String mode = "local";	//local or streaming
 	private double size = 12;
 	private int local = 0;
+	private File dir = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	//Windows: C:/Users/"User"/Documents/HomeFlix	OSX: has to be tested	Linux: has to be tested(shalt not work!)
+	private File file = new File(dir + "/config.xml");	//Windows: C:/Users/"User"/Documents/HomeFlix/config.xml	OSX: has to be tested	Linux: has to be tested(shalt not work!)
 	Properties props = new Properties();
 	private MainWindowController mainWindowController;
 	
@@ -58,7 +62,7 @@ public class Main extends Application {
 	}
 	
 	public void mainWindow(){
-		File file = new File("config.xml");
+	
 		try {
 		FXMLLoader loader = new FXMLLoader(Main.class.getResource("MainWindow.fxml"));
 		AnchorPane pane = loader.load();
@@ -68,29 +72,45 @@ public class Main extends Application {
 		primaryStage.setTitle("Project HomeFlix");
 		primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/recources/Homeflix_Icon_64x64.png"))); //fügt Anwendungsicon hinzu
 
-		
 		mainWindowController = loader.getController();	//verknüpfung von FXMLController und Controller Klasse
 		mainWindowController.setAutoUpdate(autoUpdate);	//setzt autoupdate
 		mainWindowController.setMain(this);	//aufruf setMain
 		
-		//prüft ob config.xml vorhanden, wenn nicht hole Pfad und schreibe Daten in Controller
-		if (file.exists() != true) {
-			mainWindowController.setPath(firstStart());
-			mainWindowController.setColor(color);
-			mainWindowController.setSize(size);
-			mainWindowController.setAutoUpdate(autoUpdate);
-			mainWindowController.setLoaclUI(local);
-			mainWindowController.saveSettings();
-			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu um Bugs zu verhindern
-			System.exit(0);	//beendet sich selbst
+		//dir exists -> check config.xml 	TODO nur Windows getestet siehe dir und file
+		if(dir.exists() == true){
+			if (file.exists() != true) {
+				mainWindowController.setPath(firstStart());
+				mainWindowController.setStreamingPath(streamingPath);
+				mainWindowController.setColor(color);
+				mainWindowController.setSize(size);
+				mainWindowController.setAutoUpdate(autoUpdate);
+				mainWindowController.setLoaclUI(local);
+				mainWindowController.setMode(mode);
+				mainWindowController.saveSettings();
+				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu um Bugs zu verhindern
+				System.exit(0);	//beendet sich selbst
+			}else{
+				loadSettings();
+			}	
 		}else{
-			loadSettings();
+		dir.mkdir();
+		mainWindowController.setPath(firstStart());
+		mainWindowController.setStreamingPath(streamingPath);
+		mainWindowController.setColor(color);
+		mainWindowController.setSize(size);
+		mainWindowController.setAutoUpdate(autoUpdate);
+		mainWindowController.setLoaclUI(local);
+		mainWindowController.setMode(mode);
+		mainWindowController.saveSettings();
+		Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu um Bugs zu verhindern
+		System.exit(0);	//beendet sich selbst
 		}
-
+		mainWindowController.loadStreamingSettings();
 		mainWindowController.applyColor();	//setzt die Theme Farbe
 		mainWindowController.cbLocal.getSelectionModel().select(mainWindowController.getLocal()); //setzt local
 		mainWindowController.mainColor.setValue(Color.valueOf(mainWindowController.getColor()));
 		mainWindowController.loadData();	//läd die Daten im Controller
+		mainWindowController.addDataUI();
 		
 		Scene scene = new Scene(pane);	//neue Scen um inhalt der stage anzuzeigen
 		
@@ -124,23 +144,22 @@ public class Main extends Application {
 	
 	//lädt die einstellungen aus der XML
 	public void loadSettings(){
-		File configFile = new File("config.xml");
 		try {
-			InputStream inputStream = new FileInputStream(configFile);
+			InputStream inputStream = new FileInputStream(file);
 			props.loadFromXML(inputStream);
-			path = props.getProperty("path");
+			path = props.getProperty("path");	//setzt Propselement in Pfad
+			streamingPath = props.getProperty("streamingPath");
 			color = props.getProperty("color");
-			autoUpdate = props.getProperty("autoUpdate");
 			size = Double.parseDouble(props.getProperty("size"));
+			autoUpdate = props.getProperty("autoUpdate");
 			local = Integer.parseInt(props.getProperty("local"));
-			
+			mode = props.getProperty("mode");
 			inputStream.close();
 		} catch (IOException e) {
-			// Auto-generated catch block
+			System.out.println("An error has occurred!");
 			e.printStackTrace();
 		}
 	}
-	
 	
 	public static void main(String[] args) {
 		launch(args);
