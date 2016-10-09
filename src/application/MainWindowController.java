@@ -63,8 +63,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -89,21 +87,17 @@ public class MainWindowController {
 	@FXML
 	private AnchorPane anpane;
 	@FXML
-	private AnchorPane settingsan = new AnchorPane();
+	private AnchorPane settingsAnchor;
 	@FXML 
-	private AnchorPane streamingSettingsan = new AnchorPane();
+	private AnchorPane streamingSettingsAnchor;
 	@FXML
 	private HBox topHBox;
 	@FXML
 	private VBox sideMenuVBox;
 	@FXML
-	private VBox settingsBox = new VBox();
-	@FXML
-	private VBox streamingSettingsBox = new VBox();
-	@FXML
 	private TreeTableView<streamUiData> treeTableViewfilm;
 	@FXML
-	private TableView<streamUiData> treeViewStreamingdata = new TableView<>();
+	private TableView<streamUiData> tableViewStreamingdata;
 	@FXML
 	private JFXTextArea ta1;
 	@FXML
@@ -127,33 +121,33 @@ public class MainWindowController {
     @FXML
     private JFXButton debugBtn;
     @FXML
-    private JFXButton updateBtn = new JFXButton("Auf Update prüfen");
+    private JFXButton updateBtn;
     @FXML
-    private JFXButton directoryBtn = new JFXButton("Ordner auswählen");
+    private JFXButton directoryBtn;
     @FXML
-    private JFXButton streamingDirectoryBtn = new JFXButton("Ordner auswählen");
+    private JFXButton streamingDirectoryBtn;
     @FXML
-    private JFXToggleButton autoupdateBtn = new JFXToggleButton();
+    private JFXToggleButton autoupdateBtn;
     @FXML
-    public JFXTextField tfPfad = new JFXTextField();
+    public JFXTextField tfPath;
     @FXML
-    public JFXTextField streamingtfPfad = new JFXTextField();
+    public JFXTextField tfStreamingPath;
     @FXML
     private JFXTextField tfsearch;
     @FXML
-    public JFXColorPicker mainColor = new JFXColorPicker();
+    public JFXColorPicker mainColor;
     @FXML
-    public	ChoiceBox<String> cbLocal = new ChoiceBox<String>();
+    public	ChoiceBox<String> cbLocal;
     @FXML
-    public JFXSlider sl1 = new JFXSlider();
+    public JFXSlider sliderFontSize;
     @FXML
     private JFXDialog dialog = new JFXDialog();
     @FXML
-    private Label versionlbl = new Label();
+    private Label versionlbl;
     @FXML
-    private Label sizelbl = new Label("Schriftgröße:");
+    private Label sizelbl;
     @FXML
-    private Label aulbl = new Label("beim starten nach Updates suchen:");
+    private Label aulbl;
     @FXML
     private ImageView image1;
     
@@ -180,7 +174,7 @@ public class MainWindowController {
     private TableColumn<streamUiData, String> dataNameEndColumn = new TableColumn<>("Datei Name mit Endung");
     
 	
-	private boolean menutrue = false;	//merker fï¿½r menubtn (ï¿½ffnen oder schlieï¿½en)
+	private boolean menutrue = false;	//merker für menubtn (öffnen oder schließen)
 	private boolean settingstrue = false;
 	private boolean streamingSettingsTrue = false;
 	private String version = "0.3.7";
@@ -240,13 +234,13 @@ public class MainWindowController {
 			menutrue = false;
 		}
 		if(settingstrue == true){
-			anpane.getChildren().removeAll(settingsBox);
-			setPath(tfPfad.getText());
+			settingsAnchor.setVisible(false);
+			setPath(tfPath.getText());
 			saveSettings();
 			settingstrue = false;
 		}
 		if(streamingSettingsTrue == true){
-			anpane.getChildren().removeAll(streamingSettingsBox);
+			streamingSettingsAnchor.setVisible(false);
 			streamingSettingsTrue = false;
 		}
 	}
@@ -360,75 +354,15 @@ public class MainWindowController {
 	@FXML
 	private void settingsBtnclicked(){
 		if(settingstrue == false){
-			anpane.getChildren().addAll(settingsBox);
-			
-			tfPfad.setOnAction(new EventHandler<ActionEvent>(){
-				@Override
-				public void handle(ActionEvent event){
-					setPath(tfPfad.getText());
-					saveSettings();
-				}
-			});
-			directoryBtn.setOnAction(new EventHandler<ActionEvent>() {
-				@Override
-				public void handle(ActionEvent event){
-					selectedFolder = directoryChooser.showDialog(null);  
-	                if(selectedFolder == null){
-	                    System.out.println("No Directory selected");
-	                }else{
-	                	setPath(selectedFolder.getAbsolutePath());
-	                	saveSettings();
-						tfPfad.setText(getPath());
-						try {
-							Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu
-							System.exit(0);	//beendet sich selbst
-						} catch (IOException e) {
-							System.out.println("es ist ein Fehler aufgetreten");
-							e.printStackTrace();
-						}
-	                }
-				}
-			});
-			mainColor.setOnAction(new EventHandler<ActionEvent>(){
-				@Override
-				public void handle(ActionEvent event){
-					editColor(mainColor.getValue().toString());
-					applyColor();
-				}
-			});
-			sl1.valueProperty().addListener(new ChangeListener<Number>() {
-				 @Override
-				public void changed(ObservableValue<? extends Number> ov,Number old_val, Number new_val) {
-					setSize(sl1.getValue()); 
-					ta1.setFont(Font.font("System", size));
-					saveSettings();
-				 }
-			});
-			
-			//updater
-			updateBtn.setOnAction(new EventHandler<ActionEvent>() {
-				@Override
-				public void handle(ActionEvent event){
-					update();
-				}
-			});
-			autoupdateBtn.setOnAction(new EventHandler<ActionEvent>(){
-	            @Override
-				public void handle(ActionEvent event) {
-	            	if(autoUpdate.equals("0")){
-	            		setAutoUpdate("1");
-	            		saveSettings();
-	            	}else{
-	            		setAutoUpdate("0");
-	            		saveSettings();
-	            	}
-	            }
-			});
-			
+			if(streamingSettingsTrue == true){
+				streamingSettingsAnchor.setVisible(false);
+				streamingSettingsTrue = false;
+			}
+			settingsAnchor.setVisible(true);	
 			settingstrue = true;
 		}else{
-			anpane.getChildren().removeAll(settingsBox);
-			setPath(tfPfad.getText());
+			settingsAnchor.setVisible(false);
+			setPath(tfPath.getText());
 			saveSettings();
 			settingstrue = false;
 		}
@@ -440,32 +374,14 @@ public class MainWindowController {
 	@FXML
 	private void streamingSettingsBtnclicked(){
 		if(streamingSettingsTrue == false){
-			anpane.getChildren().addAll(streamingSettingsBox);				
-			streamingDirectoryBtn.setOnAction(new EventHandler<ActionEvent>() {
-									
-				@Override
-				public void handle(ActionEvent event) {
-				selectedStreamingFolder = directoryChooser.showDialog(null);  
-				if(selectedStreamingFolder == null){
-						System.out.println("No Directory selected");
-				}else{
-					setStreamingPath(selectedStreamingFolder.getAbsolutePath());
-					saveSettings();
-					streamingtfPfad.setText(getStreamingPath());
-					try {
-						Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu
-						System.exit(0);	//beendet sich selbst
-					} catch (IOException e) {
-						System.out.println("es ist ein Fehler aufgetreten");
-						e.printStackTrace();
-					}
-					}
-				}
-			});
-								
+			if(settingstrue == true){
+				settingsAnchor.setVisible(false);
+				settingstrue = false;
+			}
+			streamingSettingsAnchor.setVisible(true);			
 			streamingSettingsTrue = true;	
 			}else{
-				anpane.getChildren().removeAll(streamingSettingsBox);
+				streamingSettingsAnchor.setVisible(false);
 				streamingSettingsTrue = false;
 			}					
 	}
@@ -482,22 +398,95 @@ public class MainWindowController {
 		saveSettings();
 		root.getChildren().remove(0,root.getChildren().size());
 		addDataUI();
-		
+		settingsAnchor.setVisible(false);
+		streamingSettingsAnchor.setVisible(false);
 		sideMenuVBox.setVisible(false);	//disables sidemenu
 		menutrue = false;
+		settingstrue = false;
+		streamingSettingsTrue = false;
 	}
 	
 	@FXML
 	private void debugBtnclicked(){
 		//for testing
 	}
+
+	
+	@FXML
+	private void tfPathAction(){
+		setPath(tfPath.getText());
+		saveSettings();
+	}
+	
+	@FXML
+	private void directoryBtnAction(){
+		selectedFolder = directoryChooser.showDialog(null);  
+        if(selectedFolder == null){
+            System.out.println("No Directory selected");
+        }else{
+        	setPath(selectedFolder.getAbsolutePath());
+        	saveSettings();
+        	tfPath.setText(getPath());
+			try {
+				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu
+				System.exit(0);	//beendet sich selbst
+			} catch (IOException e) {
+				System.out.println("es ist ein Fehler aufgetreten");
+				e.printStackTrace();
+			}
+        }
+	}
+	
+	@FXML
+	private void mainColorAction(){
+		editColor(mainColor.getValue().toString());
+		applyColor();
+	}
+	
+	@FXML
+	private void updateBtnAction(){
+		update();
+	}
+	
+	@FXML
+	private void autoupdateBtnAction(){
+		if(autoUpdate.equals("0")){
+    		setAutoUpdate("1");
+    	}else{
+    		setAutoUpdate("0");
+    	}
+		saveSettings();
+	}
+	
+	@FXML
+	private void tfStreamingPathAction(){
+		//
+	}
+	
+	@FXML
+	private void streamingDirectoryBtnAction(){
+		selectedStreamingFolder = directoryChooser.showDialog(null);  
+		if(selectedStreamingFolder == null){
+				System.out.println("No Directory selected");
+		}else{
+			setStreamingPath(selectedStreamingFolder.getAbsolutePath());
+			saveSettings();
+			tfStreamingPath.setText(getStreamingPath());
+			try {
+				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu
+				System.exit(0);	//beendet sich selbst
+			} catch (IOException e) {
+				System.out.println("es ist ein Fehler aufgetreten");
+				e.printStackTrace();
+			}
+			}
+	}
+	
 	
 	//"Main" Methode die beim start von der Klasse Main aufgerufen wird, initialiesirung der einzellnen UI-Objekte 
-	@SuppressWarnings({ "static-access"})
 	public void setMain(Main main) {
 		
 		loadSettings();
-//		loadStreamingSettings();
 		initTabel();
 		initActions();
 		
@@ -505,32 +494,14 @@ public class MainWindowController {
 		
 		debugBtn.setDisable(true); 	//debugging btn for tests
 		debugBtn.setVisible(false);
-		
-        tfPfad.setPrefWidth(250);
-        tfPfad.setPromptText("Pfad");
-        tfPfad.setText(getPath());
         
-        streamingtfPfad.setPrefWidth(250);
-        streamingtfPfad.setPromptText("Pfad");
-        streamingtfPfad.setText(getStreamingPath());
+        tfPath.setText(getPath());
 
-        sl1.setMaxWidth(250);
-        sl1.setMin(2);
-        sl1.setMax(48);
-        sl1.setValue(getSize());
+        sliderFontSize.setValue(getSize());
         
         cbLocal.setItems(locals);
         
         updateBtn.setFont(Font.font("System", 12));
-        
-        directoryBtn.setFont(Font.font("System", 12));
-        directoryBtn.setMaxSize(180, 25);
-        
-        streamingDirectoryBtn.setFont(Font.font("System", 12));
-        streamingDirectoryBtn.setMaxSize(180, 25);
-        
-		treeViewStreamingdata.setPrefHeight(533);
-		treeViewStreamingdata.setPrefWidth(370);
         
         if(autoUpdate.equals("1")){
     		autoupdateBtn.setSelected(true);
@@ -540,68 +511,7 @@ public class MainWindowController {
     	}
         
         versionlbl.setText("Version: "+version);
-		
-		settingsBox.setStyle("-fx-background-color: #FFFFFF;");
-		settingsBox.getChildren().add(settingsan);
-		
-		streamingSettingsBox.setStyle("-fx-background-color: #FFFFFF;");
-		streamingSettingsBox.getChildren().add(streamingSettingsan);
-		
-		settingsan.getChildren().addAll(tfPfad, directoryBtn, mainColor, sizelbl, sl1, cbLocal, updateBtn, aulbl, autoupdateBtn, versionlbl);
-		
-		settingsan.setTopAnchor(tfPfad, 5d);
-		settingsan.setLeftAnchor(tfPfad, 5d);
-		
-		settingsan.setTopAnchor(directoryBtn, 5d);
-		settingsan.setLeftAnchor(directoryBtn, 260d);
-		
-		settingsan.setTopAnchor(mainColor, 40d);
-		settingsan.setLeftAnchor(mainColor, 5d);
-		
-		settingsan.setTopAnchor(sizelbl, 75d);
-		settingsan.setLeftAnchor(sizelbl, 5d);
-		
-		settingsan.setTopAnchor(sl1, 110d);
-		settingsan.setLeftAnchor(sl1, 5d);
-		
-		settingsan.setTopAnchor(cbLocal, 145d);
-		settingsan.setLeftAnchor(cbLocal, 5d);
-		
-		settingsan.setTopAnchor(updateBtn, 180d);
-		settingsan.setLeftAnchor(updateBtn, 5d);
-		
-		settingsan.setTopAnchor(aulbl, 215d);
-		settingsan.setLeftAnchor(aulbl, 5d);
-		
-		settingsan.setTopAnchor(autoupdateBtn, 230d);
-		settingsan.setLeftAnchor(autoupdateBtn, 5d);
-		
-		settingsan.setTopAnchor(versionlbl, 280d);
-		settingsan.setLeftAnchor(versionlbl, 5d);
-		
-		streamingSettingsan.getChildren().addAll(streamingtfPfad, streamingDirectoryBtn,treeViewStreamingdata);
-		
-		streamingSettingsan.setTopAnchor(streamingtfPfad, 5d);
-		streamingSettingsan.setLeftAnchor(streamingtfPfad, 5d);
-		
-		streamingSettingsan.setTopAnchor(streamingDirectoryBtn, 5d);
-		streamingSettingsan.setLeftAnchor(streamingDirectoryBtn, 260d);
-		
-		streamingSettingsan.setTopAnchor(treeViewStreamingdata, 40d);
-		streamingSettingsan.setLeftAnchor(treeViewStreamingdata, 5d);
-		streamingSettingsan.setBottomAnchor(treeViewStreamingdata, 5d);
-		
-		
-		AnchorPane.setTopAnchor(settingsBox, 34d);
-		AnchorPane.setRightAnchor(settingsBox, 0d);
-		AnchorPane.setBottomAnchor(settingsBox, 0d);
-		AnchorPane.setLeftAnchor(settingsBox, 150d);
-		
-		AnchorPane.setTopAnchor(streamingSettingsBox, 34d);
-		AnchorPane.setRightAnchor(streamingSettingsBox, 0d);
-		AnchorPane.setBottomAnchor(streamingSettingsBox, 0d);
-		AnchorPane.setLeftAnchor(streamingSettingsBox, 150d);
-    	
+
     	ta1.setWrapText(true);
     	ta1.setEditable(false);
     	ta1.setFont(Font.font("System", getSize()));
@@ -611,12 +521,12 @@ public class MainWindowController {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void initTabel(){
 
-		//Filmtabelle
-//	    root.setExpanded(true); 
-	        
+		//Filmtabelle   
 	    columnRating.setMaxWidth(120);
 	    columnTitel.setMaxWidth(240);
 	    columnStreamUrl.setMaxWidth(0);
+	    dataNameColumn.setPrefWidth(130);
+	    dataNameEndColumn.setPrefWidth(170);
 		
         treeTableViewfilm.setRoot(root);
         treeTableViewfilm.setColumnResizePolicy( TreeTableView.CONSTRAINED_RESIZE_POLICY );
@@ -662,12 +572,11 @@ public class MainWindowController {
 		});
 	    
 	    //Streaming-Settings Tabelle
-	    
 	    dataNameColumn.setCellValueFactory(cellData -> cellData.getValue().titelProperty());
 	    dataNameEndColumn.setCellValueFactory(cellData -> cellData.getValue().streamUrlProperty());
 		
-		treeViewStreamingdata.getColumns().addAll(dataNameColumn, dataNameEndColumn);
-		treeViewStreamingdata.setItems(streamingData);
+	    tableViewStreamingdata.getColumns().addAll(dataNameColumn, dataNameEndColumn);
+	    tableViewStreamingdata.setItems(streamingData);
 	}
 	
 	//initialisierung der Button Actions
@@ -702,11 +611,19 @@ public class MainWindowController {
         	  saveSettings();
           }
         });
+        
+        sliderFontSize.valueProperty().addListener(new ChangeListener<Number>() {
+			 @Override
+			public void changed(ObservableValue<? extends Number> ov,Number old_val, Number new_val) {
+				setSize(sliderFontSize.getValue()); 
+				ta1.setFont(Font.font("System", size));
+				saveSettings();
+			 }
+        });
 	}
 	
 	//prüft auf Update und fürht es gegebenenfalls aus
 	private void update(){
-
 		System.out.println("check for updates ...");
 		try {
 			URL url = new URL(versionURL); //URL der Datei mit aktueller Versionsnummer
@@ -866,7 +783,7 @@ public class MainWindowController {
 		sideMenuVBox.setStyle(style);
 		topHBox.setStyle(style);
 		tfsearch.setFocusColor(Color.valueOf(getColor()));
-		tfPfad.setFocusColor(Color.valueOf(getColor()));
+		tfPath.setFocusColor(Color.valueOf(getColor()));
 		
 		if(icolor.compareTo(ccolor) == -1){
 			settingsBtn.setStyle("-fx-text-fill: WHITE;");
@@ -921,9 +838,12 @@ public class MainWindowController {
 		settingsBtn.setText(bundle.getString("settings"));
 		streamingSettingsBtn.setText(bundle.getString("streamingSettings"));
 		playbtn.setText(bundle.getString("play"));
+		tfPath.setPromptText(bundle.getString("tfPath"));
+		tfStreamingPath.setPromptText(bundle.getString("tfPath"));
 		openfolderbtn.setText(bundle.getString("openFolder"));
 		updateBtn.setText(bundle.getString("checkUpdates"));
 		directoryBtn.setText(bundle.getString("chooseFolder"));
+		streamingDirectoryBtn.setText(bundle.getString("chooseFolder"));
 		sizelbl.setText(bundle.getString("fontSize"));
 		aulbl.setText(bundle.getString("autoUpdate"));
 		versionlbl.setText(bundle.getString("version")+" "+version);
@@ -1119,7 +1039,7 @@ public class MainWindowController {
 				ta1.appendText("Titel: "+titel+"\n");
 				ta1.appendText("Jahr: "+ year+"\n");
 				ta1.appendText("Einstufung: "+rated+"\n");
-				ta1.appendText("Verï¿½ffentlicht am: "+released+"\n");
+				ta1.appendText("Veröffentlicht am: "+released+"\n");
 				ta1.appendText("Laufzeit: "+runtime+"\n");
 				ta1.appendText("Genre: "+genre+"\n");
 				ta1.appendText("Regisseur: "+director+"\n");

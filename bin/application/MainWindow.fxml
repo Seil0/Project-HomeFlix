@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXColorPicker?>
+<?import com.jfoenix.controls.JFXSlider?>
 <?import com.jfoenix.controls.JFXTextArea?>
 <?import com.jfoenix.controls.JFXTextField?>
+<?import com.jfoenix.controls.JFXToggleButton?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TreeTableView?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -38,7 +44,7 @@
 				<JFXButton fx:id="menubtn" onAction="#menubtnclicked" prefHeight="32.0" prefWidth="32.0" />
          </children>
       </HBox>
-      <VBox fx:id="sideMenuVBox" layoutY="32.0" prefHeight="660.0" prefWidth="150.0" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="34.0">
+      <VBox fx:id="sideMenuVBox" layoutY="32.0" prefHeight="660.0" prefWidth="150.0" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="38.0">
          <children>
             <JFXButton fx:id="infoBtn" onAction="#infoBtnclicked" prefHeight="32.0" prefWidth="150.0" textAlignment="CENTER">
                <font>
@@ -67,5 +73,25 @@
             </JFXButton>
          </children>
       </VBox>
+      <AnchorPane fx:id="streamingSettingsAnchor" layoutX="138.0" layoutY="33.0" prefHeight="566.0" prefWidth="760.0" style="-fx-background-color: #FFFFFF;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="38.0">
+         <children>
+            <JFXTextField fx:id="tfStreamingPath" layoutX="14.0" layoutY="14.0" onAction="#tfStreamingPathAction" prefWidth="250.0" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="5.0" />
+            <JFXButton fx:id="streamingDirectoryBtn" layoutX="263.0" layoutY="2.0" onAction="#streamingDirectoryBtnAction" AnchorPane.leftAnchor="260.0" AnchorPane.topAnchor="5.0" />
+            <TableView fx:id="tableViewStreamingdata" layoutX="14.0" layoutY="44.0" prefHeight="200.0" prefWidth="300.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="40.0" />
+         </children></AnchorPane>
+      <AnchorPane fx:id="settingsAnchor" layoutX="160.0" layoutY="44.0" prefHeight="566.0" prefWidth="760.0" style="-fx-background-color: #FFFFFF;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="38.0">
+         <children>
+            <JFXTextField fx:id="tfPath" layoutX="14.0" layoutY="14.0" onAction="#tfPathAction" prefWidth="250.0" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="5.0" />
+            <JFXButton fx:id="directoryBtn" layoutX="255.0" layoutY="8.0" onAction="#directoryBtnAction" prefHeight="25.0" AnchorPane.leftAnchor="260.0" />
+            <JFXColorPicker fx:id="mainColor" layoutX="14.0" layoutY="45.0" onAction="#mainColorAction" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="40.0" />
+            <Label fx:id="sizelbl" layoutY="73.0" text="Label" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="75.0" />
+            <JFXSlider fx:id="sliderFontSize" layoutX="10.0" layoutY="99.0" max="48.0" min="2.0" prefWidth="250.0" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="110.0" />
+            <ChoiceBox fx:id="cbLocal" layoutX="14.0" layoutY="131.0" prefWidth="150.0" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="145.0" />
+            <JFXButton fx:id="updateBtn" layoutX="7.0" layoutY="177.0" onAction="#updateBtnAction" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="180.0" />
+            <Label fx:id="aulbl" layoutX="43.0" layoutY="219.0" text="Label" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="215.0" />
+            <JFXToggleButton fx:id="autoupdateBtn" layoutX="19.0" layoutY="215.0" onAction="#autoupdateBtnAction" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="230.0" />
+            <Label fx:id="versionlbl" layoutX="29.0" layoutY="297.0" text="Label" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="280.0" />
+         </children>
+      </AnchorPane>
 	</children>
 </AnchorPane>
