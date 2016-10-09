@@ -66,7 +66,6 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ChoiceBox;
@@ -80,10 +79,10 @@ import javafx.scene.control.TreeTableView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.DirectoryChooser;
 
 public class MainWindowController {
@@ -94,9 +93,9 @@ public class MainWindowController {
 	@FXML 
 	private AnchorPane streamingSettingsan = new AnchorPane();
 	@FXML
-	private VBox topVBox;
+	private HBox topHBox;
 	@FXML
-	private VBox menuBox = new VBox();
+	private VBox sideMenuVBox;
 	@FXML
 	private VBox settingsBox = new VBox();
 	@FXML
@@ -118,15 +117,15 @@ public class MainWindowController {
 	@FXML
 	private JFXButton forwardBtn;
     @FXML
-    private JFXButton infoBtn = new JFXButton("Info");
+    private JFXButton infoBtn;
     @FXML
-    private JFXButton demoBtn = new JFXButton("Debugging");
+    private JFXButton settingsBtn;
     @FXML
-    private JFXButton settingsBtn = new JFXButton("Settings");
+    private JFXButton streamingSettingsBtn;
     @FXML
-    private JFXButton streamingSettingsBtn = new  JFXButton("Streaming-Settings");
+    private JFXButton switchBtn;
     @FXML
-    private JFXButton switchBtn = new  JFXButton("local");
+    private JFXButton debugBtn;
     @FXML
     private JFXButton updateBtn = new JFXButton("Auf Update prüfen");
     @FXML
@@ -167,11 +166,11 @@ public class MainWindowController {
     @FXML
     TreeTableColumn<streamUiData, String> columnStreamUrl = new TreeTableColumn<>("Datei Name");
     @FXML
-    TreeTableColumn<streamUiData, String> columnResolution = new TreeTableColumn<>("Auflösung");	//TODO translate
+    TreeTableColumn<streamUiData, String> columnResolution = new TreeTableColumn<>("Auflösung");
     @FXML
-    TreeTableColumn<streamUiData, Integer> columnYear = new TreeTableColumn<>("Jahr");	//TODO translate
+    TreeTableColumn<streamUiData, Integer> columnYear = new TreeTableColumn<>("Jahr");
     @FXML
-    TreeTableColumn<streamUiData, Integer> columnSeason = new TreeTableColumn<>("Staffel");	//TODO translate
+    TreeTableColumn<streamUiData, Integer> columnSeason = new TreeTableColumn<>("Staffel");
     
     @FXML
     private TreeItem<streamUiData> streamingRoot =new TreeItem<>(new streamUiData(1 ,1 ,1.0 ,"1" ,"filme" ,"1"));
@@ -194,6 +193,8 @@ public class MainWindowController {
 	private String errorUpdateD;
 	private String errorUpdateV;
 	private String errorPlay;
+	private String errorOpenStream;
+	private String errorMode;
 	private String infoText;
 	private String linuxBugText;
 	private String vlcNotInstalled;
@@ -219,7 +220,6 @@ public class MainWindowController {
 	private ObservableList<streamUiData> streamData = FXCollections.observableArrayList();
 	private ObservableList<String> locals = FXCollections.observableArrayList("english", "deutsch");
 	private ObservableList<streamUiData> streamingData = FXCollections.observableArrayList();
-	private Image imHF = new Image("recources/Homeflix_Poster.png");
 	private ImageView menu_icon_black = new ImageView(new Image("recources/menu_icon_black.png"));
 	private ImageView menu_icon_white = new ImageView(new Image("recources/menu_icon_white.png"));
 	private DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -233,10 +233,10 @@ public class MainWindowController {
 	@FXML
 	private void menubtnclicked(){
 		if(menutrue == false){
-			anpane.getChildren().addAll(menuBox);		
+			sideMenuVBox.setVisible(true);	
 			menutrue = true;
 		}else{
-			anpane.getChildren().removeAll(menuBox);
+			sideMenuVBox.setVisible(false);
 			menutrue = false;
 		}
 		if(settingstrue == true){
@@ -246,7 +246,6 @@ public class MainWindowController {
 			settingstrue = false;
 		}
 		if(streamingSettingsTrue == true){
-			System.out.println("close settings");
 			anpane.getChildren().removeAll(streamingSettingsBox);
 			streamingSettingsTrue = false;
 		}
@@ -310,13 +309,21 @@ public class MainWindowController {
 				}
 			}else if(mode.equals("streaming")){
 				try {
-					Desktop.getDesktop().browse(new URI(datPath));	//TODO muss noch überarbeite werden!
+					Desktop.getDesktop().browse(new URI(datPath));	//opening streaming url in browser (other option?)
 				} catch (URISyntaxException | IOException e) {
-					//Auto-generated catch block
+					Alert alert = new Alert(AlertType.ERROR);
+					alert.setHeaderText("");
+		        	alert.setTitle("Error");
+		        	alert.setContentText(errorOpenStream);
+		        	alert.showAndWait();
 					e.printStackTrace();
 				}
 			}else{
-				System.out.println("error");	//TODO richtige fehlermeldung mode
+				Alert alert = new Alert(AlertType.ERROR);
+				alert.setHeaderText("");
+	        	alert.setTitle("Error");
+	        	alert.setContentText(errorMode);
+	        	alert.showAndWait();
 			}
 		}
 	}
@@ -341,6 +348,150 @@ public class MainWindowController {
 		treeTableViewfilm.getSelectionModel().select(next);
 	}
 	
+	@FXML
+	private void infoBtnclicked(){
+		Alert alert = new Alert(AlertType.INFORMATION);
+    	alert.setTitle("Info");
+    	alert.setHeaderText("Project HomeFlix");
+    	alert.setContentText(infoText);
+    	alert.showAndWait();
+	}
+	
+	@FXML
+	private void settingsBtnclicked(){
+		if(settingstrue == false){
+			anpane.getChildren().addAll(settingsBox);
+			
+			tfPfad.setOnAction(new EventHandler<ActionEvent>(){
+				@Override
+				public void handle(ActionEvent event){
+					setPath(tfPfad.getText());
+					saveSettings();
+				}
+			});
+			directoryBtn.setOnAction(new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent event){
+					selectedFolder = directoryChooser.showDialog(null);  
+	                if(selectedFolder == null){
+	                    System.out.println("No Directory selected");
+	                }else{
+	                	setPath(selectedFolder.getAbsolutePath());
+	                	saveSettings();
+						tfPfad.setText(getPath());
+						try {
+							Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu
+							System.exit(0);	//beendet sich selbst
+						} catch (IOException e) {
+							System.out.println("es ist ein Fehler aufgetreten");
+							e.printStackTrace();
+						}
+	                }
+				}
+			});
+			mainColor.setOnAction(new EventHandler<ActionEvent>(){
+				@Override
+				public void handle(ActionEvent event){
+					editColor(mainColor.getValue().toString());
+					applyColor();
+				}
+			});
+			sl1.valueProperty().addListener(new ChangeListener<Number>() {
+				 @Override
+				public void changed(ObservableValue<? extends Number> ov,Number old_val, Number new_val) {
+					setSize(sl1.getValue()); 
+					ta1.setFont(Font.font("System", size));
+					saveSettings();
+				 }
+			});
+			
+			//updater
+			updateBtn.setOnAction(new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent event){
+					update();
+				}
+			});
+			autoupdateBtn.setOnAction(new EventHandler<ActionEvent>(){
+	            @Override
+				public void handle(ActionEvent event) {
+	            	if(autoUpdate.equals("0")){
+	            		setAutoUpdate("1");
+	            		saveSettings();
+	            	}else{
+	            		setAutoUpdate("0");
+	            		saveSettings();
+	            	}
+	            }
+			});
+			
+			settingstrue = true;
+		}else{
+			anpane.getChildren().removeAll(settingsBox);
+			setPath(tfPfad.getText());
+			saveSettings();
+			settingstrue = false;
+		}
+	}
+	
+	/**
+	 * TODO zusätzliche infos über die dateien
+	 */
+	@FXML
+	private void streamingSettingsBtnclicked(){
+		if(streamingSettingsTrue == false){
+			anpane.getChildren().addAll(streamingSettingsBox);				
+			streamingDirectoryBtn.setOnAction(new EventHandler<ActionEvent>() {
+									
+				@Override
+				public void handle(ActionEvent event) {
+				selectedStreamingFolder = directoryChooser.showDialog(null);  
+				if(selectedStreamingFolder == null){
+						System.out.println("No Directory selected");
+				}else{
+					setStreamingPath(selectedStreamingFolder.getAbsolutePath());
+					saveSettings();
+					streamingtfPfad.setText(getStreamingPath());
+					try {
+						Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu
+						System.exit(0);	//beendet sich selbst
+					} catch (IOException e) {
+						System.out.println("es ist ein Fehler aufgetreten");
+						e.printStackTrace();
+					}
+					}
+				}
+			});
+								
+			streamingSettingsTrue = true;	
+			}else{
+				anpane.getChildren().removeAll(streamingSettingsBox);
+				streamingSettingsTrue = false;
+			}					
+	}
+	
+	@FXML
+	private void switchBtnclicked(){
+		if(mode.equals("local")){	//switch to streaming mode
+			setMode("streaming");
+			switchBtn.setText("local");
+		}else if(mode.equals("streaming")){	//switch to local mode
+			setMode("local");
+			switchBtn.setText("streaming");
+		}
+		saveSettings();
+		root.getChildren().remove(0,root.getChildren().size());
+		addDataUI();
+		
+		sideMenuVBox.setVisible(false);	//disables sidemenu
+		menutrue = false;
+	}
+	
+	@FXML
+	private void debugBtnclicked(){
+		//for testing
+	}
+	
 	//"Main" Methode die beim start von der Klasse Main aufgerufen wird, initialiesirung der einzellnen UI-Objekte 
 	@SuppressWarnings({ "static-access"})
 	public void setMain(Main main) {
@@ -348,34 +499,13 @@ public class MainWindowController {
 		loadSettings();
 //		loadStreamingSettings();
 		initTabel();
-		initBtnAction();
+		initActions();
 		
 		System.out.println("Mode: "+mode);
 		
-		infoBtn.setPrefWidth(130);
-        infoBtn.setPrefHeight(32);
-        infoBtn.setFont(Font.font("System", FontWeight.BOLD, 15));
-        
-        settingsBtn.setPrefWidth(130);
-        settingsBtn.setPrefHeight(32);
-        settingsBtn.setFont(Font.font("System", FontWeight.BOLD, 15));
-        
-        streamingSettingsBtn.setPrefWidth(130);
-        streamingSettingsBtn.setPrefHeight(32);
-        streamingSettingsBtn.setFont(Font.font("System", FontWeight.BOLD, 15));
-        
-        switchBtn.setPrefWidth(130);
-        switchBtn.setPrefHeight(32);
-        switchBtn.setFont(Font.font("System", FontWeight.BOLD, 15));
-        
-        demoBtn.setPrefWidth(130);
-        demoBtn.setPrefHeight(32);
-        demoBtn.setFont(Font.font("System", FontWeight.BOLD, 15));
-        demoBtn.setDisable(false);
-        
-        menubtn.setText("");
-        menubtn.setMaxSize(32, 32);
-       
+		debugBtn.setDisable(true); 	//debugging btn for tests
+		debugBtn.setVisible(false);
+		
         tfPfad.setPrefWidth(250);
         tfPfad.setPromptText("Pfad");
         tfPfad.setText(getPath());
@@ -410,14 +540,6 @@ public class MainWindowController {
     	}
         
         versionlbl.setText("Version: "+version);
-        
-    	menuBox.setSpacing(2.5);	//Zeilenabstand
-    	menuBox.setPadding(new Insets(2.5,0,0,2.5)); // abstand zum Rand
-        menuBox.getChildren().addAll(infoBtn, settingsBtn, streamingSettingsBtn, switchBtn, demoBtn);
-    	menuBox.setFillWidth(true);
-    	
-    	AnchorPane.setTopAnchor(menuBox, 33d);
-		AnchorPane.setBottomAnchor(menuBox, 0d);
 		
 		settingsBox.setStyle("-fx-background-color: #FFFFFF;");
 		settingsBox.getChildren().add(settingsan);
@@ -473,49 +595,16 @@ public class MainWindowController {
 		AnchorPane.setTopAnchor(settingsBox, 34d);
 		AnchorPane.setRightAnchor(settingsBox, 0d);
 		AnchorPane.setBottomAnchor(settingsBox, 0d);
-		AnchorPane.setLeftAnchor(settingsBox, 130d);
+		AnchorPane.setLeftAnchor(settingsBox, 150d);
 		
 		AnchorPane.setTopAnchor(streamingSettingsBox, 34d);
 		AnchorPane.setRightAnchor(streamingSettingsBox, 0d);
 		AnchorPane.setBottomAnchor(streamingSettingsBox, 0d);
-		AnchorPane.setLeftAnchor(streamingSettingsBox, 130d);
+		AnchorPane.setLeftAnchor(streamingSettingsBox, 150d);
     	
     	ta1.setWrapText(true);
     	ta1.setEditable(false);
     	ta1.setFont(Font.font("System", getSize()));
-    	
-    	image1.setImage(imHF);
-    	
-    	//TODO kann das auch raus?
-        tfsearch.textProperty().addListener(new ChangeListener<String>() {
-    	    @SuppressWarnings("unchecked")
-			@Override
-    	    public void changed(ObservableValue<? extends String> observable,String oldValue, String newValue) {
-    	    	int counter = newDaten.size();
-    	    	filterData.removeAll(filterData);
-    	    	root.getChildren().remove(0,root.getChildren().size());
-    	    	
-    	    	for(int i = 0; i < counter; i++){
-    	    		if(newDaten.get(i).getTitel().toLowerCase().contains(tfsearch.getText().toLowerCase())){
-    	    			filterData.add(newDaten.get(i));
-    	    		}
-    	    	}
-    	    	
-    	    	for(int i = 0; i < filterData.size(); i++){
-    				root.getChildren().addAll(new TreeItem<streamUiData>(filterData.get(i)));	//fügt daten zur Rootnode hinzu
-    			}
-    	    }
-    	});
-        
-        //TODO das auch?
-        cbLocal.getSelectionModel().selectedIndexProperty()
-        .addListener(new ChangeListener<Number>() {
-          public void changed(ObservableValue<? extends Number> ov, Number value, Number new_value) { 
-        	  setLocal(new_value.intValue());
-        	  setLoaclUI(local);
-        	  saveSettings();
-          }
-        });
 	}
 	
 	//initialisierung der Tabellen für filme(beide Modi) und Streaming-Settings
@@ -582,169 +671,37 @@ public class MainWindowController {
 	}
 	
 	//initialisierung der Button Actions
-	private void initBtnAction(){
+	private void initActions(){
 		
-		infoBtn.setOnAction(new EventHandler<ActionEvent>(){
-            @Override
-            public void handle(ActionEvent event) {
-            	Alert alert = new Alert(AlertType.INFORMATION);
-            	alert.setTitle("Info");
-            	alert.setHeaderText("Project HomeFlix");
-            	alert.setContentText(infoText);
-            	alert.showAndWait();
-            }
-		});
-		
-		//setteingsbtn clicked, deklarieren der actions der Objekte die bei settingsbtn angezeigt werden
-		settingsBtn.setOnAction(new EventHandler<ActionEvent>() {
+		//TODO unterscheiden zwischen streaming und local
+        tfsearch.textProperty().addListener(new ChangeListener<String>() {
+    	    @SuppressWarnings("unchecked")
 			@Override
-			public void handle(ActionEvent event){
-				if(settingstrue == false){
-					anpane.getChildren().addAll(settingsBox);
-					
-					tfPfad.setOnAction(new EventHandler<ActionEvent>(){
-						@Override
-						public void handle(ActionEvent event){
-							setPath(tfPfad.getText());
-							saveSettings();
-						}
-					});
-					directoryBtn.setOnAction(new EventHandler<ActionEvent>() {
-						@Override
-						public void handle(ActionEvent event){
-							selectedFolder = directoryChooser.showDialog(null);  
-			                if(selectedFolder == null){
-			                    System.out.println("No Directory selected");
-			                }else{
-			                	setPath(selectedFolder.getAbsolutePath());
-			                	saveSettings();
-								tfPfad.setText(getPath());
-								try {
-									Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu
-									System.exit(0);	//beendet sich selbst
-								} catch (IOException e) {
-									System.out.println("es ist ein Fehler aufgetreten");
-									e.printStackTrace();
-								}
-			                }
-						}
-					});
-					mainColor.setOnAction(new EventHandler<ActionEvent>(){
-						@Override
-						public void handle(ActionEvent event){
-							editColor(mainColor.getValue().toString());
-							applyColor();
-						}
-					});
-					sl1.valueProperty().addListener(new ChangeListener<Number>() {
-						 @Override
-						public void changed(ObservableValue<? extends Number> ov,Number old_val, Number new_val) {
-							setSize(sl1.getValue()); 
-							ta1.setFont(Font.font("System", size));
-							saveSettings();
-						 }
-					});
-					
-					//updater
-					updateBtn.setOnAction(new EventHandler<ActionEvent>() {
-						@Override
-						public void handle(ActionEvent event){
-							update();
-						}
-					});
-					autoupdateBtn.setOnAction(new EventHandler<ActionEvent>(){
-			            @Override
-						public void handle(ActionEvent event) {
-			            	if(autoUpdate.equals("0")){
-			            		setAutoUpdate("1");
-			            		saveSettings();
-			            	}else{
-			            		setAutoUpdate("0");
-			            		saveSettings();
-			            	}
-			            }
-					});
-					
-					settingstrue = true;
-				}else{
-					anpane.getChildren().removeAll(settingsBox);
-					setPath(tfPfad.getText());
-					saveSettings();
-					settingstrue = false;
-				}
-			}
-		});
-		
-		//demoBtn clicked debbuging
-		demoBtn.setOnAction(new EventHandler<ActionEvent>(){
-            @Override
-			public void handle(ActionEvent event) {
-            	/**
-            	 * TODO DBController
-            	 */
-//            	loadData();       	
-            }
-		});
-		
-		streamingSettingsBtn.setOnAction(new EventHandler<ActionEvent>() {
-						@Override
-						public void handle(ActionEvent event){
-							if(streamingSettingsTrue == false){
-								anpane.getChildren().addAll(streamingSettingsBox);
-								
-								streamingDirectoryBtn.setOnAction(new EventHandler<ActionEvent>() {
-									
-									@Override
-									public void handle(ActionEvent event) {
-										selectedStreamingFolder = directoryChooser.showDialog(null);  
-						                if(selectedStreamingFolder == null){
-						                    System.out.println("No Directory selected");
-						                }else{
-						                	setStreamingPath(selectedStreamingFolder.getAbsolutePath());
-						                	saveSettings();
-											streamingtfPfad.setText(getStreamingPath());
-											try {
-												Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu
-												System.exit(0);	//beendet sich selbst
-											} catch (IOException e) {
-												System.out.println("es ist ein Fehler aufgetreten");
-												e.printStackTrace();
-											}
-						                }
-									}
-								});;
-								
-								streamingSettingsTrue = true;	
-							}else{
-								anpane.getChildren().removeAll(streamingSettingsBox);
-								streamingSettingsTrue = false;
-							}
-							
-						}
-		});
-		
-		/**
-		 * TODO menu wieder verschwinden lassen
-		 * TODO Banner zurück auf homeflix setzen
-		 */
-		switchBtn.setOnAction(new EventHandler<ActionEvent>() {
-			
-			@Override
-			public void handle(ActionEvent event) {
-				
-				if(mode.equals("local")){	//switch to streaming mode
-					setMode("streaming");
-					switchBtn.setText("local");
-				}else if(mode.equals("streaming")){	//switch to local mode
-					setMode("local");
-					switchBtn.setText("streaming");
-				}
-				saveSettings();
-				root.getChildren().remove(0,root.getChildren().size());
-				addDataUI();
-				
-			}
-		});
+    	    public void changed(ObservableValue<? extends String> observable,String oldValue, String newValue) {
+    	    	int counter = newDaten.size();
+    	    	filterData.removeAll(filterData);
+    	    	root.getChildren().remove(0,root.getChildren().size());
+    	    	
+    	    	for(int i = 0; i < counter; i++){
+    	    		if(newDaten.get(i).getTitel().toLowerCase().contains(tfsearch.getText().toLowerCase())){
+    	    			filterData.add(newDaten.get(i));
+    	    		}
+    	    	}
+    	    	
+    	    	for(int i = 0; i < filterData.size(); i++){
+    				root.getChildren().addAll(new TreeItem<streamUiData>(filterData.get(i)));	//fügt daten zur Rootnode hinzu
+    			}
+    	    }
+    	});
+        
+        cbLocal.getSelectionModel().selectedIndexProperty()
+        .addListener(new ChangeListener<Number>() {
+          public void changed(ObservableValue<? extends Number> ov, Number value, Number new_value) { 
+        	  setLocal(new_value.intValue());
+        	  setLoaclUI(local);
+        	  saveSettings();
+          }
+        });
 	}
 	
 	//prüft auf Update und fürht es gegebenenfalls aus
@@ -846,13 +803,6 @@ public class MainWindowController {
 				}
 			}
 			}	
-//		}else{
-//			Alert alert = new Alert(AlertType.ERROR);
-//			alert.setHeaderText("");
-//        	alert.setTitle("Error");
-//        	alert.setContentText("Oh, something went wrong! It seems someone has used a wrong mode. Please contact the maintainer!");
-//        	alert.showAndWait();
-//		}
 	}
 	
 	public void addDataUI(){
@@ -913,8 +863,8 @@ public class MainWindowController {
 		BigInteger icolor = new BigInteger(getColor(),16);
 		BigInteger ccolor = new BigInteger("78909cff",16);
 		
-		menuBox.setStyle(style);
-		topVBox.setStyle(style);
+		sideMenuVBox.setStyle(style);
+		topHBox.setStyle(style);
 		tfsearch.setFocusColor(Color.valueOf(getColor()));
 		tfPfad.setFocusColor(Color.valueOf(getColor()));
 		
@@ -923,7 +873,7 @@ public class MainWindowController {
 			streamingSettingsBtn.setStyle("-fx-text-fill: WHITE;");
 			switchBtn.setStyle("-fx-text-fill: WHITE;");
 			infoBtn.setStyle("-fx-text-fill: WHITE;");
-			demoBtn.setStyle("-fx-text-fill: WHITE;");
+			debugBtn.setStyle("-fx-text-fill: WHITE;");
 			directoryBtn.setStyle(btnStylewhite);
 			streamingDirectoryBtn.setStyle(btnStyle);
 			updateBtn.setStyle(btnStylewhite);
@@ -937,7 +887,7 @@ public class MainWindowController {
 			streamingSettingsBtn.setStyle("-fx-text-fill: BLACK;");
 			switchBtn.setStyle("-fx-text-fill: BLACK;");
 			infoBtn.setStyle("-fx-text-fill: BLACK;");
-			demoBtn.setStyle("-fx-text-fill: BLACK;");
+			debugBtn.setStyle("-fx-text-fill: BLACK;");
 			directoryBtn.setStyle(btnStyle);
 			streamingDirectoryBtn.setStyle(btnStyle);
 			updateBtn.setStyle(btnStyle);
@@ -950,7 +900,7 @@ public class MainWindowController {
 		
 		//das solte weg kann aber hier bleiben wicht ist dass es zum selben zeitpunkt wie aply color ausgeführt wird
 		if(mode.equals("local")){
-			switchBtn.setText("streaming");
+			switchBtn.setText("streaming");	//TODO translate
 		}else if(mode.equals("streaming")){
 			switchBtn.setText("local");
 		}
@@ -967,8 +917,9 @@ public class MainWindowController {
      	default:bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//default local
      			break;
 		 }
-		settingsBtn.setText(bundle.getString("settings"));
 		infoBtn.setText(bundle.getString("info"));
+		settingsBtn.setText(bundle.getString("settings"));
+		streamingSettingsBtn.setText(bundle.getString("streamingSettings"));
 		playbtn.setText(bundle.getString("play"));
 		openfolderbtn.setText(bundle.getString("openFolder"));
 		updateBtn.setText(bundle.getString("checkUpdates"));
@@ -978,12 +929,17 @@ public class MainWindowController {
 		versionlbl.setText(bundle.getString("version")+" "+version);
 		columnTitel.setText(bundle.getString("columnName"));
 		columnRating.setText(bundle.getString("columnRating"));
-		columnStreamUrl.setText(bundle.getString("columnDatName"));
+		columnStreamUrl.setText(bundle.getString("columnStreamUrl"));
+		columnResolution.setText(bundle.getString("columnResolution"));
+		columnSeason.setText(bundle.getString("columnSeason"));
+		columnYear.setText(bundle.getString("columnYear"));
 		errorUpdateD = bundle.getString("errorUpdateD");
 		errorUpdateV = bundle.getString("errorUpdateV");
+		errorPlay = bundle.getString("errorPlay");
+		errorOpenStream = bundle.getString("errorOpenStream");
+		errorMode = bundle.getString("errorMode");
 		infoText = bundle.getString("version")+" "+version+" plasma bucket"+bundle.getString("infoText");
 		linuxBugText = bundle.getString("linuxBug");
-		errorPlay = bundle.getString("errorPlay");
 		vlcNotInstalled = bundle.getString("vlcNotInstalled");
 	}
 	
