@@ -57,6 +57,9 @@ import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXToggleButton;
 
+import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.TranslateTransition;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
@@ -82,6 +85,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
+import javafx.util.Duration;
 
 public class MainWindowController {
 	@FXML
@@ -152,7 +156,7 @@ public class MainWindowController {
     private ImageView image1;
     
     @FXML
-    TreeItem<streamUiData> root = new TreeItem<>(new streamUiData(1, 1, 5.0,"1", "filme","1"));
+    TreeItem<streamUiData> root = new TreeItem<>(new streamUiData(1, 1, 1, 5.0,"1", "filme","1"));
     @FXML
     TreeTableColumn<streamUiData, Double> columnRating = new TreeTableColumn<>("Bewertung");
     @FXML
@@ -165,9 +169,11 @@ public class MainWindowController {
     TreeTableColumn<streamUiData, Integer> columnYear = new TreeTableColumn<>("Jahr");
     @FXML
     TreeTableColumn<streamUiData, Integer> columnSeason = new TreeTableColumn<>("Staffel");
+    @FXML
+    TreeTableColumn<streamUiData, Integer> columnEpisode = new TreeTableColumn<>("Episode");
     
     @FXML
-    private TreeItem<streamUiData> streamingRoot =new TreeItem<>(new streamUiData(1 ,1 ,1.0 ,"1" ,"filme" ,"1"));
+    private TreeItem<streamUiData> streamingRoot =new TreeItem<>(new streamUiData(1 ,1 ,1 ,1.0 ,"1" ,"filme" ,"1"));
     @FXML
     private TableColumn<streamUiData, String> dataNameColumn = new TableColumn<>("Datei Name");
     @FXML
@@ -177,7 +183,8 @@ public class MainWindowController {
 	private boolean menutrue = false;	//merker für menubtn (öffnen oder schließen)
 	private boolean settingstrue = false;
 	private boolean streamingSettingsTrue = false;
-	private String version = "0.3.7";
+	private String version = "0.3.8";
+	private String versionName = "half glowing bucket";
 	private String versionURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/version.txt";
 	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt";
 	private File dir = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	
@@ -222,15 +229,14 @@ public class MainWindowController {
 	//wenn menubtn clicked
 	/**
 	 * TODO change value of Text-color change
-	 * TODO animation of side menu
 	 */
 	@FXML
 	private void menubtnclicked(){
 		if(menutrue == false){
-			sideMenuVBox.setVisible(true);	
+			sideMenuSlideIn();
 			menutrue = true;
 		}else{
-			sideMenuVBox.setVisible(false);
+			sideMenuSlideOut();
 			menutrue = false;
 		}
 		if(settingstrue == true){
@@ -400,7 +406,7 @@ public class MainWindowController {
 		addDataUI();
 		settingsAnchor.setVisible(false);
 		streamingSettingsAnchor.setVisible(false);
-		sideMenuVBox.setVisible(false);	//disables sidemenu
+		sideMenuSlideOut();		//disables sidemenu
 		menutrue = false;
 		settingstrue = false;
 		streamingSettingsTrue = false;
@@ -550,8 +556,11 @@ public class MainWindowController {
         
         columnSeason.setCellValueFactory((CellDataFeatures<streamUiData, Integer> p) -> 
         new ReadOnlyObjectWrapper(p.getValue().getValue().getSeason()));
+        
+        columnEpisode.setCellValueFactory((CellDataFeatures<streamUiData, Integer> p) -> 
+        new ReadOnlyObjectWrapper(p.getValue().getValue().getEpisode()));
 
-        treeTableViewfilm.getColumns().addAll(columnTitel, columnRating, columnStreamUrl, columnResolution, columnYear, columnSeason);
+        treeTableViewfilm.getColumns().addAll(columnTitel, columnRating, columnStreamUrl, columnResolution, columnYear, columnSeason, columnEpisode);
 	    treeTableViewfilm.getColumns().get(2).setVisible(false); //blendet die Column mit den Dateinamen aus (wichtig um sie abzuspielen)
 	
 	    //Changelistener für TreeTable
@@ -685,7 +694,7 @@ public class MainWindowController {
 				for(int i = 0; i < entries.length; i++){
 					String titel = ohneEndung(entries[i]);
 					String data = entries[i];
-					newDaten.add(new streamUiData(1, 1, 5.0, "1", titel, data));
+					newDaten.add(new streamUiData(1, 1, 1, 5.0, "1", titel, data));
 				}
 			}
 
@@ -694,6 +703,7 @@ public class MainWindowController {
         	String resolution = null;
         	String streamUrl = null;  
         	int season;
+        	int episode;
         	int year;
         	double rating = 5.0;
         	if(getStreamingPath().equals("")||getStreamingPath().equals(null)){
@@ -708,10 +718,11 @@ public class MainWindowController {
 	            	for (JsonValue item : items) {
 	            	  titel = item.asObject().getString("titel","");
 	            	  season = item.asObject().getInt("season", 0);
+	            	  episode = item.asObject().getInt("episode", 0);
 	            	  year = item.asObject().getInt("year", 0);
 	            	  resolution = item.asObject().getString("resolution", "");
 	            	  streamUrl = item.asObject().getString("streamUrl", "");
-	            	  streamData.add(new streamUiData(year, season, rating, resolution, titel, streamUrl));
+	            	  streamData.add(new streamUiData(year, season, episode, rating, resolution, titel, streamUrl));
 	            	}
 					
 				} catch (IOException e) {
@@ -732,6 +743,7 @@ public class MainWindowController {
 			treeTableViewfilm.getColumns().get(3).setVisible(false);
 			treeTableViewfilm.getColumns().get(4).setVisible(false);
 			treeTableViewfilm.getColumns().get(5).setVisible(false);
+			treeTableViewfilm.getColumns().get(6).setVisible(false);
 		}else if(mode.equals("streaming")){
 			for(int i = 0; i < streamData.size(); i++){
 				root.getChildren().add(new TreeItem<streamUiData>(streamData.get(i)));	//fügt daten zur Rootnode hinzu
@@ -741,9 +753,11 @@ public class MainWindowController {
 			columnRating.setMaxWidth(52.5);
 			columnYear.setMaxWidth(40);
 			columnSeason.setMaxWidth(52.5);
+			columnEpisode.setMaxWidth(0);	//disabled for ui size reasons
 			treeTableViewfilm.getColumns().get(3).setVisible(true);
 			treeTableViewfilm.getColumns().get(4).setVisible(true);
 			treeTableViewfilm.getColumns().get(5).setVisible(true);
+			treeTableViewfilm.getColumns().get(6).setVisible(true);
 		}
 	}
 	
@@ -756,7 +770,7 @@ public class MainWindowController {
 				if(entries[i].endsWith(".json")){
 					String titel = ohneEndung(entries[i]);
 					String data = entries[i];
-					streamingData.add(new streamUiData(1,1,5.0,"1",titel ,data));
+					streamingData.add(new streamUiData(1,1,1,5.0,"1",titel ,data));
 				}
 			}
 			for(int i = 0; i < streamingData.size(); i++){
@@ -823,7 +837,37 @@ public class MainWindowController {
 		}
 	}
 	
+	private void sideMenuSlideIn(){
+		sideMenuVBox.setVisible(true);
+		//einblenden von 40% nach 100% deckkraft in 400ms
+		FadeTransition fadeTransition = new FadeTransition(Duration.millis(400), sideMenuVBox);
+		fadeTransition.setFromValue(0.4);
+		fadeTransition.setToValue(1.0);
+		//einfahren des side munes in 400ms
+		TranslateTransition translateTransition = new TranslateTransition(Duration.millis(400), sideMenuVBox);
+		translateTransition.setFromX(-150);
+		translateTransition.setToX(0);
+		//falls beides verwendet werden soll	    
+		ParallelTransition parallelTransition = new ParallelTransition();
+		parallelTransition.getChildren().addAll(translateTransition);//(fadeTransition, translateTransition);
+		parallelTransition.play();
+	}
 	
+	private void sideMenuSlideOut(){
+//		sideMenuVBox.setVisible(false);
+		//ausblenden von 100% nach 40% deckkraft in 400ms
+		FadeTransition fadeTransition = new FadeTransition(Duration.millis(400), sideMenuVBox);
+		fadeTransition.setFromValue(1.0);
+		fadeTransition.setToValue(0.4);
+		//ausfahren des side munes in 400ms
+		TranslateTransition translateTransition = new TranslateTransition(Duration.millis(400), sideMenuVBox);
+		translateTransition.setFromX(0);
+		translateTransition.setToX(-150);
+		//falls beides verwendet werden soll	    
+		ParallelTransition parallelTransition = new ParallelTransition();
+		parallelTransition.getChildren().addAll(translateTransition);//(fadeTransition, translateTransition);
+		parallelTransition.play();
+	}
 	
 	public void setLoaclUI(int local){
 		switch(local){
@@ -858,7 +902,7 @@ public class MainWindowController {
 		errorPlay = bundle.getString("errorPlay");
 		errorOpenStream = bundle.getString("errorOpenStream");
 		errorMode = bundle.getString("errorMode");
-		infoText = bundle.getString("version")+" "+version+" plasma bucket"+bundle.getString("infoText");
+		infoText = bundle.getString("version")+" "+version+" "+versionName+bundle.getString("infoText");
 		linuxBugText = bundle.getString("linuxBug");
 		vlcNotInstalled = bundle.getString("vlcNotInstalled");
 	}
