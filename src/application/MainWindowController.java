@@ -26,12 +26,15 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -73,6 +76,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableColumn.CellDataFeatures;
@@ -80,7 +84,9 @@ import javafx.scene.control.TreeTableView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -155,6 +161,7 @@ public class MainWindowController {
     @FXML
     private ImageView image1;
     
+    
     @FXML
     TreeItem<streamUiData> root = new TreeItem<>(new streamUiData(1, 1, 1, 5.0,"1", "filme","1"));
     @FXML
@@ -180,11 +187,11 @@ public class MainWindowController {
     private TableColumn<streamUiData, String> dataNameEndColumn = new TableColumn<>("Datei Name mit Endung");
     
 	
-	private boolean menutrue = false;	//merker für menubtn (öffnen oder schließen)
+	private boolean menutrue = false;	//saves the position of menubtn (opened or closed)
 	private boolean settingstrue = false;
 	private boolean streamingSettingsTrue = false;
-	private String version = "0.3.8";
-	private String versionName = "half glowing bucket";
+	private String version = "0.3.9";
+	private String versionName = "glowing bucket";
 	private String versionURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/version.txt";
 	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt";
 	private File dir = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	
@@ -286,12 +293,7 @@ public class MainWindowController {
 				try {
 					Runtime.getRuntime().exec("vlc "+getPath()+"/"+ datPath);
 				} catch (IOException e) {
-					Alert alert = new Alert(AlertType.ERROR);
-					alert.setHeaderText("");
-		        	alert.setTitle("Info");
-		        	alert.setContentText(errorPlay);
-		        	alert.showAndWait();
-					e.printStackTrace();
+					showErrorMsg(errorPlay,e);
 				}
 			}
 		}else if(SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_MAC_OSX){
@@ -300,30 +302,18 @@ public class MainWindowController {
 				try {
 					Desktop.getDesktop().open(new File(getPath()+"\\"+ datPath));
 				} catch (IOException e) {
-					Alert alert = new Alert(AlertType.ERROR);
-					alert.setHeaderText("");
-		        	alert.setTitle("Info");
-		        	alert.setContentText(errorPlay);
-		        	alert.showAndWait();
-					e.printStackTrace();
+					showErrorMsg(errorPlay,e);
 				}
 			}else if(mode.equals("streaming")){
 				try {
-					Desktop.getDesktop().browse(new URI(datPath));	//opening streaming url in browser (other option?)
+					Desktop.getDesktop().browse(new URI(datPath));	//opens the streaming url in browser (other option?)
 				} catch (URISyntaxException | IOException e) {
-					Alert alert = new Alert(AlertType.ERROR);
-					alert.setHeaderText("");
-		        	alert.setTitle("Error");
-		        	alert.setContentText(errorOpenStream);
-		        	alert.showAndWait();
-					e.printStackTrace();
+					showErrorMsg(errorOpenStream, (IOException) e);
 				}
 			}else{
-				Alert alert = new Alert(AlertType.ERROR);
-				alert.setHeaderText("");
-	        	alert.setTitle("Error");
-	        	alert.setContentText(errorMode);
-	        	alert.showAndWait();
+				IOException e = new IOException("error");
+				showErrorMsg(errorMode, e);
+				
 			}
 		}
 	}
@@ -415,6 +405,41 @@ public class MainWindowController {
 	@FXML
 	private void debugBtnclicked(){
 		//for testing
+		
+		Alert alert = new Alert(AlertType.ERROR);
+    	alert.setTitle("Error");
+    	alert.setHeaderText("");
+    	alert.setContentText(errorUpdateV);
+    	
+    	Exception ex = new FileNotFoundException("Could not find file blabla.txt");
+
+    	// Create expandable Exception.
+    	StringWriter sw = new StringWriter();
+    	PrintWriter pw = new PrintWriter(sw);
+    	ex.printStackTrace(pw);
+    	String exceptionText = sw.toString();
+
+    	Label label = new Label("The exception stacktrace was:");
+
+    	TextArea textArea = new TextArea(exceptionText);
+    	textArea.setEditable(false);
+    	textArea.setWrapText(true);
+
+    	textArea.setMaxWidth(Double.MAX_VALUE);
+    	textArea.setMaxHeight(Double.MAX_VALUE);
+    	GridPane.setVgrow(textArea, Priority.ALWAYS);
+    	GridPane.setHgrow(textArea, Priority.ALWAYS);
+
+    	GridPane expContent = new GridPane();
+    	expContent.setMaxWidth(Double.MAX_VALUE);
+    	expContent.add(label, 0, 0);
+    	expContent.add(textArea, 0, 1);
+
+    	// Set expandable Exception into the dialog pane.
+    	alert.getDialogPane().setExpandableContent(expContent);
+
+    	alert.showAndWait();
+
 	}
 
 	
@@ -434,8 +459,8 @@ public class MainWindowController {
         	saveSettings();
         	tfPath.setText(getPath());
 			try {
-				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu
-				System.exit(0);	//beendet sich selbst
+				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
+				System.exit(0);	//finishes itself
 			} catch (IOException e) {
 				System.out.println("es ist ein Fehler aufgetreten");
 				e.printStackTrace();
@@ -479,8 +504,8 @@ public class MainWindowController {
 			saveSettings();
 			tfStreamingPath.setText(getStreamingPath());
 			try {
-				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu
-				System.exit(0);	//beendet sich selbst
+				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
+				System.exit(0);	//finishes itself
 			} catch (IOException e) {
 				System.out.println("es ist ein Fehler aufgetreten");
 				e.printStackTrace();
@@ -527,7 +552,7 @@ public class MainWindowController {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void initTabel(){
 
-		//Filmtabelle   
+		//filmtabelle 
 	    columnRating.setMaxWidth(120);
 	    columnTitel.setMaxWidth(240);
 	    columnStreamUrl.setMaxWidth(0);
@@ -640,12 +665,7 @@ public class MainWindowController {
 	        aktVersion = in.readLine();	//schreibt inputstream in String
 	        in.close();
 		} catch (IOException e1) {
-			Alert alert = new Alert(AlertType.ERROR);
-        	alert.setTitle("Error");
-        	alert.setHeaderText("");
-        	alert.setContentText(errorUpdateV);
-        	alert.showAndWait();
-			e1.printStackTrace();
+			showErrorMsg(errorUpdateV, e1);
 		}
 		System.out.println("Version: "+version+", Update: "+aktVersion);
 		
@@ -654,11 +674,11 @@ public class MainWindowController {
 		int iaktVersion = Integer.parseInt(aktVersion.replace(".", ""));
 		
 		if(iversion >= iaktVersion){
-			updateBtn.setText("kein Update verügbar");
-			System.out.println("kein Update verfügbar");
+			updateBtn.setText(bundle.getString("updateBtnNotavail"));
+			System.out.println("no update available");
 		}else{
-			updateBtn.setText("Update verfügbar");
-			System.out.println("Update verfügbar");
+			updateBtn.setText(bundle.getString("updateBtnavail"));
+			System.out.println("update available");
 		try {
 			URL website;
 			URL downloadURL = new URL(downloadLink);
@@ -672,14 +692,8 @@ public class MainWindowController {
 			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu
 			System.exit(0);	//beendet sich selbst
 		} catch (IOException e) {
-			//Falls ein Fehler auftritt
-			e.printStackTrace();
-			Alert alert = new Alert(AlertType.ERROR);
-        	alert.setTitle("Error");
-        	alert.setHeaderText("");
-        	alert.setContentText(errorUpdateD);
-        	alert.showAndWait();
-			e.printStackTrace();
+			//in case there is an error
+			showErrorMsg(errorUpdateD, e);
 		}
 		}
 	}
@@ -905,6 +919,39 @@ public class MainWindowController {
 		infoText = bundle.getString("version")+" "+version+" "+versionName+bundle.getString("infoText");
 		linuxBugText = bundle.getString("linuxBug");
 		vlcNotInstalled = bundle.getString("vlcNotInstalled");
+	}
+	
+	private void showErrorMsg(String msg, IOException exception){
+		Alert alert = new Alert(AlertType.ERROR);
+    	alert.setTitle("Error");
+    	alert.setHeaderText("");
+    	alert.setContentText(msg);
+    	
+    	// Create expandable Exception.
+    	StringWriter sw = new StringWriter();
+    	PrintWriter pw = new PrintWriter(sw);
+    	exception.printStackTrace(pw);
+    	String exceptionText = sw.toString();
+
+    	TextArea textArea = new TextArea(exceptionText);
+    	textArea.setEditable(false);
+    	textArea.setWrapText(true);
+
+    	textArea.setMaxWidth(Double.MAX_VALUE);
+    	textArea.setMaxHeight(Double.MAX_VALUE);
+    	GridPane.setVgrow(textArea, Priority.ALWAYS);
+    	GridPane.setHgrow(textArea, Priority.ALWAYS);
+
+    	GridPane expContent = new GridPane();
+    	expContent.setMaxWidth(Double.MAX_VALUE);
+    	expContent.add(textArea, 0, 1);
+
+    	// Set expandable Exception into the dialog pane.
+    	alert.getDialogPane().setExpandableContent(expContent);
+    	alert.showAndWait();
+    	
+    	exception.printStackTrace();
+		
 	}
 	
 	//speichert die Einstellungen
