@@ -1,6 +1,6 @@
 # Project-HomeFlix
 
-Project HomeFlix is a Kellerkinder Project. HomeFlix is a Programm that alowes you to sort all your local   
+Project HomeFlix is a Kellerkinder Project, that alowes you to sort all your local   
 saved movies in clean UI.
 
 Librarys used in this Project:  
