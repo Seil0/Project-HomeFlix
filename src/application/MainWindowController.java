@@ -26,7 +26,6 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -190,9 +189,10 @@ public class MainWindowController {
 	private boolean menutrue = false;	//saves the position of menubtn (opened or closed)
 	private boolean settingstrue = false;
 	private boolean streamingSettingsTrue = false;
-	private String version = "0.3.9";
+	private String version = "0.4.0";
+	private String buildNumber = "100";
 	private String versionName = "glowing bucket";
-	private String versionURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/version.txt";
+	private String buildURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/buildNumber.txt";
 	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt";
 	private File dir = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	
 	private File file = new File(dir + "/config.xml");	
@@ -206,7 +206,7 @@ public class MainWindowController {
 	private String infoText;
 	private String linuxBugText;
 	private String vlcNotInstalled;
-	private String aktVersion;
+	private String aktBuildNumber;
 	private String path;
 	private String streamingPath;
 	private String color;
@@ -323,7 +323,6 @@ public class MainWindowController {
 		try {
 			Desktop.getDesktop().open(new File(getPath()));	//öffnet den aktuellen Pfad
 		} catch (IOException e) {
-			// Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -505,8 +504,6 @@ public class MainWindowController {
     	}else{
     		autoupdateBtn.setSelected(false);
     	}
-        
-        versionlbl.setText("Version: "+version);
 
     	ta1.setWrapText(true);
     	ta1.setEditable(false);
@@ -623,20 +620,22 @@ public class MainWindowController {
 	
 	//prüft auf Update und fürht es gegebenenfalls aus
 	private void update(){
+		
 		System.out.println("check for updates ...");
 		try {
-			URL url = new URL(versionURL); //URL der Datei mit aktueller Versionsnummer
+			URL url = new URL(buildURL); //URL der Datei mit aktueller Versionsnummer
 	        BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-	        aktVersion = in.readLine();	//schreibt inputstream in String
+	        aktBuildNumber = in.readLine();	//schreibt inputstream in String
 	        in.close();
 		} catch (IOException e1) {
 			showErrorMsg(errorUpdateV, e1);
 		}
-		System.out.println("Version: "+version+", Update: "+aktVersion);
+		System.out.println("Build: "+buildNumber+", Update: "+aktBuildNumber);
+		
 		
 		//vergleicht die Versionsnummern, bei aktversion > version wird ein Update durchgrfï¿½hrt
-		int iversion = Integer.parseInt(version.replace(".", ""));
-		int iaktVersion = Integer.parseInt(aktVersion.replace(".", ""));
+		int iversion = Integer.parseInt(buildNumber.replace(".", ""));
+		int iaktVersion = Integer.parseInt(aktBuildNumber.replace(".", ""));
 		
 		if(iversion >= iaktVersion){
 			updateBtn.setText(bundle.getString("updateBtnNotavail"));
@@ -650,12 +649,12 @@ public class MainWindowController {
 			BufferedReader in = new BufferedReader(new InputStreamReader(downloadURL.openStream()));
 			updateDataURL = in.readLine();
 			website = new URL(updateDataURL);	//Update URL
-			ReadableByteChannel rbc = Channels.newChannel(website.openStream());	//ï¿½ffnet neuen Stream/Channel
-			FileOutputStream fos = new FileOutputStream("ProjectHomeFlix.jar");	//neuer fileoutputstram fï¿½r ProjectHomeFLix.jar
-			fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);	//holt datei von 0 bis max grï¿½ï¿½e
-			fos.close();	//schlieï¿½t den fos (extrem wichtig!)
-			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu
-			System.exit(0);	//beendet sich selbst
+			ReadableByteChannel rbc = Channels.newChannel(website.openStream());	//open new Stream/Channel
+			FileOutputStream fos = new FileOutputStream("ProjectHomeFlix.jar");	//nea fileoutputstram for ProjectHomeFLix.jar
+			fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);	//gets file from 0 to max size
+			fos.close();	//close fos (extrem wichtig!)
+			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
+			System.exit(0);	//finishes itself
 		} catch (IOException e) {
 			//in case there is an error
 			showErrorMsg(errorUpdateD, e);
@@ -869,7 +868,7 @@ public class MainWindowController {
 		streamingDirectoryBtn.setText(bundle.getString("chooseFolder"));
 		sizelbl.setText(bundle.getString("fontSize"));
 		aulbl.setText(bundle.getString("autoUpdate"));
-		versionlbl.setText(bundle.getString("version")+" "+version);
+		versionlbl.setText(bundle.getString("version")+" "+version+" (Build: "+buildNumber+")");
 		columnTitel.setText(bundle.getString("columnName"));
 		columnRating.setText(bundle.getString("columnRating"));
 		columnStreamUrl.setText(bundle.getString("columnStreamUrl"));
@@ -881,7 +880,7 @@ public class MainWindowController {
 		errorPlay = bundle.getString("errorPlay");
 		errorOpenStream = bundle.getString("errorOpenStream");
 		errorMode = bundle.getString("errorMode");
-		infoText = bundle.getString("version")+" "+version+" "+versionName+bundle.getString("infoText");
+		infoText = bundle.getString("version")+" "+version+" (Build: "+buildNumber+") "+versionName+bundle.getString("infoText");
 		linuxBugText = bundle.getString("linuxBug");
 		vlcNotInstalled = bundle.getString("vlcNotInstalled");
 	}

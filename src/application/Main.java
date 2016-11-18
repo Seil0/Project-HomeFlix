@@ -87,8 +87,8 @@ public class Main extends Application {
 				mainWindowController.setLoaclUI(local);
 				mainWindowController.setMode(mode);
 				mainWindowController.saveSettings();
-				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu um Bugs zu verhindern
-				System.exit(0);	//beendet sich selbst
+				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
+				System.exit(0);	//finishes itself
 			}else{
 				loadSettings();
 			}	
@@ -102,8 +102,8 @@ public class Main extends Application {
 		mainWindowController.setLoaclUI(local);
 		mainWindowController.setMode(mode);
 		mainWindowController.saveSettings();
-		Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//starte neu um Bugs zu verhindern
-		System.exit(0);	//beendet sich selbst
+		Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
+		System.exit(0);	//finishes itself
 		}
 		mainWindowController.loadStreamingSettings();
 		mainWindowController.applyColor();	//setzt die Theme Farbe
