@@ -190,7 +190,7 @@ public class MainWindowController {
 	private boolean settingstrue = false;
 	private boolean streamingSettingsTrue = false;
 	private String version = "0.4.0";
-	private String buildNumber = "102";
+	private String buildNumber = "103";
 	private String versionName = "glowing bucket";
 	private String buildURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/buildNumber.txt";
 	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt";
@@ -203,6 +203,7 @@ public class MainWindowController {
 	private String errorPlay;
 	private String errorOpenStream;
 	private String errorMode;
+	@SuppressWarnings("unused")
 	private String errorLoad;
 	private String errorSave;
 	private String noFilmFound;
@@ -1002,7 +1003,7 @@ public class MainWindowController {
 			mode = props.getProperty("mode");
 			inputStream.close();
 		} catch (IOException e) {
-			showErrorMsg(errorLoad, e);
+//			showErrorMsg(errorLoad, e); //TODO das soll beim ersten start nicht erscheinen
 			e.printStackTrace();
 		}
 	}
