@@ -9,7 +9,7 @@ Commons Lang: https://commons.apache.org/proper/commons-lang/
 
 ## Installation
 
-read our [wiki](https://github.com/Seil0/Project-HomeFlix/wiki) 
+[wiki](https://github.com/Seil0/Project-HomeFlix/wiki) 
 
 Project HomeFlix © 2016 Software Development Kellerkinder (SDK)     
 www.kellerkinder.xyz
