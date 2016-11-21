@@ -190,7 +190,7 @@ public class MainWindowController {
 	private boolean settingstrue = false;
 	private boolean streamingSettingsTrue = false;
 	private String version = "0.4.0";
-	private String buildNumber = "100";
+	private String buildNumber = "102";
 	private String versionName = "glowing bucket";
 	private String buildURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/buildNumber.txt";
 	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt";
@@ -203,6 +203,9 @@ public class MainWindowController {
 	private String errorPlay;
 	private String errorOpenStream;
 	private String errorMode;
+	private String errorLoad;
+	private String errorSave;
+	private String noFilmFound;
 	private String infoText;
 	private String linuxBugText;
 	private String vlcNotInstalled;
@@ -213,7 +216,23 @@ public class MainWindowController {
 	private String Name;
 	private String datPath;
 	private String autoUpdate;
-	private String mode;
+	private String mode;	
+	private String title;
+	private String year;
+	private String rating;
+	private String publishedOn;
+	private String duration;
+	private String genre;
+	private String director;
+	private String writer;
+	private String actors;
+	private String plot;
+	private String language;
+	private String country;
+	private String awards;
+	private String metascore;
+	private String imdbRating;
+	private String type;	
 	private double size;
 	private int last;
 	private int selected;
@@ -228,8 +247,14 @@ public class MainWindowController {
 	private ObservableList<streamUiData> streamData = FXCollections.observableArrayList();
 	private ObservableList<String> locals = FXCollections.observableArrayList("english", "deutsch");
 	private ObservableList<streamUiData> streamingData = FXCollections.observableArrayList();
-	private ImageView menu_icon_black = new ImageView(new Image("recources/menu_icon_black.png"));
-	private ImageView menu_icon_white = new ImageView(new Image("recources/menu_icon_white.png"));
+	private ImageView menu_icon_black = new ImageView(new Image("recources/icons/menu_icon_black.png"));
+	private ImageView menu_icon_white = new ImageView(new Image("recources/icons/menu_icon_white.png"));
+	private ImageView skip_previous_white = new ImageView(new Image("recources/icons/ic_skip_previous_white_18dp_1x.png"));
+	private ImageView skip_previous_black = new ImageView(new Image("recources/icons/ic_skip_previous_black_18dp_1x.png"));
+	private ImageView skip_next_white = new ImageView(new Image("recources/icons/ic_skip_next_white_18dp_1x.png"));
+	private ImageView skip_next_black = new ImageView(new Image("recources/icons/ic_skip_next_black_18dp_1x.png"));
+	private ImageView play_arrow_white = new ImageView(new Image("recources/icons/ic_play_arrow_white_18dp_1x.png"));
+	private ImageView play_arrow_black = new ImageView(new Image("recources/icons/ic_play_arrow_black_18dp_1x.png"));
 	private DirectoryChooser directoryChooser = new DirectoryChooser();
 	Properties props = new Properties();
 	
@@ -767,8 +792,8 @@ public class MainWindowController {
 	//setzt die Farben für die UI-Elemente
 	public void applyColor(){
 		String style = "-fx-background-color: #"+getColor()+";";
-		String btnStyle = "-fx-button-type: RAISED; -fx-background-color: #"+getColor()+"; -fx-text-fill: BLACK;";
-		String btnStylewhite = "-fx-button-type: RAISED; -fx-background-color: #"+getColor()+"; -fx-text-fill: WHITE;";
+		String btnStyleBlack = "-fx-button-type: RAISED; -fx-background-color: #"+getColor()+"; -fx-text-fill: BLACK;";
+		String btnStyleWhite = "-fx-button-type: RAISED; -fx-background-color: #"+getColor()+"; -fx-text-fill: WHITE;";
 		BigInteger icolor = new BigInteger(getColor(),16);
 		BigInteger ccolor = new BigInteger("78909cff",16);
 		
@@ -783,13 +808,16 @@ public class MainWindowController {
 			switchBtn.setStyle("-fx-text-fill: WHITE;");
 			infoBtn.setStyle("-fx-text-fill: WHITE;");
 			debugBtn.setStyle("-fx-text-fill: WHITE;");
-			directoryBtn.setStyle(btnStylewhite);
-			streamingDirectoryBtn.setStyle(btnStyle);
-			updateBtn.setStyle(btnStylewhite);
-			playbtn.setStyle(btnStylewhite);
-			openfolderbtn.setStyle(btnStylewhite);
-			returnBtn.setStyle(btnStylewhite);
-			forwardBtn.setStyle(btnStylewhite);
+			directoryBtn.setStyle(btnStyleWhite);
+			streamingDirectoryBtn.setStyle(btnStyleWhite);
+			updateBtn.setStyle(btnStyleWhite);
+			playbtn.setStyle(btnStyleWhite);
+			openfolderbtn.setStyle(btnStyleWhite);
+			returnBtn.setStyle(btnStyleWhite);
+			forwardBtn.setStyle(btnStyleWhite);
+			playbtn.setGraphic(play_arrow_white);
+			returnBtn.setGraphic(skip_previous_white);
+			forwardBtn.setGraphic(skip_next_white);
 			menubtn.setGraphic(menu_icon_white);
 		}else{
 			settingsBtn.setStyle("-fx-text-fill: BLACK;");
@@ -797,13 +825,16 @@ public class MainWindowController {
 			switchBtn.setStyle("-fx-text-fill: BLACK;");
 			infoBtn.setStyle("-fx-text-fill: BLACK;");
 			debugBtn.setStyle("-fx-text-fill: BLACK;");
-			directoryBtn.setStyle(btnStyle);
-			streamingDirectoryBtn.setStyle(btnStyle);
-			updateBtn.setStyle(btnStyle);
-			playbtn.setStyle(btnStyle);
-			openfolderbtn.setStyle(btnStyle);
-			returnBtn.setStyle(btnStyle);
-			forwardBtn.setStyle(btnStyle);
+			directoryBtn.setStyle(btnStyleBlack);
+			streamingDirectoryBtn.setStyle(btnStyleBlack);
+			updateBtn.setStyle(btnStyleBlack);
+			playbtn.setStyle(btnStyleBlack);
+			openfolderbtn.setStyle(btnStyleBlack);
+			returnBtn.setStyle(btnStyleBlack);
+			forwardBtn.setStyle(btnStyleBlack);
+			playbtn.setGraphic(play_arrow_black);
+			returnBtn.setGraphic(skip_previous_black);
+			forwardBtn.setGraphic(skip_next_black);
 			menubtn.setGraphic(menu_icon_black);
 		}
 		
@@ -817,15 +848,15 @@ public class MainWindowController {
 	
 	private void sideMenuSlideIn(){
 		sideMenuVBox.setVisible(true);
-		//einblenden von 40% nach 100% deckkraft in 400ms
+		//fade in from 40% to 100% opacity in 400ms
 		FadeTransition fadeTransition = new FadeTransition(Duration.millis(400), sideMenuVBox);
 		fadeTransition.setFromValue(0.4);
 		fadeTransition.setToValue(1.0);
-		//einfahren des side munes in 400ms
+		//slide in in 400ms
 		TranslateTransition translateTransition = new TranslateTransition(Duration.millis(400), sideMenuVBox);
 		translateTransition.setFromX(-150);
 		translateTransition.setToX(0);
-		//falls beides verwendet werden soll	    
+		//in case both animations are used (add (fadeTransition, translateTransition) in the second line under this command)    
 		ParallelTransition parallelTransition = new ParallelTransition();
 		parallelTransition.getChildren().addAll(translateTransition);//(fadeTransition, translateTransition);
 		parallelTransition.play();
@@ -833,15 +864,15 @@ public class MainWindowController {
 	
 	private void sideMenuSlideOut(){
 //		sideMenuVBox.setVisible(false);
-		//ausblenden von 100% nach 40% deckkraft in 400ms
+		//fade out from 100% to 40% opacity in 400ms
 		FadeTransition fadeTransition = new FadeTransition(Duration.millis(400), sideMenuVBox);
 		fadeTransition.setFromValue(1.0);
 		fadeTransition.setToValue(0.4);
-		//ausfahren des side munes in 400ms
+		//slide out in 400ms
 		TranslateTransition translateTransition = new TranslateTransition(Duration.millis(400), sideMenuVBox);
 		translateTransition.setFromX(0);
 		translateTransition.setToX(-150);
-		//falls beides verwendet werden soll	    
+		//in case both animations are used (add (fadeTransition, translateTransition) in the second line under this command)	    
 		ParallelTransition parallelTransition = new ParallelTransition();
 		parallelTransition.getChildren().addAll(translateTransition);//(fadeTransition, translateTransition);
 		parallelTransition.play();
@@ -859,9 +890,9 @@ public class MainWindowController {
 		infoBtn.setText(bundle.getString("info"));
 		settingsBtn.setText(bundle.getString("settings"));
 		streamingSettingsBtn.setText(bundle.getString("streamingSettings"));
-		playbtn.setText(bundle.getString("play"));
 		tfPath.setPromptText(bundle.getString("tfPath"));
 		tfStreamingPath.setPromptText(bundle.getString("tfPath"));
+		tfsearch.setPromptText(bundle.getString("tfSearch"));
 		openfolderbtn.setText(bundle.getString("openFolder"));
 		updateBtn.setText(bundle.getString("checkUpdates"));
 		directoryBtn.setText(bundle.getString("chooseFolder"));
@@ -880,9 +911,29 @@ public class MainWindowController {
 		errorPlay = bundle.getString("errorPlay");
 		errorOpenStream = bundle.getString("errorOpenStream");
 		errorMode = bundle.getString("errorMode");
+		errorLoad = bundle.getString("errorLoad");
+		errorSave = bundle.getString("errorSave");
+		noFilmFound = bundle.getString("noFilmFound");
 		infoText = bundle.getString("version")+" "+version+" (Build: "+buildNumber+") "+versionName+bundle.getString("infoText");
 		linuxBugText = bundle.getString("linuxBug");
 		vlcNotInstalled = bundle.getString("vlcNotInstalled");
+		
+		title = bundle.getString("title");
+		year = bundle.getString("year");
+		rating = bundle.getString("rating");
+		publishedOn = bundle.getString("publishedOn");
+		duration = bundle.getString("duration");
+		genre = bundle.getString("genre");
+		director = bundle.getString("director");
+		writer = bundle.getString("writer");
+		actors = bundle.getString("actors");
+		plot = bundle.getString("plot");
+		language = bundle.getString("language");
+		country = bundle.getString("country");
+		awards = bundle.getString("awards");
+		metascore = bundle.getString("metascore");
+		imdbRating = bundle.getString("imdbRating");
+		type = bundle.getString("type");
 	}
 	
 	private void showErrorMsg(String msg, IOException exception){
@@ -918,31 +969,31 @@ public class MainWindowController {
 		
 	}
 	
-	//speichert die Einstellungen
+	//saves the Settings
 	public void saveSettings(){
 		try {
-			props.setProperty("path", getPath());	//setzt pfad in propselement
+			props.setProperty("path", getPath());	//writes path into property
 			props.setProperty("color", getColor());
 			props.setProperty("autoUpdate", getAutoUpdate());
 			props.setProperty("size", getSize().toString());
 			props.setProperty("local", Integer.toString(getLocal()));
 			props.setProperty("streamingPath", getStreamingPath());
 			props.setProperty("mode", getMode());
-			OutputStream outputStream = new FileOutputStream(file);	//neuer outputstream
-			props.storeToXML(outputStream, "Project HomeFlix settings");
+			OutputStream outputStream = new FileOutputStream(file);	//new outputstream
+			props.storeToXML(outputStream, "Project HomeFlix settings");	//writes new .xml
 			outputStream.close();
 		} catch (IOException e) {
-			System.out.println("An error has occurred!");
+			showErrorMsg(errorSave, e);
 			e.printStackTrace();
 		}
 	}
 	
-	//lädt die Einstellungen
+	//loads the Settings
 	public void loadSettings(){
 		try {
 			InputStream inputStream = new FileInputStream(file);
-			props.loadFromXML(inputStream);
-			path = props.getProperty("path");	//setzt Propselement in Pfad
+			props.loadFromXML(inputStream);	//new inputstream from .xml
+			path = props.getProperty("path");	//reads path from property
 			streamingPath = props.getProperty("streamingPath");
 			color = props.getProperty("color");
 			size = Double.parseDouble(props.getProperty("size"));
@@ -951,12 +1002,12 @@ public class MainWindowController {
 			mode = props.getProperty("mode");
 			inputStream.close();
 		} catch (IOException e) {
-			System.out.println("An error has occurred!");
+			showErrorMsg(errorLoad, e);
 			e.printStackTrace();
 		}
 	}
 	
-	//entfernt 0x von dem Rückgabewert des Colorpickers
+	//cuts 0x of the Colorpickers return value
 	private void editColor(String input){
 		StringBuilder sb = new StringBuilder(input);
 		sb.delete(0, 2);
@@ -964,7 +1015,7 @@ public class MainWindowController {
 		saveSettings();
 	}
 	
-	//getter Und setter
+	//getter and setter
 	public void setColor(String input){
 		this.color = input;
 	}
@@ -1021,7 +1072,7 @@ public class MainWindowController {
 		return mode;
 	}
 	
-	//methode der API-Abfrage
+	//API-Query
 	@SuppressWarnings("deprecation")
 	private void apiAbfrage(String input){
 		URL url = null;
@@ -1035,19 +1086,19 @@ public class MainWindowController {
 
 		try {
 
-			// hohlen des Filmtitels
+			//get film title
 			sc = new Scanner(System.in);
 			moviename = input;
 
-			// für keinen oder "" Filmtitel
+			// in case of no or "" Film title
 			if (moviename == null || moviename.equals("")) {
 				System.out.println("No movie found");
 			}
 
-			//entfernen ungewolter leerzeichen
+			//remove unwanted blank
 			moviename = moviename.trim();
 
-			// ersetzen der Leerzeichen durch + für api-abfrage
+			//replace blank with + for api-query
 			moviename = moviename.replace(" ", "+");
 
 			//URL wird zusammengestellt abfragetypen: http,json,xml (muss json sein um späteres trennen zu ermöglichen)
@@ -1062,51 +1113,52 @@ public class MainWindowController {
 				//retdata in json object parsen und anschließend das json Objekt "zerschneiden"
 				System.out.println(retdata);
 				JsonObject object = Json.parse(retdata).asObject();
-				String titel = object.getString("Title", "");
-				String year = object.getString("Year", "");
-				String rated = object.getString("Rated", "");
-				String released = object.getString("Released", "");
-				String runtime = object.getString("Runtime", "");
-				String genre = object.getString("Genre", "");
-				String director = object.getString("Director", "");
-				String writer = object.getString("Writer", "");
-				String actors  = object.getString("Actors", "");
-				String plot = object.getString("Plot", "");
-				String language = object.getString("Language", "");
-				String country = object.getString("Country", "");
-				String awards = object.getString("Awards", "");
+				String titelV = object.getString("Title", "");
+				String yearV = object.getString("Year", "");
+				String ratedV = object.getString("Rated", "");
+				String releasedV = object.getString("Released", "");
+				String runtimeV = object.getString("Runtime", "");
+				String genreV = object.getString("Genre", "");
+				String directorV = object.getString("Director", "");
+				String writerV = object.getString("Writer", "");
+				String actorsV  = object.getString("Actors", "");
+				String plotV = object.getString("Plot", "");
+				String languageV = object.getString("Language", "");
+				String countryV = object.getString("Country", "");
+				String awardsV = object.getString("Awards", "");
 				String posterURL = object.getString("Poster", "");
-				String metascore = object.getString("Metascore", "");
-				String imdbRating = object.getString("imdbRating", "");
+				String metascoreV = object.getString("Metascore", "");
+				String imdbRatingV = object.getString("imdbRating", "");
 				@SuppressWarnings("unused")
-				String imdbVotes = object.getString("imdbVotes", "");
+				String imdbVotesV = object.getString("imdbVotes", "");
 				@SuppressWarnings("unused")
-				String imdbID = object.getString("imdbID", "");
-				String type = object.getString("Type", "");
+				String imdbIDV = object.getString("imdbID", "");
+				String typeV = object.getString("Type", "");
 				String response = object.getString("Response", "");
 				
+				
 				if(response.equals("False")){
-					ta1.appendText("Kein Film mit diesem Titel gefunden!!");
-					Image im2 = new Image("http://publicdomainvectors.org/photos/jean_victor_balin_cross.png");
+					ta1.appendText(noFilmFound);
+					Image im2 = new Image("recources/icons/close_black_2048x2048.png");
 					image1.setImage(im2);
 				}else{
-				//ausgabe des Textes in ta1 in jeweils neuer Zeile
-				ta1.appendText("Titel: "+titel+"\n");
-				ta1.appendText("Jahr: "+ year+"\n");
-				ta1.appendText("Einstufung: "+rated+"\n");
-				ta1.appendText("Veröffentlicht am: "+released+"\n");
-				ta1.appendText("Laufzeit: "+runtime+"\n");
-				ta1.appendText("Genre: "+genre+"\n");
-				ta1.appendText("Regisseur: "+director+"\n");
-				ta1.appendText("Autor: "+writer+"\n");
-				ta1.appendText("Schauspieler: "+actors+"\n");
-				ta1.appendText("Beschreibung: "+plot+"\n");
-				ta1.appendText("Original Sprache: "+language+"\n");
-				ta1.appendText("Produktionsland: "+country+"\n");
-				ta1.appendText("Auszeichnungen: "+awards+"\n");
-				ta1.appendText("Metascore: "+metascore+"\n");
-				ta1.appendText("imdb Bewertung: "+imdbRating+"\n");
-				ta1.appendText("Type: "+type+"\n");
+				//ausgabe des Textes in ta1 in jeweils neuer Zeile //TODOformatting
+				ta1.appendText(title+": "+titelV+"\n");
+				ta1.appendText(year+": "+ yearV+"\n");
+				ta1.appendText(rating+": "+ratedV+"\n");
+				ta1.appendText(publishedOn+": "+releasedV+"\n");
+				ta1.appendText(duration+": "+runtimeV+"\n");
+				ta1.appendText(genre+": "+genreV+"\n");
+				ta1.appendText(director+": "+directorV+"\n");
+				ta1.appendText(writer+": "+writerV+"\n");
+				ta1.appendText(actors+": "+actorsV+"\n");
+				ta1.appendText(plot+": "+plotV+"\n");
+				ta1.appendText(language+": "+languageV+"\n");
+				ta1.appendText(country+": "+countryV+"\n");
+				ta1.appendText(awards+": "+awardsV+"\n");
+				ta1.appendText(metascore+": "+metascoreV+"\n");
+				ta1.appendText(imdbRating+": "+imdbRatingV+"\n");
+				ta1.appendText(type+": "+typeV+"\n");
 				
 				Image im1 = new Image(posterURL);
 				image1.setImage(im1);
@@ -1116,8 +1168,8 @@ public class MainWindowController {
 		} catch (Exception e) {
 			System.out.println(e);
 		} finally {
+			//closes datainputStream, InputStream,Scanner if not already done
 			try {
-				//schließt datainputStream, InputStream,Scanner
 				if (dis != null) {
 					dis.close();
 				}

@@ -21,7 +21,7 @@
 	<children>
 		<TreeTableView fx:id="treeTableViewfilm" layoutX="14.0" layoutY="88.0" prefHeight="400.0" prefWidth="360.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="12.0" AnchorPane.topAnchor="88.0" />
 		<JFXTextArea fx:id="ta1" layoutX="385.0" layoutY="42.0" maxWidth="503.0" minWidth="275.0" prefHeight="546.0" prefWidth="293.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="385.0" AnchorPane.rightAnchor="222.0" AnchorPane.topAnchor="44.0" />
-		<JFXButton fx:id="playbtn" layoutX="690.0" layoutY="363.0" onAction="#playbtnclicked" prefHeight="25.0" prefWidth="198.0" text="play" AnchorPane.bottomAnchor="212.0" AnchorPane.rightAnchor="12.0">
+		<JFXButton fx:id="playbtn" contentDisplay="CENTER" layoutX="690.0" layoutY="363.0" onAction="#playbtnclicked" prefHeight="25.0" prefWidth="198.0" AnchorPane.bottomAnchor="212.0" AnchorPane.rightAnchor="12.0">
          <font>
             <Font name="System Bold" size="14.0" />
          </font></JFXButton>
@@ -37,8 +37,8 @@
          <image>
             <Image url="@../recources/Homeflix_Poster.png" />
          </image></ImageView>
-      <JFXButton fx:id="returnBtn" layoutX="690.0" layoutY="443.0" onAction="#returnBtnclicked" prefHeight="25.0" prefWidth="90.0" text="&lt;&lt;" AnchorPane.bottomAnchor="132.0" AnchorPane.rightAnchor="120.0" />
-      <JFXButton fx:id="forwardBtn" layoutX="798.0" layoutY="443.0" onAction="#forwardBtnclicked" prefHeight="25.0" prefWidth="90.0" text="&gt;&gt;" AnchorPane.bottomAnchor="132.0" AnchorPane.rightAnchor="12.0" />
+      <JFXButton fx:id="returnBtn" contentDisplay="CENTER" layoutX="690.0" layoutY="443.0" onAction="#returnBtnclicked" prefHeight="25.0" prefWidth="90.0" AnchorPane.bottomAnchor="132.0" AnchorPane.rightAnchor="120.0" />
+      <JFXButton fx:id="forwardBtn" contentDisplay="CENTER" layoutX="798.0" layoutY="443.0" onAction="#forwardBtnclicked" prefHeight="25.0" prefWidth="90.0" AnchorPane.bottomAnchor="132.0" AnchorPane.rightAnchor="12.0" />
       <HBox fx:id="topHBox" layoutY="12.0" prefHeight="32.0" prefWidth="900.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
 				<JFXButton fx:id="menubtn" onAction="#menubtnclicked" prefHeight="32.0" prefWidth="32.0" />
