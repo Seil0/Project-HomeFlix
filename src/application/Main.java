@@ -126,7 +126,7 @@ public class Main extends Application {
 	private String firstStart(){
 		Alert alert = new Alert(AlertType.CONFIRMATION);	//neuer alert mit filechooser
 		alert.setTitle("Project HomeFlix");
-		alert.setHeaderText("Es ist kein Stammverzeichniss für Filme angegeben!");
+		alert.setHeaderText("Es ist kein Stammverzeichniss für Filme angegeben!");	//TODO translate
 		alert.setContentText("Stammverzeichniss angeben?");
 
 		Optional<ButtonType> result = alert.showAndWait();

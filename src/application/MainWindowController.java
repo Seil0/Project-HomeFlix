@@ -23,7 +23,6 @@ package application;
 
 import java.awt.Desktop;
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -37,13 +36,9 @@ import java.io.StringWriter;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
-import java.util.Scanner;
 
 import org.apache.commons.lang3.SystemUtils;
 
@@ -107,8 +102,7 @@ public class MainWindowController {
 	private TreeTableView<streamUiData> treeTableViewfilm;
 	@FXML
 	private TableView<streamUiData> tableViewStreamingdata;
-	@FXML
-	private JFXTextArea ta1;
+	@FXML JFXTextArea ta1;
 	@FXML
 	private JFXButton menubtn;
 	@FXML
@@ -130,7 +124,7 @@ public class MainWindowController {
     @FXML
     private JFXButton debugBtn;
     @FXML
-    private JFXButton updateBtn;
+    public JFXButton updateBtn;
     @FXML
     private JFXButton directoryBtn;
     @FXML
@@ -157,8 +151,7 @@ public class MainWindowController {
     private Label sizelbl;
     @FXML
     private Label aulbl;
-    @FXML
-    private ImageView image1;
+    @FXML ImageView image1;
     
     
     @FXML
@@ -190,23 +183,22 @@ public class MainWindowController {
 	private boolean settingstrue = false;
 	private boolean streamingSettingsTrue = false;
 	private String version = "0.4.0";
-	private String buildNumber = "103";
+	private String buildNumber = "104";
 	private String versionName = "glowing bucket";
 	private String buildURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/buildNumber.txt";
 	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt";
 	private File dir = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	
 	private File file = new File(dir + "/config.xml");	
 	
-	private String updateDataURL;
-	private String errorUpdateD;
-	private String errorUpdateV;
+	String errorUpdateD;
+	String errorUpdateV;
 	private String errorPlay;
 	private String errorOpenStream;
 	private String errorMode;
 	@SuppressWarnings("unused")
 	private String errorLoad;
 	private String errorSave;
-	private String noFilmFound;
+	String noFilmFound;
 	private String infoText;
 	private String linuxBugText;
 	private String vlcNotInstalled;
@@ -218,22 +210,22 @@ public class MainWindowController {
 	private String datPath;
 	private String autoUpdate;
 	private String mode;	
-	private String title;
-	private String year;
-	private String rating;
-	private String publishedOn;
-	private String duration;
-	private String genre;
-	private String director;
-	private String writer;
-	private String actors;
-	private String plot;
-	private String language;
-	private String country;
-	private String awards;
-	private String metascore;
-	private String imdbRating;
-	private String type;	
+	String title;
+	String year;
+	String rating;
+	String publishedOn;
+	String duration;
+	String genre;
+	String director;
+	String writer;
+	String actors;
+	String plot;
+	String language;
+	String country;
+	String awards;
+	String metascore;
+	String imdbRating;
+	String type;	
 	private double size;
 	private int last;
 	private int selected;
@@ -241,7 +233,7 @@ public class MainWindowController {
 	private int local;
 	private File selectedFolder;
 	private File selectedStreamingFolder;
-	private ResourceBundle bundle;
+	ResourceBundle bundle;
 
 	private ObservableList<streamUiData> newDaten = FXCollections.observableArrayList();
 	private ObservableList<streamUiData> filterData = FXCollections.observableArrayList();
@@ -258,6 +250,9 @@ public class MainWindowController {
 	private ImageView play_arrow_black = new ImageView(new Image("recources/icons/ic_play_arrow_black_18dp_1x.png"));
 	private DirectoryChooser directoryChooser = new DirectoryChooser();
 	Properties props = new Properties();
+	
+	private updater Updater;
+	private apiQuery ApiQuery;
 	
 	//wenn menubtn clicked
 	/**
@@ -466,7 +461,7 @@ public class MainWindowController {
 	
 	@FXML
 	private void updateBtnAction(){
-		update();
+		Updater.update(buildURL, downloadLink, aktBuildNumber, buildNumber);
 	}
 	
 	@FXML
@@ -511,6 +506,9 @@ public class MainWindowController {
 		initTabel();
 		initActions();
 		
+		Updater = new updater(this);
+		ApiQuery = new apiQuery(this);
+		
 		System.out.println("Mode: "+mode);
 		
 		debugBtn.setDisable(true); 	//debugging btn for tests
@@ -526,7 +524,7 @@ public class MainWindowController {
         
         if(autoUpdate.equals("1")){
     		autoupdateBtn.setSelected(true);
-    		update();
+    		Updater.update(buildURL, downloadLink, aktBuildNumber, buildNumber);
     	}else{
     		autoupdateBtn.setSelected(false);
     	}
@@ -587,9 +585,8 @@ public class MainWindowController {
 				Name = columnTitel.getCellData(selected); // holt Namen des Aktuelle Items aus der ColumnName
 				datPath = columnStreamUrl.getCellData(selected); // holt den aktuellen Datei Pfad aus der ColumnDatName
 				ta1.setText(""); // löscht Text in ta1
-				apiAbfrage(Name); // startet die api abfrage
-				ta1.positionCaret(0); // setzt die startposition des Cursors in
-										// ta1
+				ApiQuery.startQuery(Name); // startet die api abfrage
+				ta1.positionCaret(0); // setzt die startposition des Cursors in ta1
 			}
 		});
 	    
@@ -644,52 +641,8 @@ public class MainWindowController {
         });
 	}
 	
-	//prüft auf Update und fürht es gegebenenfalls aus
-	private void update(){
-		
-		System.out.println("check for updates ...");
-		try {
-			URL url = new URL(buildURL); //URL der Datei mit aktueller Versionsnummer
-	        BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-	        aktBuildNumber = in.readLine();	//schreibt inputstream in String
-	        in.close();
-		} catch (IOException e1) {
-			showErrorMsg(errorUpdateV, e1);
-		}
-		System.out.println("Build: "+buildNumber+", Update: "+aktBuildNumber);
-		
-		
-		//vergleicht die Versionsnummern, bei aktversion > version wird ein Update durchgrfï¿½hrt
-		int iversion = Integer.parseInt(buildNumber.replace(".", ""));
-		int iaktVersion = Integer.parseInt(aktBuildNumber.replace(".", ""));
-		
-		if(iversion >= iaktVersion){
-			updateBtn.setText(bundle.getString("updateBtnNotavail"));
-			System.out.println("no update available");
-		}else{
-			updateBtn.setText(bundle.getString("updateBtnavail"));
-			System.out.println("update available");
-		try {
-			URL website;
-			URL downloadURL = new URL(downloadLink);
-			BufferedReader in = new BufferedReader(new InputStreamReader(downloadURL.openStream()));
-			updateDataURL = in.readLine();
-			website = new URL(updateDataURL);	//Update URL
-			ReadableByteChannel rbc = Channels.newChannel(website.openStream());	//open new Stream/Channel
-			FileOutputStream fos = new FileOutputStream("ProjectHomeFlix.jar");	//nea fileoutputstram for ProjectHomeFLix.jar
-			fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);	//gets file from 0 to max size
-			fos.close();	//close fos (extrem wichtig!)
-			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
-			System.exit(0);	//finishes itself
-		} catch (IOException e) {
-			//in case there is an error
-			showErrorMsg(errorUpdateD, e);
-		}
-		}
-	}
-	
 	//lädt die Daten im angegeben Ordner in newDaten
-	public void loadData(){
+	void loadData(){
 			//load local Data
 			if(getPath().equals("")||getPath().equals(null)){
 				System.out.println("Kein Pfad angegeben");	//falls der Pfad null oder "" ist
@@ -737,7 +690,7 @@ public class MainWindowController {
 			}	
 	}
 	
-	public void addDataUI(){
+	void addDataUI(){
 		if(mode.equals("local")){
 			for(int i = 0; i < newDaten.size(); i++){
 				root.getChildren().add(new TreeItem<streamUiData>(newDaten.get(i)));	//fügt daten zur Rootnode hinzu
@@ -765,7 +718,7 @@ public class MainWindowController {
 		}
 	}
 	
-	public void loadStreamingSettings(){
+	void loadStreamingSettings(){
 		if(getStreamingPath().equals("")||getStreamingPath().equals(null)){
 			System.out.println("Kein Pfad angegeben");	//falls der Pfad null oder "" ist
 		}else{
@@ -791,7 +744,7 @@ public class MainWindowController {
 	}
 	
 	//setzt die Farben für die UI-Elemente
-	public void applyColor(){
+	void applyColor(){
 		String style = "-fx-background-color: #"+getColor()+";";
 		String btnStyleBlack = "-fx-button-type: RAISED; -fx-background-color: #"+getColor()+"; -fx-text-fill: BLACK;";
 		String btnStyleWhite = "-fx-button-type: RAISED; -fx-background-color: #"+getColor()+"; -fx-text-fill: WHITE;";
@@ -937,7 +890,7 @@ public class MainWindowController {
 		type = bundle.getString("type");
 	}
 	
-	private void showErrorMsg(String msg, IOException exception){
+	public void showErrorMsg(String msg, IOException exception){
 		Alert alert = new Alert(AlertType.ERROR);
     	alert.setTitle("Error");
     	alert.setHeaderText("");
@@ -1071,120 +1024,5 @@ public class MainWindowController {
 	
 	public String getMode(){
 		return mode;
-	}
-	
-	//API-Query
-	@SuppressWarnings("deprecation")
-	private void apiAbfrage(String input){
-		URL url = null;
-		Scanner sc = null;
-		String apiurl = "https://www.omdbapi.com/?";	//API URL
-		String moviename = null;
-		String dataurl = null;
-		String retdata = null;
-		InputStream is = null;
-		DataInputStream dis = null;
-
-		try {
-
-			//get film title
-			sc = new Scanner(System.in);
-			moviename = input;
-
-			// in case of no or "" Film title
-			if (moviename == null || moviename.equals("")) {
-				System.out.println("No movie found");
-			}
-
-			//remove unwanted blank
-			moviename = moviename.trim();
-
-			//replace blank with + for api-query
-			moviename = moviename.replace(" ", "+");
-
-			//URL wird zusammengestellt abfragetypen: http,json,xml (muss json sein um späteres trennen zu ermöglichen)
-			dataurl = apiurl + "t=" + moviename + "&plot=full&r=json";
-
-			url = new URL(dataurl);
-			is = url.openStream();
-			dis = new DataInputStream(is);
-
-			// lesen der Daten aus dem Antwort Stream
-			while ((retdata = dis.readLine()) != null) {
-				//retdata in json object parsen und anschließend das json Objekt "zerschneiden"
-				System.out.println(retdata);
-				JsonObject object = Json.parse(retdata).asObject();
-				String titelV = object.getString("Title", "");
-				String yearV = object.getString("Year", "");
-				String ratedV = object.getString("Rated", "");
-				String releasedV = object.getString("Released", "");
-				String runtimeV = object.getString("Runtime", "");
-				String genreV = object.getString("Genre", "");
-				String directorV = object.getString("Director", "");
-				String writerV = object.getString("Writer", "");
-				String actorsV  = object.getString("Actors", "");
-				String plotV = object.getString("Plot", "");
-				String languageV = object.getString("Language", "");
-				String countryV = object.getString("Country", "");
-				String awardsV = object.getString("Awards", "");
-				String posterURL = object.getString("Poster", "");
-				String metascoreV = object.getString("Metascore", "");
-				String imdbRatingV = object.getString("imdbRating", "");
-				@SuppressWarnings("unused")
-				String imdbVotesV = object.getString("imdbVotes", "");
-				@SuppressWarnings("unused")
-				String imdbIDV = object.getString("imdbID", "");
-				String typeV = object.getString("Type", "");
-				String response = object.getString("Response", "");
-				
-				
-				if(response.equals("False")){
-					ta1.appendText(noFilmFound);
-					Image im2 = new Image("recources/icons/close_black_2048x2048.png");
-					image1.setImage(im2);
-				}else{
-				//ausgabe des Textes in ta1 in jeweils neuer Zeile //TODOformatting
-				ta1.appendText(title+": "+titelV+"\n");
-				ta1.appendText(year+": "+ yearV+"\n");
-				ta1.appendText(rating+": "+ratedV+"\n");
-				ta1.appendText(publishedOn+": "+releasedV+"\n");
-				ta1.appendText(duration+": "+runtimeV+"\n");
-				ta1.appendText(genre+": "+genreV+"\n");
-				ta1.appendText(director+": "+directorV+"\n");
-				ta1.appendText(writer+": "+writerV+"\n");
-				ta1.appendText(actors+": "+actorsV+"\n");
-				ta1.appendText(plot+": "+plotV+"\n");
-				ta1.appendText(language+": "+languageV+"\n");
-				ta1.appendText(country+": "+countryV+"\n");
-				ta1.appendText(awards+": "+awardsV+"\n");
-				ta1.appendText(metascore+": "+metascoreV+"\n");
-				ta1.appendText(imdbRating+": "+imdbRatingV+"\n");
-				ta1.appendText(type+": "+typeV+"\n");
-				
-				Image im1 = new Image(posterURL);
-				image1.setImage(im1);
-				}
-			}
-
-		} catch (Exception e) {
-			System.out.println(e);
-		} finally {
-			//closes datainputStream, InputStream,Scanner if not already done
-			try {
-				if (dis != null) {
-					dis.close();
-				}
-
-				if (is != null) {
-					is.close();
-				}
-
-				if (sc != null) {
-					sc.close();
-				}
-			} catch (Exception e2) {
-				;
-			}
-		}
 	}
 }
