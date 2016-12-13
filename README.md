@@ -5,7 +5,8 @@ Project HomeFlix is a Kellerkinder Project, that alowes you to sort all your loc
 Librarys used in this Project:  
 JFoenix: https://github.com/jfoenixadmin/JFoenix   
 minimal-json: https://github.com/ralfstx/minimal-json   
-Commons Lang: https://commons.apache.org/proper/commons-lang/
+Commons Lang: https://commons.apache.org/proper/commons-lang/      
+sqlite-jdbc: https://github.com/xerial/sqlite-jdbc
 
 ## Installation
 
