@@ -239,7 +239,7 @@ public class MainWindowController {
 	private ObservableList<streamUiData> filterData = FXCollections.observableArrayList();
 	private ObservableList<streamUiData> streamData = FXCollections.observableArrayList();
 	private ObservableList<String> locals = FXCollections.observableArrayList("english", "deutsch");
-	private ObservableList<streamUiData> streamingData = FXCollections.observableArrayList();
+	ObservableList<streamUiData> streamingData = FXCollections.observableArrayList();
 	private ImageView menu_icon_black = new ImageView(new Image("recources/icons/menu_icon_black.png"));
 	private ImageView menu_icon_white = new ImageView(new Image("recources/icons/menu_icon_white.png"));
 	private ImageView skip_previous_white = new ImageView(new Image("recources/icons/ic_skip_previous_white_18dp_1x.png"));
@@ -253,6 +253,7 @@ public class MainWindowController {
 	
 	private updater Updater;
 	private apiQuery ApiQuery;
+	private DBController dbController;
 	
 	//wenn menubtn clicked
 	/**
@@ -424,6 +425,7 @@ public class MainWindowController {
 	
 	@FXML
 	private void debugBtnclicked(){
+		dbController.main();
 		//for testing
 	}
 
@@ -508,11 +510,14 @@ public class MainWindowController {
 		
 		Updater = new updater(this);
 		ApiQuery = new apiQuery(this);
+		dbController = new DBController(this);
 		
 		System.out.println("Mode: "+mode);
 		
-		debugBtn.setDisable(true); 	//debugging btn for tests
-		debugBtn.setVisible(false);
+//		dbController.ausgeben();
+		
+		debugBtn.setDisable(false); 	//debugging btn for tests
+		debugBtn.setVisible(true);
         
         tfPath.setText(getPath());
 

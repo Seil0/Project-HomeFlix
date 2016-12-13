@@ -6,5 +6,6 @@
 	<classpathentry kind="lib" path="C:/Users/Jannik/workspace/Project HomeFlix/src/libraries/jfoenix.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Jannik/workspace/Project HomeFlix/src/libraries/minimal-json-0.9.4.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Jannik/workspace/Project HomeFlix/src/libraries/commons-lang3-3.5.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Jannik/workspace/Project HomeFlix/src/libraries/sqlite-jdbc-3.15.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
