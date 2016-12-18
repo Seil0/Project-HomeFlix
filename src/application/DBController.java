@@ -1,12 +1,12 @@
 /**
  * DBController for Project HomeFlix
  * 
- * TODO fav and defav
+ * connection is in manual commit!
  */
 
 package application;
 
-import java.sql.Connection;  //für Datenbank
+import java.sql.Connection; //für Datenbank
 import java.sql.DriverManager; //für Datenbank
 import java.sql.PreparedStatement; //für Datenbank
 import java.sql.ResultSet; //für Datenbank
@@ -22,59 +22,46 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class DBController { 
-	
-	public DBController(MainWindowController m){
-		mainWindowController=m;
+public class DBController {
+
+	public DBController(MainWindowController m) {
+		mainWindowController = m;
 	}
-	
+
 	private MainWindowController mainWindowController;
 	private String DB_PATH = System.getProperty("user.home") + "\\Documents\\HomeFlix" + "\\" + "Homeflix.db"; // der Pfad der Datenbank-Datei
-    Connection connection = null;
-	
-	public void main() 
-    {
-		
-		System.out.println("Hallo");
-		
-      try
-      {
-        // create a database connection
-        connection = DriverManager.getConnection("jdbc:sqlite:"+DB_PATH);
-//        Statement statement = connection.createStatement();
-//        statement.setQueryTimeout(30);  // set timeout to 30 sec. TODO don't know wath to do with this
+	Connection connection = null;
 
+	public void main() {
+		try {
+			// create a database connection
+			connection = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+			// Statement statement = connection.createStatement();
+			// statement.setQueryTimeout(30); // set timeout to 30 sec. TODO don't know wath to do with this
 
-        
-        fuelleDatenbank();
-//        ausgeben();
-       getFavStatus("House of Cards");
-       favorisieren("House of Cards");
-       getFavStatus("House of Cards");
-       defavorisieren("House of Cards");
-       getFavStatus("House of Cards");
-        
-      }
-      catch(SQLException e)
-      {
-        // if the error message is "out of memory", 
-        // it probably means no database file is found
-        System.err.println(e.getMessage());
-      }
-      finally
-      {
-        try
-        {
-          if(connection != null)
-            connection.close();
-        }
-        catch(SQLException e)
-        {
-          // connection close failed.
-          System.err.println(e);
-        }
-      }
-    }
+			connection.setAutoCommit(false);	//Autocommit to false -> manual commit is active!
+			fuelleDatenbank();
+//			ausgeben();
+//			getFavStatus("House of Cards");
+//			favorisieren("House of Cards");
+//			getFavStatus("House of Cards");
+//			defavorisieren("House of Cards");
+//			getFavStatus("House of Cards");
+
+		} catch (SQLException e) {
+			// if the error message is "out of memory", it probably means no database file is found
+			System.err.println(e.getMessage());
+		}
+//		finally {
+//			try {
+//				if (connection != null)
+//					connection.close();
+//			} catch (SQLException e) {
+//				// connection close failed.
+//				System.err.println(e);
+//			}
+//		}
+	}
 	
 	public void fuelleDatenbank() { 
 
@@ -92,7 +79,6 @@ public class DBController {
 			PreparedStatement psS = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?, ?)"); // SQL Befehl
 
 			String[] entries = new File(mainWindowController.getPath()).list();
-			System.out.println("Size: "+entries.length);
 
 			for(int i=0;i!=entries.length;i++) // Geht alle Dateien im Verzeichniss durch
 			{
@@ -104,9 +90,7 @@ public class DBController {
 			}
 			
 			
-			System.out.println("Erstelle Einträge streaming");
-
-			System.out.println(mainWindowController.getStreamingPath());
+			System.out.println("Erstelle Einträge streaming \n");
 			if(mainWindowController.getStreamingPath().equals("")||mainWindowController.getStreamingPath().equals(null)){
 				System.out.println("Kein Pfad angegeben");	//falls der Pfad null oder "" ist
 			}else{
@@ -131,16 +115,16 @@ public class DBController {
 				}
 			}
 			}
-			connection.setAutoCommit(false); 
+//			connection.setAutoCommit(false); 
 			ps.executeBatch();  // scheibt alle Einträge in die Datenbank
-			psS.executeBatch();
-			connection.setAutoCommit(true);
+			psS.executeBatch();			
+			connection.commit();
 			ps.close();
 			psS.close();
 			//connection.close(); 
-		} catch (SQLException e) { 
+		} catch (SQLException ea) { 
 			System.err.println("Konnte nicht ausgeführt werden"); 
-			e.printStackTrace(); 
+			ea.printStackTrace(); 
 		} 
 	}
 	
@@ -200,16 +184,18 @@ public class DBController {
 		try{
 			Statement stmt = connection.createStatement(); 
 			stmt.executeUpdate("UPDATE film_local SET rating=0 WHERE titel='"+name+"';");
-			connection.commit();	//TODO hier kommt es zu fehlern mit dem autocommit
-		}catch(SQLException e){	
-			try {
-				Statement stmtS = connection.createStatement(); 
-				stmtS.executeUpdate("UPDATE film_streaming SET rating=0 WHERE titel='"+name+"';");
-				connection.commit();
-			} catch (SQLException e1) {
-				System.out.println("Ups! an error occured!");
-				e1.printStackTrace();
-			}
+			connection.commit();
+		}catch(SQLException e){
+			System.out.println("Ups! an error occured!");
+			e.printStackTrace();
+		}
+		try {
+			Statement stmtS = connection.createStatement(); 
+			stmtS.executeUpdate("UPDATE film_streaming SET rating=0 WHERE titel='"+name+"';");
+			connection.commit();
+		} catch (SQLException e1) {
+			System.out.println("Ups! an error occured!");
+			e1.printStackTrace();
 		}
 	}
 //setzt die Favorisierung eines bestimmten Films
@@ -218,16 +204,18 @@ public class DBController {
 		try{
 			Statement stmt = connection.createStatement(); 
 			stmt.executeUpdate("UPDATE film_local SET rating=1 WHERE titel='"+name+"';");
-			connection.commit();	//TODO hier kommt es zu fehlern mit dem autocommit
-		}catch(SQLException e){	
-			try {
-				Statement stmtS = connection.createStatement(); 
-				stmtS.executeUpdate("UPDATE film_streaming SET rating=1 WHERE titel='"+name+"';");
-				connection.commit();
-			} catch (SQLException e1) {
-				System.out.println("Ups! an error occured!");
-				e1.printStackTrace();
-			}
+			connection.commit();
+		}catch(SQLException e){
+			System.out.println("Ups! an error occured!");
+			e.printStackTrace();
+		}
+		try {
+			Statement stmtS = connection.createStatement(); 
+			stmtS.executeUpdate("UPDATE film_streaming SET rating=1 WHERE titel='"+name+"';");
+			connection.commit();
+		} catch (SQLException e1) {
+			System.out.println("Ups! an error occured!");
+			e1.printStackTrace();
 		}
 	}
 	

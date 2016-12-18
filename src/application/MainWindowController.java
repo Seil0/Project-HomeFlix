@@ -425,7 +425,12 @@ public class MainWindowController {
 	
 	@FXML
 	private void debugBtnclicked(){
-		dbController.main();
+		dbController.main();	//TODO das muss vor einen anderen Befehl warum auch immer
+		dbController.getFavStatus("House of Cards");
+		dbController.favorisieren("House of Cards");
+		dbController.getFavStatus("House of Cards");
+//		dbController.defavorisieren("House of Cards");
+//		dbController.getFavStatus("House of Cards");
 		//for testing
 	}
 
@@ -514,7 +519,7 @@ public class MainWindowController {
 		
 		System.out.println("Mode: "+mode);
 		
-//		dbController.ausgeben();
+//		dbController.main();
 		
 		debugBtn.setDisable(false); 	//debugging btn for tests
 		debugBtn.setVisible(true);
