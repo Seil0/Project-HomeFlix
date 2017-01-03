@@ -102,7 +102,8 @@ public class MainWindowController {
 	private TreeTableView<streamUiData> treeTableViewfilm;
 	@FXML
 	private TableView<streamUiData> tableViewStreamingdata;
-	@FXML JFXTextArea ta1;
+	@FXML
+	JFXTextArea ta1;
 	@FXML
 	private JFXButton menubtn;
 	@FXML
@@ -151,7 +152,8 @@ public class MainWindowController {
     private Label sizelbl;
     @FXML
     private Label aulbl;
-    @FXML ImageView image1;
+    @FXML 
+    ImageView image1;
     
     
     @FXML
@@ -425,12 +427,12 @@ public class MainWindowController {
 	
 	@FXML
 	private void debugBtnclicked(){
-		dbController.main();	//TODO das muss vor einen anderen Befehl warum auch immer
-		dbController.getFavStatus("House of Cards");
-		dbController.favorisieren("House of Cards");
-		dbController.getFavStatus("House of Cards");
-//		dbController.defavorisieren("House of Cards");
-//		dbController.getFavStatus("House of Cards");
+//		dbController.ausgeben();
+		dbController.getFavStatus("Zootopia");
+		dbController.favorisieren("Zootopia");
+		dbController.getFavStatus("Zootopia");
+		dbController.defavorisieren("Zootopia");
+		dbController.getFavStatus("Zootopia");
 		//for testing
 	}
 
@@ -517,9 +519,10 @@ public class MainWindowController {
 		ApiQuery = new apiQuery(this);
 		dbController = new DBController(this);
 		
-		System.out.println("Mode: "+mode);
+		System.out.println("Mode: "+mode);	//TODO debugging
 		
-//		dbController.main();
+		loadStreamingSettings();
+		dbController.main();
 		
 		debugBtn.setDisable(false); 	//debugging btn for tests
 		debugBtn.setVisible(true);
@@ -728,7 +731,7 @@ public class MainWindowController {
 		}
 	}
 	
-	void loadStreamingSettings(){
+	private void loadStreamingSettings(){
 		if(getStreamingPath().equals("")||getStreamingPath().equals(null)){
 			System.out.println("Kein Pfad angegeben");	//falls der Pfad null oder "" ist
 		}else{

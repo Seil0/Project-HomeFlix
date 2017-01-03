@@ -137,7 +137,8 @@ public class DBController {
 			System.out.println(rs.getString(1));
 			System.out.println(rs.getString(2));
 			System.out.println(rs.getString(3)+"\n");
-		} 
+		}
+		stmt.close();
 		rs.close();
 		
 		System.out.println("Streaming Entries: \n");
@@ -151,7 +152,8 @@ public class DBController {
 			System.out.println(rsS.getString(5));
 			System.out.println(rsS.getString(6));
 			System.out.println(rsS.getString(7)+"\n");
-		} 
+		}
+		stmt.close();
 		rsS.close(); 
 
 	} catch (SQLException e) { 
@@ -164,19 +166,30 @@ public class DBController {
 //gibt die Favorisierung eines bestimmten Films
 	public void getFavStatus(String name){
 		try{
-			Statement stmt = connection.createStatement(); 
-			ResultSet rs = stmt.executeQuery("SELECT titel, rating FROM film_local WHERE titel = '"+name+"';" ); //SQL Befehl
-			System.out.println("local:"+rs.getInt("rating"));
+			Statement stmta = connection.createStatement(); 
+			ResultSet rs = stmta.executeQuery("SELECT titel, rating FROM film_local WHERE titel = '"+name+"';" ); //SQL Befehl
+			System.out.println("local:"+rs.getString("rating"));
+			stmta.close();
+			rs.close();
 		}catch(SQLException e){
+			
 			try {
-				Statement stmtS = connection.createStatement(); 
-				ResultSet rsS = stmtS.executeQuery("SELECT titel, rating FROM film_streaming WHERE titel = '"+name+"';" );
-				System.out.println("streaming:"+rsS.getInt("rating"));
+				System.out.println("streaming");
+				Statement stmtSa = connection.createStatement(); 
+				ResultSet rsS = stmtSa.executeQuery("SELECT titel, rating FROM film_streaming WHERE titel = '"+name+"';" );
+				System.out.println("streaming:"+rsS.getString("rating"));
+				stmtSa.close();
+				rsS.close();
 			} catch (SQLException e1) {
-				System.out.println("Ups! an error occured!");
+//				System.out.println("Ups! an error occured!");
 				e1.printStackTrace();
 			}
+			
+			
+//			System.out.println("Ups! an error occured!");
+//			e.printStackTrace();
 		}
+		
 	}
 //setzt die Defavorisierung eines bestimmten Films
 	public void defavorisieren(String name){
