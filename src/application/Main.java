@@ -105,7 +105,7 @@ public class Main extends Application {
 		Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
 		System.exit(0);	//finishes itself
 		}
-		mainWindowController.loadStreamingSettings();
+//		mainWindowController.loadStreamingSettings();
 		mainWindowController.applyColor();	//setzt die Theme Farbe
 		mainWindowController.cbLocal.getSelectionModel().select(mainWindowController.getLocal()); //setzt local
 		mainWindowController.mainColor.setValue(Color.valueOf(mainWindowController.getColor()));
