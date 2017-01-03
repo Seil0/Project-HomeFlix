@@ -41,13 +41,6 @@ public class DBController {
 
 			connection.setAutoCommit(false);	//Autocommit to false -> manual commit is active!
 			fuelleDatenbank();
-//			ausgeben();
-//			getFavStatus("House of Cards");
-//			favorisieren("House of Cards");
-//			getFavStatus("House of Cards");
-//			defavorisieren("House of Cards");
-//			getFavStatus("House of Cards");
-
 		} catch (SQLException e) {
 			// if the error message is "out of memory", it probably means no database file is found
 			System.err.println(e.getMessage());
