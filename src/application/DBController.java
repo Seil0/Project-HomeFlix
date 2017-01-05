@@ -1,26 +1,27 @@
 /**
  * DBController for Project HomeFlix
- * 
  * connection is in manual commit!
+ * TODO überprüfen ob neue filme hinzu gekommen sind
  */
 
 package application;
 
-import java.sql.Connection; //für Datenbank
-import java.sql.DriverManager; //für Datenbank
-import java.sql.PreparedStatement; //für Datenbank
-import java.sql.ResultSet; //für Datenbank
-import java.sql.SQLException; //für Datenbank
-import java.sql.Statement; //für Datenbank
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
-
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 
 public class DBController {
 
@@ -30,6 +31,11 @@ public class DBController {
 
 	private MainWindowController mainWindowController;
 	private String DB_PATH = System.getProperty("user.home") + "\\Documents\\HomeFlix" + "\\" + "Homeflix.db"; // der Pfad der Datenbank-Datei
+	private List<String> filmsdb = new ArrayList<String>();
+	private List<String> filmsAll = new ArrayList<String>();
+	private List<String> filmsDir = new ArrayList<String>();
+	private List<String> filmsStream = new ArrayList<String>();
+	private List<Integer> counter = new ArrayList<Integer>();
 	Connection connection = null;
 
 	public void main() {
@@ -39,8 +45,8 @@ public class DBController {
 			// Statement statement = connection.createStatement();
 			// statement.setQueryTimeout(30); // set timeout to 30 sec. TODO don't know wath to do with this
 
-			connection.setAutoCommit(false);	//Autocommit to false -> manual commit is active!
-			fuelleDatenbank();
+			connection.setAutoCommit(false);	//Autocommit to false -> manual commit is active
+//			fuelleDatenbank();
 		} catch (SQLException e) {
 			// if the error message is "out of memory", it probably means no database file is found
 			System.err.println(e.getMessage());
@@ -56,72 +62,239 @@ public class DBController {
 //		}
 	}
 	
-	public void fuelleDatenbank() { 
-
-		try { 
-			System.out.println("Erstelle Einträge local");
+	void createDatabase() { 
+		System.out.println("<=====starting loading sql=====>");
+		
+		PreparedStatement ps;
+		PreparedStatement psS;	
+		String[] entries = new File(mainWindowController.getPath()).list();
+	
+		try {
 			Statement stmt = connection.createStatement();
-			Statement stmtS = connection.createStatement(); 
-			stmt.executeUpdate("drop table if exists film_local");
-			stmtS.executeUpdate("drop table if exists film_streaming"); 
-			stmt.executeUpdate("create table film_local (rating, titel, streamUrl)"); // Tabelle "filme" und die Spalten "titel", "pfad", "bewertung" erstellen
-			stmtS.executeUpdate("create table film_streaming (year, season, episode, rating, resolution, titel, streamUrl)"); // Tabelle "filme" und die Spalten "titel", "pfad", "bewertung" erstellen
+			stmt.executeUpdate("create table if not exists film_local (rating, titel, streamUrl)");
+			stmt.executeUpdate("create table if not exists film_streaming (year, season, episode, rating, resolution, titel, streamUrl)");
+			stmt.close();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		} 
+			
+			try { 
+				Statement stmt = connection.createStatement(); 
+				ResultSet rs = stmt.executeQuery("SELECT * FROM film_local"); 
+				while (rs.next()) { 
+					filmsdb.add(rs.getString(2));
+				}
+				stmt.close();
+				rs.close();
 
-
-			PreparedStatement ps = connection.prepareStatement("insert into film_local values (?, ?, ?)"); // SQL Befehl
-			PreparedStatement psS = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?, ?)"); // SQL Befehl
-
-			String[] entries = new File(mainWindowController.getPath()).list();
-
-			for(int i=0;i!=entries.length;i++) // Geht alle Dateien im Verzeichniss durch
-			{
-				//System.out.println(file[i].getName());
-				ps.setInt(1, 0); // definiert Bewertung als Integer in der dritten Spalte
-				ps.setString(2, ohneEndung(entries[i])); // definiert Name als String in der ersten Spalte
-				ps.setString(3,entries[i]); // definiert Pfad als String in der zweiten Spalte
-				ps.addBatch(); // fügt den Eintrag hinzu
+				rs = stmt.executeQuery("SELECT * FROM film_streaming;"); 
+				while (rs.next()) { 
+					filmsdb.add(rs.getString(6));
+				}
+				stmt.close();
+				rs.close();
+			}catch (SQLException ea){
+				//TODO
 			}
-			
-			
-			System.out.println("Erstelle Einträge streaming \n");
-			if(mainWindowController.getStreamingPath().equals("")||mainWindowController.getStreamingPath().equals(null)){
-				System.out.println("Kein Pfad angegeben");	//falls der Pfad null oder "" ist
-			}else{
-				for(int i=0; i< mainWindowController.streamingData.size(); i++){
-				String fileName = mainWindowController.getStreamingPath()+"/"+mainWindowController.streamingData.get(i).getStreamUrl();
+				
+			System.out.println("filme in db: "+filmsdb.size());
+				
+			for(int i=0;i!=entries.length;i++){
+				filmsDir.add(cutOffEnd(entries[i]));
+			}
+				
+			for(int v=0; v< mainWindowController.streamingData.size(); v++){
+				String fileName = mainWindowController.getStreamingPath()+"/"+mainWindowController.streamingData.get(v).getStreamUrl();
 				try {
 					JsonObject object = Json.parse(new FileReader(fileName)).asObject();
 					JsonArray items = object.get("entries").asArray();
 					for (JsonValue item : items) {
-						psS.setInt(1, item.asObject().getInt("year", 0));
-						psS.setInt(2, item.asObject().getInt("season", 0));
-						psS.setInt(3, item.asObject().getInt("episode", 0));
-						psS.setInt(4, 0);
-						psS.setString(5, item.asObject().getString("resolution", ""));
-						psS.setString(6, item.asObject().getString("titel",""));
-						psS.setString(7, item.asObject().getString("streamUrl", ""));
-						psS.addBatch(); // fügt den Eintrag hinzu
+						filmsStream.add(item.asObject().getString("titel",""));
 					}
 				} catch (IOException e) {
-					//Auto-generated catch block
 					e.printStackTrace();
 				}
+				}		
+			filmsAll.addAll(filmsDir);
+			filmsAll.addAll(filmsStream);
+			System.out.println("films in directory: "+filmsAll.size());
+
+				
+				if(filmsdb.size() == 0){
+					System.out.println("creating entries ...");
+					
+					try{
+						ps = connection.prepareStatement("insert into film_local values (?, ?, ?)");
+						psS = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?, ?)");
+					
+						for(int j=0;j!=entries.length;j++) // Geht alle Dateien im Verzeichniss durch
+						{
+							ps.setInt(1, 0); // definiert Bewertung als Integer in der dritten Spalte
+							ps.setString(2, cutOffEnd(entries[j])); // definiert Name als String in der ersten Spalte
+							ps.setString(3,entries[j]); // definiert Pfad als String in der zweiten Spalte
+							ps.addBatch(); // fügt den Eintrag hinzu
+						}
+					
+						if(mainWindowController.getStreamingPath().equals("")||mainWindowController.getStreamingPath().equals(null)){
+							System.out.println("Kein Pfad angegeben");	//falls der Pfad null oder "" ist
+						}else{
+							for(int i=0; i< mainWindowController.streamingData.size(); i++){
+							String fileNamea = mainWindowController.getStreamingPath()+"/"+mainWindowController.streamingData.get(i).getStreamUrl();
+							try {
+								JsonObject object = Json.parse(new FileReader(fileNamea)).asObject();
+								JsonArray items = object.get("entries").asArray();
+								for (JsonValue item : items) {
+									psS.setInt(1, item.asObject().getInt("year", 0));
+									psS.setInt(2, item.asObject().getInt("season", 0));
+									psS.setInt(3, item.asObject().getInt("episode", 0));
+									psS.setInt(4, 0);
+									psS.setString(5, item.asObject().getString("resolution", ""));
+									psS.setString(6, item.asObject().getString("titel",""));
+									psS.setString(7, item.asObject().getString("streamUrl", ""));
+									psS.addBatch(); // fügt den Eintrag hinzu
+								}
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+						}
+						ps.executeBatch();  // scheibt alle Einträge in die Datenbank
+						psS.executeBatch();			
+						connection.commit();
+						ps.close();
+						psS.close();
+					}catch (SQLException ea) { 
+						System.err.println("Konnte nicht ausgeführt werden"); 
+						ea.printStackTrace(); 
+					}
+				}else if(filmsdb.size() == filmsAll.size()){
+					for(int i=0;i<filmsAll.size();i++){
+						if(filmsAll.contains(filmsdb.get(i))){
+						}else{		//calls updateDB if there is a different name between db and dir
+							int l=0;
+							try {
+								Statement stmt = connection.createStatement(); 
+								ResultSet rs = stmt.executeQuery("SELECT * FROM film_local");
+								while (rs.next()) { 
+									if(filmsDir.contains(rs.getString(2))){
+										l++;
+										System.out.println("gleich L"+l);
+									}else{
+										l++;
+										counter.add(l);
+										System.out.println("ungleich L");
+									}
+								}
+								stmt.close();
+								rs.close();
+								
+								rs = stmt.executeQuery("SELECT * FROM film_streaming;"); 
+								while (rs.next()) { 
+									if(filmsStream.contains(rs.getString(6))){
+										l++;
+										System.out.println("gleich S"+l);
+									}else{
+										l++;
+										counter.add(l);
+										System.out.println("ungleich S");
+									}
+								}
+								stmt.close();
+								rs.close();
+								System.out.println(counter);
+								updateDB();
+							} catch (SQLException e1) {
+								e1.printStackTrace();
+							} 
+						}
+					}
+				}else{
+					addEntry();	//TODO calls updateDB if there is a different size between db and dir
+				}
+	}
+	
+	//loading data from database to mainWindowController 
+	void loadData(){
+		System.out.println("loading data to mwc ..."); 
+		try { 
+			//load local Data
+			Statement stmt = connection.createStatement(); 
+			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local"); 
+			while (rs.next()) {
+				mainWindowController.newDaten.add(new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3)));
 			}
+			stmt.close();
+			rs.close();
+			
+			//load streaming Data TODO check if there are streaming data before loading -> maybe there is an issue now
+			rs = stmt.executeQuery("SELECT * FROM film_streaming;"); 
+			while (rs.next()) {
+				mainWindowController.streamData.add(new streamUiData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7)));
 			}
-//			connection.setAutoCommit(false); 
-			ps.executeBatch();  // scheibt alle Einträge in die Datenbank
-			psS.executeBatch();			
-			connection.commit();
-			ps.close();
-			psS.close();
-			//connection.close(); 
-		} catch (SQLException ea) { 
-			System.err.println("Konnte nicht ausgeführt werden"); 
-			ea.printStackTrace(); 
+			stmt.close();
+			rs.close(); 		
+		} catch (SQLException e) { 
+			System.err.println("Ups! an error occured!"); 
+			e.printStackTrace(); 
+		}
+		System.out.println("<=====finished loading sql=====>"); 
+	}
+	
+	//refreshs the data in mainWindowController.newDaten and mainWindowController.streamData
+	void refresh(String name,int i) throws SQLException{
+		System.out.println("refresh ...");
+		Statement stmt;
+		try {
+			stmt = connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local WHERE titel = '"+name+"';" );
+			mainWindowController.newDaten.set(i, new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3)));
+			stmt.close();
+			rs.close();
+		} catch (SQLException e) {
+			try {
+				stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery("SELECT * FROM film_streaming WHERE titel = '"+name+"';" );
+				mainWindowController.streamData.set(i,new streamUiData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7)));
+				stmt.close();
+				rs.close();
+			} catch (SQLException e1) {
+				System.err.println("Ups! an error occured!"); 
+				e1.printStackTrace(); 
+			} 
 		} 
 	}
 	
-	public void ausgeben(){
+	private void updateDB(){
+		System.out.println("updating DB ...");
+		for(int i=0; i<counter.size();i++){
+			String ending = "";
+			try{
+				
+				Statement stmt = connection.createStatement(); 
+				ResultSet rs = stmt.executeQuery("SELECT streamUrl FROM film_local WHERE titel='"+filmsdb.get(counter.get(i)-1)+"';"); 
+				while (rs.next()) {
+					ending=rs.getString(1);
+					int pos = ending.lastIndexOf(".");
+					ending = ending.substring(pos);
+					System.out.println(pos);
+					System.out.println(ending);
+				}
+				
+				stmt.executeUpdate("UPDATE film_local SET titel='"+filmsAll.get(counter.get(i)-1)+"', streamUrl='"+filmsAll.get(counter.get(i)-1)+ending+"' WHERE titel='"+filmsdb.get(counter.get(i)-1)+"';");
+				connection.commit();
+				stmt.close();
+			}catch(SQLException e){
+				System.out.println("Ups! an error occured!");
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private void addEntry(){
+		System.out.println("adding entry to DB ...");
+	}
+	
+	void ausgeben(){
 	System.out.println("Einträge ausgeben ... \n"); 
 	try { 
 		Statement stmt = connection.createStatement(); 
@@ -136,89 +309,86 @@ public class DBController {
 		
 		System.out.println("Streaming Entries: \n");
 		
-		ResultSet rsS = stmt.executeQuery("SELECT * FROM film_streaming;"); 
-		while (rsS.next()) { 
-			System.out.println(rsS.getString(1));
-			System.out.println(rsS.getString(2));
-			System.out.println(rsS.getString(3));
-			System.out.println(rsS.getString(4));
-			System.out.println(rsS.getString(5));
-			System.out.println(rsS.getString(6));
-			System.out.println(rsS.getString(7)+"\n");
+		rs = stmt.executeQuery("SELECT * FROM film_streaming;"); 
+		while (rs.next()) { 
+			System.out.println(rs.getString(1));
+			System.out.println(rs.getString(2));
+			System.out.println(rs.getString(3));
+			System.out.println(rs.getString(4));
+			System.out.println(rs.getString(5));
+			System.out.println(rs.getString(6));
+			System.out.println(rs.getString(7)+"\n");
 		}
 		stmt.close();
-		rsS.close(); 
+		rs.close(); 
 
 	} catch (SQLException e) { 
 		System.err.println("Konnte nicht ausgeführt werden"); 
 		e.printStackTrace(); 
 	}
-    mainWindowController.ta1.setText("Hallo");
 }
 	
-//gibt die Favorisierung eines bestimmten Films
-	public void getFavStatus(String name){
+	//gibt die Favorisierung eines bestimmten Films
+	void getFavStatus(String name){
 		try{
-			Statement stmta = connection.createStatement(); 
-			ResultSet rs = stmta.executeQuery("SELECT titel, rating FROM film_local WHERE titel = '"+name+"';" ); //SQL Befehl
-			System.out.println("local:"+rs.getString("rating"));
-			stmta.close();
+			Statement stmt = connection.createStatement(); 
+			ResultSet rs = stmt.executeQuery("SELECT titel, rating FROM film_local WHERE titel = '"+name+"';" ); //SQL Befehl
+			System.out.println("local:"+rs.getString("rating")+", "+rs.getString("titel"));
+			stmt.close();
 			rs.close();
 		}catch(SQLException e){
-			
 			try {
-				System.out.println("streaming");
-				Statement stmtSa = connection.createStatement(); 
-				ResultSet rsS = stmtSa.executeQuery("SELECT titel, rating FROM film_streaming WHERE titel = '"+name+"';" );
-				System.out.println("streaming:"+rsS.getString("rating"));
-				stmtSa.close();
+				Statement stmtS = connection.createStatement(); 
+				ResultSet rsS = stmtS.executeQuery("SELECT titel, rating FROM film_streaming WHERE titel = '"+name+"';" );
+				System.out.println("streaming:"+rsS.getString("rating")+", "+rsS.getString("titel"));
+				stmtS.close();
 				rsS.close();
 			} catch (SQLException e1) {
-//				System.out.println("Ups! an error occured!");
+				System.out.println("Ups! an error occured!");
 				e1.printStackTrace();
 			}
-			
-			
-//			System.out.println("Ups! an error occured!");
-//			e.printStackTrace();
 		}
 		
 	}
-//setzt die Defavorisierung eines bestimmten Films
-	public void defavorisieren(String name){
+	//setzt die Defavorisierung eines bestimmten Films
+	void dislike(String name){
 		System.out.println("defavorisieren ...");		
 		try{
 			Statement stmt = connection.createStatement(); 
 			stmt.executeUpdate("UPDATE film_local SET rating=0 WHERE titel='"+name+"';");
 			connection.commit();
+			stmt.close();
 		}catch(SQLException e){
 			System.out.println("Ups! an error occured!");
 			e.printStackTrace();
 		}
 		try {
-			Statement stmtS = connection.createStatement(); 
-			stmtS.executeUpdate("UPDATE film_streaming SET rating=0 WHERE titel='"+name+"';");
+			Statement stmt = connection.createStatement(); 
+			stmt.executeUpdate("UPDATE film_streaming SET rating=0 WHERE titel='"+name+"';");
 			connection.commit();
+			stmt.close();
 		} catch (SQLException e1) {
 			System.out.println("Ups! an error occured!");
 			e1.printStackTrace();
 		}
 	}
-//setzt die Favorisierung eines bestimmten Films
-	public void favorisieren(String name){
+	//setzt die Favorisierung eines bestimmten Films
+	void like(String name){
 		System.out.println("favorisieren ...");
 		try{
 			Statement stmt = connection.createStatement(); 
 			stmt.executeUpdate("UPDATE film_local SET rating=1 WHERE titel='"+name+"';");
 			connection.commit();
+			stmt.close();
 		}catch(SQLException e){
 			System.out.println("Ups! an error occured!");
 			e.printStackTrace();
 		}
 		try {
-			Statement stmtS = connection.createStatement(); 
-			stmtS.executeUpdate("UPDATE film_streaming SET rating=1 WHERE titel='"+name+"';");
+			Statement stmt = connection.createStatement(); 
+			stmt.executeUpdate("UPDATE film_streaming SET rating=1 WHERE titel='"+name+"';");
 			connection.commit();
+			stmt.close();
 		} catch (SQLException e1) {
 			System.out.println("Ups! an error occured!");
 			e1.printStackTrace();
@@ -226,7 +396,7 @@ public class DBController {
 	}
 	
 //entfernt die Endung
-	private String ohneEndung (String str) {
+	private String cutOffEnd (String str) {
 
 		if (str == null) return null;
 		int pos = str.lastIndexOf(".");

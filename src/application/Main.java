@@ -20,7 +20,9 @@
  * 
  */
 package application;
-	
+/**
+ * TODO OSX and	Linux directory and file (Linux: 99% not working!)
+ */
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -50,8 +52,8 @@ public class Main extends Application {
 	private String mode = "local";	//local or streaming
 	private double size = 12;
 	private int local = 0;
-	private File dir = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	//Windows: C:/Users/"User"/Documents/HomeFlix	OSX: has to be tested	Linux: has to be tested(shalt not work!)
-	private File file = new File(dir + "/config.xml");	//Windows: C:/Users/"User"/Documents/HomeFlix/config.xml	OSX: has to be tested	Linux: has to be tested(shalt not work!)
+	private File dir = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	//Windows: C:/Users/"User"/Documents/HomeFlix	OSX: not tested yet	Linux: not tested yet(shalt not work!)
+	private File file = new File(dir + "/config.xml");	//Windows: C:/Users/"User"/Documents/HomeFlix/config.xml	OSX: not tested yet	Linux: not tested yet(shalt not work!)
 	Properties props = new Properties();
 	private MainWindowController mainWindowController;
 	
@@ -70,13 +72,13 @@ public class Main extends Application {
 		primaryStage.setMinWidth(900.00);
 		primaryStage.setResizable(false);
 		primaryStage.setTitle("Project HomeFlix");
-		primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/recources/Homeflix_Icon_64x64.png"))); //fügt Anwendungsicon hinzu
+		primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/recources/Homeflix_Icon_64x64.png"))); //adds application icon
 
-		mainWindowController = loader.getController();	//verknüpfung von FXMLController und Controller Klasse
-		mainWindowController.setAutoUpdate(autoUpdate);	//setzt autoupdate
-		mainWindowController.setMain(this);	//aufruf setMain
+		mainWindowController = loader.getController();	//Link of FXMLController and controller class
+		mainWindowController.setAutoUpdate(autoUpdate);	//set autoupdate
+		mainWindowController.setMain(this);	//call setMain
 		
-		//dir exists -> check config.xml 	TODO nur Windows getestet siehe dir und file
+		//dir exists -> check config.xml
 		if(dir.exists() == true){
 			if (file.exists() != true) {
 				mainWindowController.setPath(firstStart());
@@ -105,26 +107,31 @@ public class Main extends Application {
 		Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
 		System.exit(0);	//finishes itself
 		}
-//		mainWindowController.loadStreamingSettings();
-		mainWindowController.applyColor();	//setzt die Theme Farbe
-		mainWindowController.cbLocal.getSelectionModel().select(mainWindowController.getLocal()); //setzt local
+		
+		mainWindowController.loadStreamingSettings();
+		mainWindowController.applyColor();	//set theme color
+		mainWindowController.cbLocal.getSelectionModel().select(mainWindowController.getLocal()); //set local
 		mainWindowController.mainColor.setValue(Color.valueOf(mainWindowController.getColor()));
-		mainWindowController.loadData();	//läd die Daten im Controller
+		
+		mainWindowController.dbController.main(); //initialize database controller
+		mainWindowController.dbController.createDatabase(); //creating the database
+		mainWindowController.dbController.loadData(); 	//loading data from database to mainWindowController 
+		
+//		mainWindowController.loadData();	//läd die Daten im Controller
 		mainWindowController.addDataUI();
 		
-		Scene scene = new Scene(pane);	//neue Scen um inhalt der stage anzuzeigen
+		Scene scene = new Scene(pane);	//create new scene, append pane to scene
 		
-		primaryStage.setScene(scene);
-		primaryStage.show();	//zeige scene
+		primaryStage.setScene(scene);	//append scene to stage
+		primaryStage.show();	//show stage
 		} catch (IOException e) {
-			// Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
 	//methode für den erstmaligen Start
 	private String firstStart(){
-		Alert alert = new Alert(AlertType.CONFIRMATION);	//neuer alert mit filechooser
+		Alert alert = new Alert(AlertType.CONFIRMATION);	//new alert with filechooser
 		alert.setTitle("Project HomeFlix");
 		alert.setHeaderText("Es ist kein Stammverzeichniss für Filme angegeben!");	//TODO translate
 		alert.setContentText("Stammverzeichniss angeben?");
