@@ -13,5 +13,5 @@ sqlite-jdbc: https://github.com/xerial/sqlite-jdbc
 
 [wiki](https://github.com/Seil0/Project-HomeFlix/wiki) 
 
-Project HomeFlix © 2016 Software Development Kellerkinder (SDK)     
+Project HomeFlix © 2016-2017 Software Development Kellerkinder (SDK)     
 www.kellerkinder.xyz
