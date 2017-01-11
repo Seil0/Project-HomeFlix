@@ -16,7 +16,7 @@ import com.eclipsesource.json.JsonObject;
 
 import javafx.scene.image.Image;
 
-public class apiQuery {
+public class apiQuery{
 	
 	public apiQuery(MainWindowController m){
 		mainWindowController=m;

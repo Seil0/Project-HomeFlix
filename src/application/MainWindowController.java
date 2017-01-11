@@ -55,6 +55,7 @@ import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -252,6 +253,10 @@ public class MainWindowController {
 	private ImageView skip_next_black = new ImageView(new Image("recources/icons/ic_skip_next_black_18dp_1x.png"));
 	private ImageView play_arrow_white = new ImageView(new Image("recources/icons/ic_play_arrow_white_18dp_1x.png"));
 	private ImageView play_arrow_black = new ImageView(new Image("recources/icons/ic_play_arrow_black_18dp_1x.png"));
+	@SuppressWarnings("unused")
+	private ImageView favorite_black = new ImageView(new Image("recources/icons/ic_favorite_black_18dp_1x.png"));
+	@SuppressWarnings("unused")
+	private ImageView favorite_border_black = new ImageView(new Image("recources/icons/ic_favorite_border_black_18dp_1x.png"));
 	private DirectoryChooser directoryChooser = new DirectoryChooser();
 	private ContextMenu menu = new ContextMenu();
     private MenuItem like = new MenuItem("like");
@@ -432,13 +437,6 @@ public class MainWindowController {
 	
 	@FXML
 	private void debugBtnclicked(){
-		System.out.println(columnRating.getSortType());
-//		System.out.println(newDaten.get(selected).getTitel()+","+newDaten.get(selected).getRating());
-//		dbController.getFavStatus("Zootopia");
-//		dbController.like("Zootopia");
-//		dbController.getFavStatus("House of Cards");
-//		dbController.dislike("Zootopia");
-//		dbController.getFavStatus("Zootopia");
 		//for testing
 	}
 
@@ -532,8 +530,8 @@ public class MainWindowController {
 //			columnRating.setSortType(TreeTableColumn.SortType.ASCENDING);
 //		}
 		
-		debugBtn.setDisable(false); 	//debugging btn for tests
-		debugBtn.setVisible(true);
+		debugBtn.setDisable(true); 	//debugging btn for tests
+		debugBtn.setVisible(false);
         
         tfPath.setText(getPath());
 
@@ -644,6 +642,10 @@ public class MainWindowController {
     	    	for(int i = 0; i < filterData.size(); i++){
     				root.getChildren().addAll(new TreeItem<streamUiData>(filterData.get(i)));	//fügt daten zur Rootnode hinzu
     			}
+    	    	if(tfsearch.getText().equals("Notflix_glowing_cow")){
+    	    		setColor("000000");
+    	    		applyColor();
+    	    	}
     	    }
     	});
         
@@ -668,12 +670,19 @@ public class MainWindowController {
         like.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-				dbController.like(Name);
+            	if(mode.equals("streaming")){
+            		dbController.like(Name,streamData.get(selected).getStreamUrl());
+            	}else{
+				dbController.like(Name,streamData.get(0).getStreamUrl());
+            	}
 				dbController.getFavStatus(Name);
 				try {
 					dbController.refresh(Name, selected);
 				} catch (SQLException e) {
-					// TODO Auto-generated catch block error msg
+					Alert alert = new Alert(AlertType.ERROR);
+			    	alert.setTitle("Error");
+			    	alert.setHeaderText("");
+			    	alert.setContentText("There should be an error message in the future (like problem)\nIt seems as a cat has stolen the like-methode");
 					e.printStackTrace();
 				}
 				refreshTable();
@@ -683,12 +692,19 @@ public class MainWindowController {
         dislike.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-				dbController.dislike(Name);
+            	if(mode.equals("streaming")){
+            		dbController.dislike(Name,streamData.get(selected).getStreamUrl());
+            	}else{
+				dbController.dislike(Name,streamData.get(0).getStreamUrl());
+            	}
 				dbController.getFavStatus(Name);
 				try {
 					dbController.refresh(Name, selected);
 				} catch (SQLException e) {
-					// TODO Auto-generated catch block error msg
+					Alert alert = new Alert(AlertType.ERROR);
+			    	alert.setTitle("Error");
+			    	alert.setHeaderText("");
+			    	alert.setContentText("There should be an error message in the future (dislike problem)");
 					e.printStackTrace();
 				}
 				refreshTable();
@@ -697,57 +713,12 @@ public class MainWindowController {
 	}
 	
 	private void refreshTable(){
+		if(mode.equals("local")){
 		root.getChildren().set(selected, new TreeItem<streamUiData>(newDaten.get(selected)));
+		}else if(mode.equals("streaming")){
+			root.getChildren().set(selected, new TreeItem<streamUiData>(streamData.get(selected)));
+		}
 	}
-	
-	//lädt die Daten im angegeben Ordner in newDaten
-//	void loadData(){
-//			//load local Data
-//			if(getPath().equals("")||getPath().equals(null)){
-//				System.out.println("Kein Pfad angegeben");	//falls der Pfad null oder "" ist
-//			}else{
-//			String[] entries = new File(getPath()).list();
-//				for(int i = 0; i < entries.length; i++){
-//					String titel = ohneEndung(entries[i]);
-//					String data = entries[i];
-//					newDaten.add(new streamUiData(1, 1, 1, 5.0, "1", titel, data));
-//				}
-//			}
-//
-//			//load streaming Data TODO prüfen ob streaming daten vorhanden -> momentan evtl. fehler
-//			String titel = null;
-//        	String resolution = null;
-//        	String streamUrl = null;  
-//        	int season;
-//        	int episode;
-//        	int year;
-//        	double rating = 5.0;
-//        	if(getStreamingPath().equals("")||getStreamingPath().equals(null)){
-//				System.out.println("Kein Pfad angegeben");	//falls der Pfad null oder "" ist
-//			}else{
-//			for(int i=0; i< streamingData.size(); i++){
-//				String fileName = streamingPath+"/"+streamingData.get(i).getStreamUrl();
-//				try {
-//					JsonObject object = Json.parse(new FileReader(fileName)).asObject();
-//					JsonArray items = object.get("entries").asArray();
-//					
-//	            	for (JsonValue item : items) {
-//	            	  titel = item.asObject().getString("titel","");
-//	            	  season = item.asObject().getInt("season", 0);
-//	            	  episode = item.asObject().getInt("episode", 0);
-//	            	  year = item.asObject().getInt("year", 0);
-//	            	  resolution = item.asObject().getString("resolution", "");
-//	            	  streamUrl = item.asObject().getString("streamUrl", "");
-//	            	  streamData.add(new streamUiData(year, season, episode, rating, resolution, titel, streamUrl));
-//	            	}
-//					
-//				} catch (IOException e) {
-//					//Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//			}
-//			}	
-//	}
 	
 	void addDataUI(){
 		if(mode.equals("local")){
