@@ -94,7 +94,7 @@ public class apiQuery{
 					im = new Image("recources/icons/close_black_2048x2048.png");
 					mainWindowController.image1.setImage(im);
 				}else{
-				//ausgabe des Textes in ta1 in jeweils neuer Zeile //TODOformatting
+				//ausgabe des Textes in ta1 in jeweils neuer Zeile //TODO formatting
 					mainWindowController.ta1.appendText(mainWindowController.title+": "+titelV+"\n");
 					mainWindowController.ta1.appendText(mainWindowController.year+": "+ yearV+"\n");
 					mainWindowController.ta1.appendText(mainWindowController.rating+": "+ratedV+"\n");
