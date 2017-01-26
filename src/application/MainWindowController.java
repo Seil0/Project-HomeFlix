@@ -166,7 +166,7 @@ public class MainWindowController {
     @FXML
     TreeTableColumn<streamUiData, String> columnStreamUrl = new TreeTableColumn<>("Datei Name");
     @FXML
-    TreeTableColumn<streamUiData, String> columnResolution = new TreeTableColumn<>("Auflösung");
+    TreeTableColumn<streamUiData, String> columnResolution = new TreeTableColumn<>("AuflÃ¶sung");
     @FXML
     TreeTableColumn<streamUiData, Integer> columnYear = new TreeTableColumn<>("Jahr");
     @FXML
@@ -355,7 +355,7 @@ public class MainWindowController {
 	@FXML
 	private void openfolderbtnclicked(){
 		try {
-			Desktop.getDesktop().open(new File(getPath()));	//öffnet den aktuellen Pfad
+			Desktop.getDesktop().open(new File(getPath()));	//Ã¶ffnet den aktuellen Pfad
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -398,7 +398,7 @@ public class MainWindowController {
 	}
 	
 	/**
-	 * TODO zusätzliche infos über die dateien
+	 * TODO zusÃ¤tzliche infos Ã¼ber die dateien
 	 */
 	@FXML
 	private void streamingSettingsBtnclicked(){
@@ -554,7 +554,7 @@ public class MainWindowController {
     	ta1.setFont(Font.font("System", getSize()));	
 	}
 	
-	//initialisierung der Tabellen für filme(beide Modi) und Streaming-Settings
+	//initialisierung der Tabellen fÃ¼r filme(beide Modi) und Streaming-Settings
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void initTabel(){
 
@@ -594,17 +594,17 @@ public class MainWindowController {
         treeTableViewfilm.getColumns().addAll(columnTitel, columnRating, columnStreamUrl, columnResolution, columnYear, columnSeason, columnEpisode);
 	    treeTableViewfilm.getColumns().get(2).setVisible(false); //blendet die Column mit den Dateinamen aus (wichtig um sie abzuspielen)
 	
-	    //Changelistener für TreeTable
+	    //Changelistener fÃ¼r TreeTable
 	    treeTableViewfilm.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {	
 			@Override
 			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal) {
-				// last = selected; //für autoplay
+				// last = selected; //fÃ¼r autoplay
 				selected = treeTableViewfilm.getSelectionModel().getSelectedIndex(); // holt aktuelles Item
 				last = selected - 1;
 				next = selected + 1;
 				Name = columnTitel.getCellData(selected); // holt Namen des Aktuelle Items aus der ColumnName
 				datPath = columnStreamUrl.getCellData(selected); // holt den aktuellen Datei Pfad aus der ColumnDatName
-				ta1.setText(""); // löscht Text in ta1
+				ta1.setText(""); // lÃ¶scht Text in ta1
 				ApiQuery.startQuery(Name); // startet die api abfrage
 				ta1.positionCaret(0); // setzt die startposition des Cursors in ta1
 			}
@@ -640,7 +640,7 @@ public class MainWindowController {
     	    	}
     	    	
     	    	for(int i = 0; i < filterData.size(); i++){
-    				root.getChildren().addAll(new TreeItem<streamUiData>(filterData.get(i)));	//fügt daten zur Rootnode hinzu
+    				root.getChildren().addAll(new TreeItem<streamUiData>(filterData.get(i)));	//fÃ¼gt daten zur Rootnode hinzu
     			}
     	    	if(tfsearch.getText().equals("Notflix_glowing_cow")){
     	    		setColor("000000");
@@ -673,7 +673,7 @@ public class MainWindowController {
             	if(mode.equals("streaming")){
             		dbController.like(Name,streamData.get(selected).getStreamUrl());
             	}else{
-				dbController.like(Name,streamData.get(0).getStreamUrl());
+				dbController.like(Name,newDaten.get(selected).getStreamUrl());
             	}
 				dbController.getFavStatus(Name);
 				try {
@@ -695,7 +695,7 @@ public class MainWindowController {
             	if(mode.equals("streaming")){
             		dbController.dislike(Name,streamData.get(selected).getStreamUrl());
             	}else{
-				dbController.dislike(Name,streamData.get(0).getStreamUrl());
+				dbController.dislike(Name,newDaten.get(selected).getStreamUrl());
             	}
 				dbController.getFavStatus(Name);
 				try {
@@ -723,7 +723,7 @@ public class MainWindowController {
 	void addDataUI(){
 		if(mode.equals("local")){
 			for(int i = 0; i < newDaten.size(); i++){
-				root.getChildren().add(new TreeItem<streamUiData>(newDaten.get(i)));	//fügt daten zur Rootnode hinzu
+				root.getChildren().add(new TreeItem<streamUiData>(newDaten.get(i)));	//fÃ¼gt daten zur Rootnode hinzu
 			}
 			columnRating.setMaxWidth(120);
 		    columnTitel.setMaxWidth(240);
@@ -733,7 +733,7 @@ public class MainWindowController {
 			treeTableViewfilm.getColumns().get(6).setVisible(false);
 		}else if(mode.equals("streaming")){
 			for(int i = 0; i < streamData.size(); i++){
-				root.getChildren().add(new TreeItem<streamUiData>(streamData.get(i)));	//fügt daten zur Rootnode hinzu
+				root.getChildren().add(new TreeItem<streamUiData>(streamData.get(i)));	//fÃ¼gt daten zur Rootnode hinzu
 			}
 			columnTitel.setMaxWidth(150);
 			columnResolution.setMaxWidth(65);
@@ -761,7 +761,7 @@ public class MainWindowController {
 				}
 			}
 			for(int i = 0; i < streamingData.size(); i++){
-				streamingRoot.getChildren().add( new TreeItem<streamUiData>(streamingData.get(i)));	//fügt daten zur Rootnode hinzu
+				streamingRoot.getChildren().add( new TreeItem<streamUiData>(streamingData.get(i)));	//fÃ¼gt daten zur Rootnode hinzu
 			}
 		}	
 	}
@@ -773,7 +773,7 @@ public class MainWindowController {
 		return str.substring(0, pos);
 	}
 	
-	//setzt die Farben für die UI-Elemente
+	//setzt die Farben fÃ¼r die UI-Elemente
 	void applyColor(){
 		String style = "-fx-background-color: #"+getColor()+";";
 		String btnStyleBlack = "-fx-button-type: RAISED; -fx-background-color: #"+getColor()+"; -fx-text-fill: BLACK;";
@@ -822,7 +822,7 @@ public class MainWindowController {
 			menubtn.setGraphic(menu_icon_black);
 		}
 		
-		//das solte weg kann aber hier bleiben wicht ist dass es zum selben zeitpunkt wie aply color ausgeführt wird
+		//das solte weg kann aber hier bleiben wicht ist dass es zum selben zeitpunkt wie aply color ausgefÃ¼hrt wird
 		if(mode.equals("local")){
 			switchBtn.setText("streaming");	//TODO translate
 		}else if(mode.equals("streaming")){
