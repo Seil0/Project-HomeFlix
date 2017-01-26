@@ -23,6 +23,7 @@ public class apiQuery{
 	}
 	
 	private MainWindowController mainWindowController;
+	private Image im;
 	
 	@SuppressWarnings("deprecation")
 	void startQuery(String input){
@@ -52,7 +53,7 @@ public class apiQuery{
 			//replace blank with + for api-query
 			moviename = moviename.replace(" ", "+");
 
-			//URL wird zusammengestellt abfragetypen: http,json,xml (muss json sein um sp‰teres trennen zu ermˆglichen)
+			//URL wird zusammengestellt abfragetypen: http,json,xml (muss json sein um sp√§teres trennen zu erm√∂glichen)
 			dataurl = apiurl + "t=" + moviename + "&plot=full&r=json";
 
 			url = new URL(dataurl);
@@ -61,7 +62,7 @@ public class apiQuery{
 
 			// lesen der Daten aus dem Antwort Stream
 			while ((retdata = dis.readLine()) != null) {
-				//retdata in json object parsen und anschlieﬂend das json Objekt "zerschneiden"
+				//retdata in json object parsen und anschlie√üend das json Objekt "zerschneiden"
 				System.out.println(retdata);
 				JsonObject object = Json.parse(retdata).asObject();
 				String titelV = object.getString("Title", "");
@@ -90,8 +91,8 @@ public class apiQuery{
 				
 				if(response.equals("False")){
 					mainWindowController.ta1.appendText(mainWindowController.noFilmFound);
-					Image im2 = new Image("recources/icons/close_black_2048x2048.png");
-					mainWindowController.image1.setImage(im2);
+					im = new Image("recources/icons/close_black_2048x2048.png");
+					mainWindowController.image1.setImage(im);
 				}else{
 				//ausgabe des Textes in ta1 in jeweils neuer Zeile //TODOformatting
 					mainWindowController.ta1.appendText(mainWindowController.title+": "+titelV+"\n");
@@ -111,8 +112,12 @@ public class apiQuery{
 					mainWindowController.ta1.appendText(mainWindowController.imdbRating+": "+imdbRatingV+"\n");
 					mainWindowController.ta1.appendText(mainWindowController.type+": "+typeV+"\n");
 				
-					Image im1 = new Image(posterURL);
-					mainWindowController.image1.setImage(im1);
+					if(posterURL.equals("N/A")){
+						im = new Image("recources/icons/close_black_2048x2048.png");
+					}else{
+						im = new Image(posterURL);
+					}
+					mainWindowController.image1.setImage(im);
 				}
 			}
 
