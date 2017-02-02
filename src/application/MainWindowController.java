@@ -53,8 +53,6 @@ import com.jfoenix.controls.JFXToggleButton;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -73,7 +71,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
-import javafx.scene.control.TreeTableColumn.CellDataFeatures;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -154,27 +151,28 @@ public class MainWindowController {
     private Label aulbl;
     @FXML 
     ImageView image1;
+    private ImageView imv1;
     
     
     @FXML
-    TreeItem<streamUiData> root = new TreeItem<>(new streamUiData(1, 1, 1, 5.0,"1", "filme","1"));
+    TreeItem<streamUiData> root = new TreeItem<>(new streamUiData(1, 1, 1, 5.0,"1", "filme","1", imv1));
     @FXML
-    TreeTableColumn<streamUiData, Double> columnRating = new TreeTableColumn<>("Bewertung");
+    TreeTableColumn<streamUiData, ImageView> columnRating = new TreeTableColumn<>("Rating");
     @FXML
-    TreeTableColumn<streamUiData, String> columnTitel = new TreeTableColumn<>("Name");
+    TreeTableColumn<streamUiData, String> columnTitel = new TreeTableColumn<>("Titel");
     @FXML
-    TreeTableColumn<streamUiData, String> columnStreamUrl = new TreeTableColumn<>("Datei Name");
+    TreeTableColumn<streamUiData, String> columnStreamUrl = new TreeTableColumn<>("File Name");
     @FXML
-    TreeTableColumn<streamUiData, String> columnResolution = new TreeTableColumn<>("Auflösung");
+    TreeTableColumn<streamUiData, String> columnResolution = new TreeTableColumn<>("Resolution");
     @FXML
-    TreeTableColumn<streamUiData, Integer> columnYear = new TreeTableColumn<>("Jahr");
+    TreeTableColumn<streamUiData, Integer> columnYear = new TreeTableColumn<>("Year");
     @FXML
-    TreeTableColumn<streamUiData, Integer> columnSeason = new TreeTableColumn<>("Staffel");
+    TreeTableColumn<streamUiData, Integer> columnSeason = new TreeTableColumn<>("Season");
     @FXML
     TreeTableColumn<streamUiData, Integer> columnEpisode = new TreeTableColumn<>("Episode");
     
     @FXML
-    private TreeItem<streamUiData> streamingRoot =new TreeItem<>(new streamUiData(1 ,1 ,1 ,1.0 ,"1" ,"filme" ,"1"));
+    private TreeItem<streamUiData> streamingRoot =new TreeItem<>(new streamUiData(1 ,1 ,1 ,1.0 ,"1" ,"filme" ,"1", imv1));
     @FXML
     private TableColumn<streamUiData, String> dataNameColumn = new TableColumn<>("Datei Name");
     @FXML
@@ -252,9 +250,7 @@ public class MainWindowController {
 	private ImageView skip_next_black = new ImageView(new Image("recources/icons/ic_skip_next_black_18dp_1x.png"));
 	private ImageView play_arrow_white = new ImageView(new Image("recources/icons/ic_play_arrow_white_18dp_1x.png"));
 	private ImageView play_arrow_black = new ImageView(new Image("recources/icons/ic_play_arrow_black_18dp_1x.png"));
-	@SuppressWarnings("unused")
 	private ImageView favorite_black = new ImageView(new Image("recources/icons/ic_favorite_black_18dp_1x.png"));
-	@SuppressWarnings("unused")
 	private ImageView favorite_border_black = new ImageView(new Image("recources/icons/ic_favorite_border_black_18dp_1x.png"));
 	private DirectoryChooser directoryChooser = new DirectoryChooser();
 	private ContextMenu menu = new ContextMenu();
@@ -436,6 +432,7 @@ public class MainWindowController {
 	
 	@FXML
 	private void debugBtnclicked(){
+		newDaten.get(selected).setImage(favorite_black);
 		//for testing
 	}
 
@@ -529,8 +526,8 @@ public class MainWindowController {
 //			columnRating.setSortType(TreeTableColumn.SortType.ASCENDING);
 //		}
 		
-		debugBtn.setDisable(true); 	//debugging btn for tests
-		debugBtn.setVisible(false);
+		debugBtn.setDisable(false); 	//debugging btn for tests
+		debugBtn.setVisible(true);
         
         tfPath.setText(getPath());
 
@@ -554,41 +551,52 @@ public class MainWindowController {
 	}
 	
 	//initialisierung der Tabellen für filme(beide Modi) und Streaming-Settings
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked"})
 	private void initTabel(){
 
 		//filmtabelle 
-	    columnRating.setMaxWidth(120);
-	    columnTitel.setMaxWidth(240);
+	    columnRating.setMaxWidth(80);
+	    columnTitel.setMaxWidth(260);
 	    columnStreamUrl.setMaxWidth(0);
-	    dataNameColumn.setPrefWidth(130);
+	    dataNameColumn.setPrefWidth(150);
 	    dataNameEndColumn.setPrefWidth(170);
+	    columnRating.setStyle("-fx-alignment: CENTER;");
 		
         treeTableViewfilm.setRoot(root);
         treeTableViewfilm.setColumnResizePolicy( TreeTableView.CONSTRAINED_RESIZE_POLICY );
         treeTableViewfilm.setShowRoot(false);
 		
         //inhalt in Zelle schreiben
-        columnTitel.setCellValueFactory((CellDataFeatures<streamUiData, String> p) -> 
-        new ReadOnlyStringWrapper(p.getValue().getValue().getTitel())); 
-       
-        columnRating.setCellValueFactory((CellDataFeatures<streamUiData, Double> p) -> 
-        new ReadOnlyObjectWrapper<Double>(p.getValue().getValue().getRating()));
+//        columnTitel.setCellValueFactory((CellDataFeatures<streamUiData, String> p) -> 
+//        new ReadOnlyStringWrapper(p.getValue().getValue().getTitel())); 
+//       
+//        columnRating.setCellValueFactory((CellDataFeatures<streamUiData, Double> p) -> 
+//        new ReadOnlyObjectWrapper<Double>(p.getValue().getValue().getRating()));
+//        
+//        columnStreamUrl.setCellValueFactory((CellDataFeatures<streamUiData, String> p) -> 
+//        new ReadOnlyStringWrapper(p.getValue().getValue().getStreamUrl()));
+//        
+//        columnResolution.setCellValueFactory((CellDataFeatures<streamUiData, String> p) -> 
+//        new ReadOnlyStringWrapper(p.getValue().getValue().getResolution()));
+//        
+//        columnYear.setCellValueFactory((CellDataFeatures<streamUiData, Integer> p) -> 
+//        new ReadOnlyObjectWrapper(p.getValue().getValue().getYear()));
+//        
+//        columnSeason.setCellValueFactory((CellDataFeatures<streamUiData, Integer> p) -> 
+//        new ReadOnlyObjectWrapper(p.getValue().getValue().getSeason()));
+//        
+//        columnEpisode.setCellValueFactory((CellDataFeatures<streamUiData, Integer> p) -> 
+//        new ReadOnlyObjectWrapper(p.getValue().getValue().getEpisode()));
         
-        columnStreamUrl.setCellValueFactory((CellDataFeatures<streamUiData, String> p) -> 
-        new ReadOnlyStringWrapper(p.getValue().getValue().getStreamUrl()));
         
-        columnResolution.setCellValueFactory((CellDataFeatures<streamUiData, String> p) -> 
-        new ReadOnlyStringWrapper(p.getValue().getValue().getResolution()));
-        
-        columnYear.setCellValueFactory((CellDataFeatures<streamUiData, Integer> p) -> 
-        new ReadOnlyObjectWrapper(p.getValue().getValue().getYear()));
-        
-        columnSeason.setCellValueFactory((CellDataFeatures<streamUiData, Integer> p) -> 
-        new ReadOnlyObjectWrapper(p.getValue().getValue().getSeason()));
-        
-        columnEpisode.setCellValueFactory((CellDataFeatures<streamUiData, Integer> p) -> 
-        new ReadOnlyObjectWrapper(p.getValue().getValue().getEpisode()));
+        //write content into cell (new)
+        columnTitel.setCellValueFactory(cellData -> cellData.getValue().getValue().titelProperty());
+        columnRating.setCellValueFactory(cellData -> cellData.getValue().getValue().imageProperty());
+        columnStreamUrl.setCellValueFactory(cellData -> cellData.getValue().getValue().streamUrlProperty());
+        columnResolution.setCellValueFactory(cellData -> cellData.getValue().getValue().resolutionProperty());
+        columnYear.setCellValueFactory(cellData -> cellData.getValue().getValue().yearProperty().asObject());
+        columnSeason.setCellValueFactory(cellData -> cellData.getValue().getValue().seasonProperty().asObject());
+        columnEpisode.setCellValueFactory(cellData -> cellData.getValue().getValue().episodeProperty().asObject());
 
         treeTableViewfilm.getColumns().addAll(columnTitel, columnRating, columnStreamUrl, columnResolution, columnYear, columnSeason, columnEpisode);
 	    treeTableViewfilm.getColumns().get(2).setVisible(false); //blendet die Column mit den Dateinamen aus (wichtig um sie abzuspielen)
@@ -724,8 +732,8 @@ public class MainWindowController {
 			for(int i = 0; i < newDaten.size(); i++){
 				root.getChildren().add(new TreeItem<streamUiData>(newDaten.get(i)));	//fügt daten zur Rootnode hinzu
 			}
-			columnRating.setMaxWidth(120);
-		    columnTitel.setMaxWidth(240);
+			columnRating.setMaxWidth(80);
+		    columnTitel.setMaxWidth(280);
 			treeTableViewfilm.getColumns().get(3).setVisible(false);
 			treeTableViewfilm.getColumns().get(4).setVisible(false);
 			treeTableViewfilm.getColumns().get(5).setVisible(false);
@@ -756,7 +764,7 @@ public class MainWindowController {
 				if(entries[i].endsWith(".json")){
 					String titel = ohneEndung(entries[i]);
 					String data = entries[i];
-					streamingData.add(new streamUiData(1,1,1,5.0,"1",titel ,data));
+					streamingData.add(new streamUiData(1,1,1,5.0,"1",titel ,data, imv1));
 				}
 			}
 			for(int i = 0; i < streamingData.size(); i++){

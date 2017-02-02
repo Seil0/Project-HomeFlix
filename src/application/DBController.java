@@ -24,6 +24,9 @@ import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+
 public class DBController {
 
 	public DBController(MainWindowController m) {
@@ -32,6 +35,8 @@ public class DBController {
 
 	private MainWindowController mainWindowController;
 	private String DB_PATH = System.getProperty("user.home") + "\\Documents\\HomeFlix" + "\\" + "Homeflix.db"; // der Pfad der Datenbank-Datei
+	private ImageView favorite_black = new ImageView(new Image("recources/icons/ic_favorite_black_18dp_1x.png"));
+	private ImageView favorite_border_black = new ImageView(new Image("recources/icons/ic_favorite_border_black_18dp_1x.png"));
 	private List<String> filmsdbAll = new ArrayList<String>();
 	private List<String> filmsdbLocal = new ArrayList<String>();
 	private List<String> filmsdbStream = new ArrayList<String>();
@@ -68,15 +73,15 @@ public class DBController {
 	}
 	
 	void createDatabase() { 
-		System.out.println("<=====starting loading sql=====>");
+		System.out.println("<==========starting loading sql==========>");
 		
 		PreparedStatement ps;
 		PreparedStatement psS;	
 	
 		try {
 			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("create table if not exists film_local (rating, titel, streamUrl)");
-			stmt.executeUpdate("create table if not exists film_streaming (year, season, episode, rating, resolution, titel, streamUrl)");
+			stmt.executeUpdate("create table if not exists film_local (rating, titel, streamUrl, favIcon)");
+			stmt.executeUpdate("create table if not exists film_streaming (year, season, episode, rating, resolution, titel, streamUrl, favIcon)");
 			stmt.close();
 		} catch (SQLException e1) {
 			e1.printStackTrace();
@@ -134,14 +139,15 @@ public class DBController {
 					System.out.println("creating entries ...");
 					
 					try{
-						ps = connection.prepareStatement("insert into film_local values (?, ?, ?)");
-						psS = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?, ?)");
+						ps = connection.prepareStatement("insert into film_local values (?, ?, ?, ?)");
+						psS = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?, ?, ?)");
 					
 						for(int j=0;j!=entries.length;j++) // Geht alle Dateien im Verzeichniss durch
 						{
 							ps.setInt(1, 0); // definiert Bewertung als Integer in der dritten Spalte
 							ps.setString(2, cutOffEnd(entries[j])); // definiert Name als String in der ersten Spalte
 							ps.setString(3,entries[j]); // definiert Pfad als String in der zweiten Spalte
+							ps.setString(4, "favorite_border_black");
 							ps.addBatch(); // fügt den Eintrag hinzu
 						}
 					
@@ -161,6 +167,7 @@ public class DBController {
 									psS.setString(5, item.asObject().getString("resolution", ""));
 									psS.setString(6, item.asObject().getString("titel",""));
 									psS.setString(7, item.asObject().getString("streamUrl", ""));
+									psS.setString(8, "favorite_border_black");
 									psS.addBatch(); // fügt den Eintrag hinzu
 								}
 							} catch (IOException e) {
@@ -201,7 +208,7 @@ public class DBController {
 			Statement stmt = connection.createStatement(); 
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local"); 
 			while (rs.next()) {
-				mainWindowController.newDaten.add(new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3)));
+				mainWindowController.newDaten.add(new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), favorite_border_black));
 			}
 			stmt.close();
 			rs.close();
@@ -209,7 +216,7 @@ public class DBController {
 			//load streaming Data TODO check if there are streaming data before loading -> maybe there is an issue now
 			rs = stmt.executeQuery("SELECT * FROM film_streaming;"); 
 			while (rs.next()) {
-				mainWindowController.streamData.add(new streamUiData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7)));
+				mainWindowController.streamData.add(new streamUiData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), favorite_border_black));
 			}
 			stmt.close();
 			rs.close(); 		
@@ -217,7 +224,7 @@ public class DBController {
 			System.err.println("Ups! an error occured!"); 
 			e.printStackTrace(); 
 		}
-		System.out.println("<=====finished loading sql=====>"); 
+		System.out.println("<==========finished loading sql==========>"); 
 	}
 	
 	//refreshs the data in mainWindowController.newDaten and mainWindowController.streamData
@@ -229,14 +236,22 @@ public class DBController {
 		try {
 			stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local WHERE titel = '"+name+"';" );
-			mainWindowController.newDaten.set(i, new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3)));
+			if(rs.getString(4).equals("favorite_black")){
+				mainWindowController.newDaten.set(i, new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), favorite_black));
+			}else{
+				mainWindowController.newDaten.set(i, new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), favorite_border_black));
+			}
 			stmt.close();
 			rs.close();
 		} catch (SQLException e) {
 			try {
 				stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery("SELECT * FROM film_streaming WHERE titel = '"+name+"';" );
-				mainWindowController.streamData.set(i,new streamUiData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7)));
+				if(rs.getString(8).equals("favorite_black")){
+					mainWindowController.streamData.set(i,new streamUiData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), favorite_black));
+				}else{
+					mainWindowController.streamData.set(i,new streamUiData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), favorite_border_black));
+				}
 				stmt.close();
 				rs.close();
 			} catch (SQLException e1) {
@@ -276,13 +291,13 @@ public class DBController {
 		System.out.println("checking for entrys to add to DB ...");
 		String[] entries = new File(mainWindowController.getPath()).list();
 		Statement stmt = connection.createStatement();
-		PreparedStatement ps = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?, ?)");;
+		PreparedStatement ps = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?, ?, ?)");;
 		int i=0;
 		
 		for(int a=0; a<filmsDir.size(); a++){
 			if(filmsdbLocal.contains(filmsDir.get(a))){
 			}else{			
-				stmt.executeUpdate("insert into film_local values (0, '"+cutOffEnd(entries[a])+"', '"+entries[a]+"')");
+				stmt.executeUpdate("insert into film_local values (0, '"+cutOffEnd(entries[a])+"', '"+entries[a]+"','favorite_border_black')");
 				connection.commit();
 				stmt.close();
 				System.out.println("added \""+filmsDir.get(a)+"\" to databsae");
@@ -308,6 +323,7 @@ public class DBController {
 						ps.setString(5, items.get(i).asObject().getString("resolution", ""));
 						ps.setString(6, items.get(i).asObject().getString("titel",""));
 						ps.setString(7, items.get(i).asObject().getString("streamUrl", ""));
+						ps.setString(8, "favorite_border_black");
 						ps.addBatch(); // adds the entry
 						
 //						stmt.executeUpdate("insert into film_streaming values ("+items.get(i).asObject().getInt("year", 0)+", "+items.get(i).asObject().getInt("season", 0)+", "+items.get(i).asObject().getInt("episode", 0)+", 0, '"+items.get(i).asObject().getString("resolution", ""+"', '"+items.get(i).asObject().getString("titel","")+"', '"+items.get(i).asObject().getString("streamUrl", "")+"')"));
@@ -328,7 +344,8 @@ public class DBController {
 		while (rs.next()) { 
 			System.out.println(rs.getString(1));
 			System.out.println(rs.getString(2));
-			System.out.println(rs.getString(3)+"\n");
+			System.out.println(rs.getString(3));
+			System.out.println(rs.getString(4)+"\n");
 		}
 		stmt.close();
 		rs.close();
@@ -343,7 +360,8 @@ public class DBController {
 			System.out.println(rs.getString(4));
 			System.out.println(rs.getString(5));
 			System.out.println(rs.getString(6));
-			System.out.println(rs.getString(7)+"\n");
+			System.out.println(rs.getString(7));
+			System.out.println(rs.getString(8)+"\n");
 		}
 		stmt.close();
 		rs.close(); 
@@ -358,15 +376,15 @@ public class DBController {
 	void getFavStatus(String name){
 		try{
 			Statement stmt = connection.createStatement(); 
-			ResultSet rs = stmt.executeQuery("SELECT titel, rating FROM film_local WHERE titel = '"+name+"';" ); //SQL Befehl
-			System.out.println("local:"+rs.getString("rating")+", "+rs.getString("titel"));
+			ResultSet rs = stmt.executeQuery("SELECT titel, rating, favIcon FROM film_local WHERE titel = '"+name+"';" ); //SQL Befehl
+			System.out.println("local:"+rs.getString("rating")+", "+rs.getString("titel")+", "+rs.getString("favIcon"));
 			stmt.close();
 			rs.close();
 		}catch(SQLException e){
 			try {
 				Statement stmtS = connection.createStatement(); 
-				ResultSet rsS = stmtS.executeQuery("SELECT titel, rating FROM film_streaming WHERE titel = '"+name+"';" );
-				System.out.println("streaming:"+rsS.getString("rating")+", "+rsS.getString("titel"));
+				ResultSet rsS = stmtS.executeQuery("SELECT titel, rating, favIcon FROM film_streaming WHERE titel = '"+name+"';" );
+				System.out.println("streaming:"+rsS.getString("rating")+", "+rsS.getString("titel")+", "+rsS.getString("favIcon"));
 				stmtS.close();
 				rsS.close();
 			} catch (SQLException e1) {
@@ -381,7 +399,7 @@ public class DBController {
 		System.out.println("defavorisieren ...");		
 		try{
 			Statement stmt = connection.createStatement(); 
-			stmt.executeUpdate("UPDATE film_local SET rating=0 WHERE titel='"+name+"';");
+			stmt.executeUpdate("UPDATE film_local SET rating=0,favIcon='favorite_border_black' WHERE titel='"+name+"';");
 			connection.commit();
 			stmt.close();
 		}catch(SQLException e){
@@ -390,7 +408,7 @@ public class DBController {
 		}
 		try {
 			Statement stmt = connection.createStatement(); 
-			stmt.executeUpdate("UPDATE film_streaming SET rating=0 WHERE streamUrl='"+streamUrl+"';");
+			stmt.executeUpdate("UPDATE film_streaming SET rating=0,favIcon='favorite_border_black' WHERE streamUrl='"+streamUrl+"';");
 			connection.commit();
 			stmt.close();
 		} catch (SQLException e1) {
@@ -403,7 +421,7 @@ public class DBController {
 		System.out.println("favorisieren ...");
 		try{
 			Statement stmt = connection.createStatement(); 
-			stmt.executeUpdate("UPDATE film_local SET rating=1 WHERE titel='"+name+"';");
+			stmt.executeUpdate("UPDATE film_local SET rating=1,favIcon='favorite_black' WHERE titel='"+name+"';");
 			connection.commit();
 			stmt.close();
 		}catch(SQLException e){
@@ -412,7 +430,7 @@ public class DBController {
 		}
 		try {
 			Statement stmt = connection.createStatement(); 
-			stmt.executeUpdate("UPDATE film_streaming SET rating=1 WHERE streamUrl='"+streamUrl+"';");
+			stmt.executeUpdate("UPDATE film_streaming SET rating=1,favIcon='favorite_black' WHERE streamUrl='"+streamUrl+"';");
 			connection.commit();
 			stmt.close();
 		} catch (SQLException e1) {
