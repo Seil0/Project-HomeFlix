@@ -34,9 +34,9 @@ public class DBController {
 	}
 
 	private MainWindowController mainWindowController;
-	private String DB_PATH = System.getProperty("user.home") + "\\Documents\\HomeFlix" + "\\" + "Homeflix.db"; // der Pfad der Datenbank-Datei
-	private ImageView favorite_black = new ImageView(new Image("recources/icons/ic_favorite_black_18dp_1x.png"));
-	private ImageView favorite_border_black = new ImageView(new Image("recources/icons/ic_favorite_border_black_18dp_1x.png"));
+	private String DB_PATH = System.getProperty("user.home") + "\\Documents\\HomeFlix" + "\\" + "Homeflix.db"; //path to database file
+	private Image favorite_black = new Image("recources/icons/ic_favorite_black_18dp_1x.png");
+	private Image favorite_border_black = new Image("recources/icons/ic_favorite_border_black_18dp_1x.png");
 	private List<String> filmsdbAll = new ArrayList<String>();
 	private List<String> filmsdbLocal = new ArrayList<String>();
 	private List<String> filmsdbStream = new ArrayList<String>();
@@ -53,9 +53,9 @@ public class DBController {
 			// create a database connection
 			connection = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
 			// Statement statement = connection.createStatement();
-			// statement.setQueryTimeout(30); // set timeout to 30 sec. TODO don't know wath to do with this
+			// statement.setQueryTimeout(30); // set timeout to 30 sec. TODO don't know what to do with this
 
-			connection.setAutoCommit(false);	//Autocommit to false -> manual commit is active
+			connection.setAutoCommit(false);	//AutoCommit to false -> manual commit is active
 //			fuelleDatenbank();
 		} catch (SQLException e) {
 			// if the error message is "out of memory", it probably means no database file is found
@@ -142,17 +142,17 @@ public class DBController {
 						ps = connection.prepareStatement("insert into film_local values (?, ?, ?, ?)");
 						psS = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?, ?, ?)");
 					
-						for(int j=0;j!=entries.length;j++) // Geht alle Dateien im Verzeichniss durch
+						for(int j=0;j!=entries.length;j++) //goes through all the files in the directory
 						{
-							ps.setInt(1, 0); // definiert Bewertung als Integer in der dritten Spalte
-							ps.setString(2, cutOffEnd(entries[j])); // definiert Name als String in der ersten Spalte
-							ps.setString(3,entries[j]); // definiert Pfad als String in der zweiten Spalte
+							ps.setInt(1, 0); //rating as integer 1. column
+							ps.setString(2, cutOffEnd(entries[j])); //name as String without ending 2. column
+							ps.setString(3,entries[j]); //path as String 3. column
 							ps.setString(4, "favorite_border_black");
-							ps.addBatch(); // fügt den Eintrag hinzu
+							ps.addBatch(); // add command to prepared statement
 						}
 					
 						if(mainWindowController.getStreamingPath().equals("")||mainWindowController.getStreamingPath().equals(null)){
-							System.out.println("Kein Pfad angegeben");	//falls der Pfad null oder "" ist
+							System.out.println("Kein Pfad angegeben");	//if path == null or ""
 						}else{
 							for(int i=0; i< mainWindowController.streamingData.size(); i++){
 							String fileNamea = mainWindowController.getStreamingPath()+"/"+mainWindowController.streamingData.get(i).getStreamUrl();
@@ -168,14 +168,14 @@ public class DBController {
 									psS.setString(6, item.asObject().getString("titel",""));
 									psS.setString(7, item.asObject().getString("streamUrl", ""));
 									psS.setString(8, "favorite_border_black");
-									psS.addBatch(); // fügt den Eintrag hinzu
+									psS.addBatch(); // add command to prepared statement
 								}
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
 						}
 						}
-						ps.executeBatch();  // scheibt alle Einträge in die Datenbank
+						ps.executeBatch();  //execute statement to write entries into table
 						psS.executeBatch();			
 						connection.commit();
 						ps.close();
@@ -208,7 +208,11 @@ public class DBController {
 			Statement stmt = connection.createStatement(); 
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local"); 
 			while (rs.next()) {
-				mainWindowController.newDaten.add(new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), favorite_border_black));
+				if(rs.getString(4).equals("favorite_black")){
+					mainWindowController.newDaten.add( new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_black)));
+				}else{
+					mainWindowController.newDaten.add( new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_border_black)));
+				}
 			}
 			stmt.close();
 			rs.close();
@@ -216,7 +220,11 @@ public class DBController {
 			//load streaming Data TODO check if there are streaming data before loading -> maybe there is an issue now
 			rs = stmt.executeQuery("SELECT * FROM film_streaming;"); 
 			while (rs.next()) {
-				mainWindowController.streamData.add(new streamUiData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), favorite_border_black));
+				if(rs.getString(8).equals("favorite_black")){
+					mainWindowController.streamData.add(new streamUiData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7),  new ImageView(favorite_black)));
+				}else{
+					mainWindowController.streamData.add(new streamUiData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), new ImageView(favorite_border_black)));
+				}
 			}
 			stmt.close();
 			rs.close(); 		
@@ -227,7 +235,7 @@ public class DBController {
 		System.out.println("<==========finished loading sql==========>"); 
 	}
 	
-	//refreshs the data in mainWindowController.newDaten and mainWindowController.streamData
+	//Refreshes the data in mainWindowController.newDaten and mainWindowController.streamData
 	//TODO it seems that there is an issue at the moment with streaming refreshing wrong entry if there is more than one with the same name
 	void refresh(String name,int i) throws SQLException{
 		System.out.println("refresh ...");
@@ -237,9 +245,9 @@ public class DBController {
 			stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local WHERE titel = '"+name+"';" );
 			if(rs.getString(4).equals("favorite_black")){
-				mainWindowController.newDaten.set(i, new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), favorite_black));
+				mainWindowController.newDaten.set(i, new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3),  new ImageView(favorite_black)));
 			}else{
-				mainWindowController.newDaten.set(i, new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), favorite_border_black));
+				mainWindowController.newDaten.set(i, new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_border_black)));
 			}
 			stmt.close();
 			rs.close();
@@ -248,9 +256,9 @@ public class DBController {
 				stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery("SELECT * FROM film_streaming WHERE titel = '"+name+"';" );
 				if(rs.getString(8).equals("favorite_black")){
-					mainWindowController.streamData.set(i,new streamUiData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), favorite_black));
+					mainWindowController.streamData.set(i,new streamUiData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7),  new ImageView(favorite_black)));
 				}else{
-					mainWindowController.streamData.set(i,new streamUiData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), favorite_border_black));
+					mainWindowController.streamData.set(i,new streamUiData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), new ImageView(favorite_border_black)));
 				}
 				stmt.close();
 				rs.close();
@@ -287,7 +295,7 @@ public class DBController {
 		
 	}
 	
-	private void checkAddEntry() throws SQLException, FileNotFoundException, IOException{	//müssen noch alphabetisch sortiert werden
+	private void checkAddEntry() throws SQLException, FileNotFoundException, IOException{	//TODO sort alphabetical
 		System.out.println("checking for entrys to add to DB ...");
 		String[] entries = new File(mainWindowController.getPath()).list();
 		Statement stmt = connection.createStatement();

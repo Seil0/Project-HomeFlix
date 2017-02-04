@@ -122,6 +122,7 @@ public class apiQuery{
 			}
 
 		} catch (Exception e) {
+			mainWindowController.ta1.setText(e.toString());
 			System.out.println(e);
 		} finally {
 			//closes datainputStream, InputStream,Scanner if not already done
