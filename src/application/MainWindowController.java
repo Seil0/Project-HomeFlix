@@ -184,12 +184,14 @@ public class MainWindowController {
 	private boolean streamingSettingsTrue = false;
 	private int hashA = -2055934614;
 	private String version = "0.4.99";
-	private String buildNumber = "110";
+	private String buildNumber = "112";
 	private String versionName = "plasma cow (pre Release)";
 	private String buildURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/buildNumber.txt";
 	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt";
-	private File dir = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	
-	private File file = new File(dir + "/config.xml");	
+	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");
+	private File dirLinux = new File(System.getProperty("user.home") + "/HomeFlix");
+	private File fileWin = new File(dirWin + "/config.xml");
+	private File fileLinux = new File(dirLinux + "/config.xml");	
 	
 	String errorUpdateD;
 	String errorUpdateV;
@@ -936,6 +938,7 @@ public class MainWindowController {
 	
 	//saves the Settings
 	public void saveSettings(){
+		OutputStream outputStream;	//new outputstream
 		try {
 			props.setProperty("path", getPath());	//writes path into property
 			props.setProperty("color", getColor());
@@ -945,7 +948,11 @@ public class MainWindowController {
 			props.setProperty("streamingPath", getStreamingPath());
 			props.setProperty("mode", getMode());
 			props.setProperty("ratingSortType", columnRating.getSortType().toString());
-			OutputStream outputStream = new FileOutputStream(file);	//new outputstream
+			if(System.getProperty("os.name").equals("Linux")){
+				outputStream = new FileOutputStream(fileLinux);
+			}else{
+				outputStream = new FileOutputStream(fileWin);
+			}
 			props.storeToXML(outputStream, "Project HomeFlix settings");	//writes new .xml
 			outputStream.close();
 		} catch (IOException e) {
@@ -956,8 +963,13 @@ public class MainWindowController {
 	
 	//loads the Settings
 	public void loadSettings(){
+		InputStream inputStream;
 		try {
-			InputStream inputStream = new FileInputStream(file);
+			if(System.getProperty("os.name").equals("Linux")){
+				inputStream = new FileInputStream(fileLinux);
+			}else{
+				inputStream = new FileInputStream(fileWin);
+			}
 			props.loadFromXML(inputStream);	//new inputstream from .xml
 			path = props.getProperty("path");	//reads path from property
 			streamingPath = props.getProperty("streamingPath");

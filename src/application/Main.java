@@ -46,14 +46,18 @@ public class Main extends Application {
 	
 	public Stage primaryStage;
 	private String path;
-	private String streamingPath = System.getProperty("user.home") + "\\Documents\\HomeFlix";
+	private InputStream inputStream;
+	private String streamingPathWin = System.getProperty("user.home") + "\\Documents\\HomeFlix";
+	private String streamingPathLinux = System.getProperty("user.home") + "/HomeFlix";
 	private String color = "ee3523";
 	private String autoUpdate = "0";
 	private String mode = "local";	//local or streaming
 	private double size = 12;
 	private int local = 0;
-	private File dir = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	//Windows: C:/Users/"User"/Documents/HomeFlix	OSX: not tested yet	Linux: not tested yet(shalt not work!)
-	private File file = new File(dir + "/config.xml");	//Windows: C:/Users/"User"/Documents/HomeFlix/config.xml	OSX: not tested yet	Linux: not tested yet(shalt not work!)
+	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	//Windows: C:/Users/"User"/Documents/HomeFlix	OSX: not tested yet	Linux: not tested yet(shalt not work!)
+	private File dirLinux = new File(System.getProperty("user.home") + "/HomeFlix");
+	private File fileWin = new File(dirWin + "/config.xml");	//Windows: C:/Users/"User"/Documents/HomeFlix/config.xml	OSX: not tested yet	Linux: not tested yet(shalt not work!)
+	private File fileLinux = new File(dirLinux + "/config.xml");
 	Properties props = new Properties();
 	private MainWindowController mainWindowController;
 	
@@ -79,33 +83,68 @@ public class Main extends Application {
 		mainWindowController.setMain(this);	//call setMain
 		
 		//dir exists -> check config.xml
-		if(dir.exists() == true){
-			if (file.exists() != true) {
-				mainWindowController.setPath(firstStart());
-				mainWindowController.setStreamingPath(streamingPath);
-				mainWindowController.setColor(color);
-				mainWindowController.setSize(size);
-				mainWindowController.setAutoUpdate(autoUpdate);
-				mainWindowController.setLoaclUI(local);
-				mainWindowController.setMode(mode);
-				mainWindowController.saveSettings();
-				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
-				System.exit(0);	//finishes itself
+		if(System.getProperty("os.name").equals("Linux")){
+			if(dirLinux.exists() == true){
+				if (fileLinux.exists() != true) {
+					mainWindowController.setPath(firstStart());
+					if(System.getProperty("os.name").equals("Linux")){
+						mainWindowController.setStreamingPath(streamingPathLinux);
+					}else{
+						mainWindowController.setStreamingPath(streamingPathWin);
+					}
+					mainWindowController.setColor(color);
+					mainWindowController.setSize(size);
+					mainWindowController.setAutoUpdate(autoUpdate);
+					mainWindowController.setLoaclUI(local);
+					mainWindowController.setMode(mode);
+					mainWindowController.saveSettings();
+					Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
+					System.exit(0);	//finishes itself
+				}else{
+					loadSettings();
+				}	
 			}else{
-				loadSettings();
-			}	
+			dirLinux.mkdir();
+			mainWindowController.setPath(firstStart());
+			mainWindowController.setStreamingPath(streamingPathLinux);
+			mainWindowController.setColor(color);
+			mainWindowController.setSize(size);
+			mainWindowController.setAutoUpdate(autoUpdate);
+			mainWindowController.setLoaclUI(local);
+			mainWindowController.setMode(mode);
+			mainWindowController.saveSettings();
+			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
+			System.exit(0);	//finishes itself
+			}
 		}else{
-		dir.mkdir();
-		mainWindowController.setPath(firstStart());
-		mainWindowController.setStreamingPath(streamingPath);
-		mainWindowController.setColor(color);
-		mainWindowController.setSize(size);
-		mainWindowController.setAutoUpdate(autoUpdate);
-		mainWindowController.setLoaclUI(local);
-		mainWindowController.setMode(mode);
-		mainWindowController.saveSettings();
-		Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
-		System.exit(0);	//finishes itself
+			if(dirWin.exists() == true){
+				if (fileWin.exists() != true) {
+					mainWindowController.setPath(firstStart());
+					mainWindowController.setStreamingPath(streamingPathWin);
+					mainWindowController.setColor(color);
+					mainWindowController.setSize(size);
+					mainWindowController.setAutoUpdate(autoUpdate);
+					mainWindowController.setLoaclUI(local);
+					mainWindowController.setMode(mode);
+					mainWindowController.saveSettings();
+					Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
+					System.exit(0);	//finishes itself
+				}else{
+					loadSettings();
+				}	
+			}else{
+			dirWin.mkdir();
+			mainWindowController.setPath(firstStart());
+			mainWindowController.setStreamingPath(streamingPathWin);
+			mainWindowController.setColor(color);
+			mainWindowController.setSize(size);
+			mainWindowController.setAutoUpdate(autoUpdate);
+			mainWindowController.setLoaclUI(local);
+			mainWindowController.setMode(mode);
+			mainWindowController.saveSettings();
+			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
+			System.exit(0);	//finishes itself
+			}
 		}
 		
 		mainWindowController.loadStreamingSettings();
@@ -117,7 +156,7 @@ public class Main extends Application {
 		mainWindowController.dbController.createDatabase(); //creating the database
 		mainWindowController.dbController.loadData(); 	//loading data from database to mainWindowController 
 		
-//		mainWindowController.loadData();	//läd die Daten im Controller
+//		mainWindowController.loadData();	//lï¿½d die Daten im Controller
 		mainWindowController.addDataUI();
 		
 		Scene scene = new Scene(pane);	//create new scene, append pane to scene
@@ -129,11 +168,11 @@ public class Main extends Application {
 		}
 	}
 	
-	//methode für den erstmaligen Start
+	//methode fï¿½r den erstmaligen Start
 	private String firstStart(){
 		Alert alert = new Alert(AlertType.CONFIRMATION);	//new alert with filechooser
 		alert.setTitle("Project HomeFlix");
-		alert.setHeaderText("Es ist kein Stammverzeichniss für Filme angegeben!");	//TODO translate
+		alert.setHeaderText("Es ist kein Stammverzeichniss fï¿½r Filme angegeben!");	//TODO translate
 		alert.setContentText("Stammverzeichniss angeben?");
 
 		Optional<ButtonType> result = alert.showAndWait();
@@ -149,13 +188,21 @@ public class Main extends Application {
 		return path;
 	}
 	
-	//lädt die einstellungen aus der XML
+	//lÃ¤dt die einstellungen aus der XML
 	public void loadSettings(){
 		try {
-			InputStream inputStream = new FileInputStream(file);
+			if(System.getProperty("os.name").equals("Linux")){
+				inputStream = new FileInputStream(fileLinux);
+			}else{
+				inputStream = new FileInputStream(fileWin);
+			}
 			props.loadFromXML(inputStream);
 			path = props.getProperty("path");	//setzt Propselement in Pfad
-			streamingPath = props.getProperty("streamingPath");
+			if(System.getProperty("os.name").equals("Linux")){
+				streamingPathLinux = props.getProperty("streamingPath");
+			}else{
+				streamingPathWin = props.getProperty("streamingPath");
+			}
 			color = props.getProperty("color");
 			size = Double.parseDouble(props.getProperty("size"));
 			autoUpdate = props.getProperty("autoUpdate");

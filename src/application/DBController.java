@@ -49,6 +49,11 @@ public class DBController {
 	Connection connection = null;
 
 	public void main() {
+		if (System.getProperty("os.name").equals("Linux")) {
+			DB_PATH = System.getProperty("user.home") + "/HomeFlix/Homeflix.db";
+		}else{
+			DB_PATH = System.getProperty("user.home") + "\\Documents\\HomeFlix" + "\\" + "Homeflix.db";
+		}
 		try {
 			// create a database connection
 			connection = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
@@ -181,7 +186,7 @@ public class DBController {
 						ps.close();
 						psS.close();
 					}catch (SQLException ea) { 
-						System.err.println("Konnte nicht ausgeführt werden"); 
+						System.err.println("Konnte nicht ausgefï¿½hrt werden"); 
 						ea.printStackTrace(); 
 					}
 				}else {
@@ -322,7 +327,7 @@ public class DBController {
 					String titel = items.get(i).asObject().getString("titel","");
 					
 					if(streamURL.equals(filmsStreamURL.get(b))){
-						System.out.println("hinzufügen \""+titel+"\"");
+						System.out.println("hinzufï¿½gen \""+titel+"\"");
 						
 						ps.setInt(1, items.get(i).asObject().getInt("year", 0));
 						ps.setInt(2, items.get(i).asObject().getInt("season", 0));
@@ -345,7 +350,7 @@ public class DBController {
 	}
 	
 	void ausgeben(){
-	System.out.println("Einträge ausgeben ... \n"); 
+	System.out.println("Eintrï¿½ge ausgeben ... \n"); 
 	try { 
 		Statement stmt = connection.createStatement(); 
 		ResultSet rs = stmt.executeQuery("SELECT * FROM film_local"); 
