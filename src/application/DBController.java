@@ -114,8 +114,13 @@ public class DBController {
 			}
 			
 			String[] entries = new File(mainWindowController.getPath()).list();
-			for(int i=0;i!=entries.length;i++){
-				filmsDir.add(cutOffEnd(entries[i]));
+			if(mainWindowController.getPath().equals("") || mainWindowController.getPath() == null){
+				System.out.println("Kein Pfad angegeben");	//if path == null or ""
+			}else{
+				System.out.println(entries.length);
+				for(int i=0;i!=entries.length;i++){
+					filmsDir.add(cutOffEnd(entries[i]));
+				}
 			}
 				
 			for(int v=0; v< mainWindowController.streamingData.size(); v++){
@@ -146,19 +151,23 @@ public class DBController {
 					try{
 						ps = connection.prepareStatement("insert into film_local values (?, ?, ?, ?)");
 						psS = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?, ?, ?)");
-					
-						for(int j=0;j!=entries.length;j++) //goes through all the files in the directory
-						{
-							ps.setInt(1, 0); //rating as integer 1. column
-							ps.setString(2, cutOffEnd(entries[j])); //name as String without ending 2. column
-							ps.setString(3,entries[j]); //path as String 3. column
-							ps.setString(4, "favorite_border_black");
-							ps.addBatch(); // add command to prepared statement
+						
+						if(mainWindowController.getPath().equals("") || mainWindowController.getPath() == null){
+							System.out.println("Kein Pfad angegeben");	//if path == null or ""
+						}else{
+							for(int j=0;j!=entries.length;j++) //goes through all the files in the directory
+							{
+								ps.setInt(1, 0); //rating as integer 1. column
+								ps.setString(2, cutOffEnd(entries[j])); //name as String without ending 2. column
+								ps.setString(3,entries[j]); //path as String 3. column
+								ps.setString(4, "favorite_border_black");
+								ps.addBatch(); // add command to prepared statement
+							}
 						}
 					
 						if(mainWindowController.getStreamingPath().equals("")||mainWindowController.getStreamingPath().equals(null)){
 							System.out.println("Kein Pfad angegeben");	//if path == null or ""
-						}else{
+						}else{						
 							for(int i=0; i< mainWindowController.streamingData.size(); i++){
 							String fileNamea = mainWindowController.getStreamingPath()+"/"+mainWindowController.streamingData.get(i).getStreamUrl();
 							try {

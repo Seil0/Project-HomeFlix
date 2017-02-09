@@ -20,15 +20,15 @@
  * 
  */
 package application;
-/**
- * TODO OSX and	Linux directory and file (Linux: 99% not working!)
- */
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.ResourceBundle;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -54,11 +54,12 @@ public class Main extends Application {
 	private String mode = "local";	//local or streaming
 	private double size = 12;
 	private int local = 0;
-	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	//Windows: C:/Users/"User"/Documents/HomeFlix	OSX: not tested yet	Linux: not tested yet(shalt not work!)
+	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	//Windows: C:/Users/"User"/Documents/HomeFlix
 	private File dirLinux = new File(System.getProperty("user.home") + "/HomeFlix");
-	private File fileWin = new File(dirWin + "/config.xml");	//Windows: C:/Users/"User"/Documents/HomeFlix/config.xml	OSX: not tested yet	Linux: not tested yet(shalt not work!)
+	private File fileWin = new File(dirWin + "/config.xml");	//Windows: C:/Users/"User"/Documents/HomeFlix/config.xml
 	private File fileLinux = new File(dirLinux + "/config.xml");
 	Properties props = new Properties();
+	private ResourceBundle bundle;
 	private MainWindowController mainWindowController;
 	
 	@Override
@@ -155,8 +156,6 @@ public class Main extends Application {
 		mainWindowController.dbController.main(); //initialize database controller
 		mainWindowController.dbController.createDatabase(); //creating the database
 		mainWindowController.dbController.loadData(); 	//loading data from database to mainWindowController 
-		
-//		mainWindowController.loadData();	//l�d die Daten im Controller
 		mainWindowController.addDataUI();
 		
 		Scene scene = new Scene(pane);	//create new scene, append pane to scene
@@ -166,14 +165,25 @@ public class Main extends Application {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		System.out.println(System.getProperty("user.language")+"_"+System.getProperty("user.country"));
 	}
 	
-	//methode f�r den erstmaligen Start
+	//Method for first Start
 	private String firstStart(){
-		Alert alert = new Alert(AlertType.CONFIRMATION);	//new alert with filechooser
+		System.out.println(System.getProperty("user.language")+"_"+System.getProperty("user.country"));
+		switch(System.getProperty("user.language")+"_"+System.getProperty("user.country")){
+		case "en_US":	bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//us_english
+				break;
+     	case "de_DE":	bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.GERMAN);	//german
+     			break;
+     	default:		bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//default local
+     			break;
+		 }
+		
+		Alert alert = new Alert(AlertType.CONFIRMATION);	//new alert with file-chooser
 		alert.setTitle("Project HomeFlix");
-		alert.setHeaderText("Es ist kein Stammverzeichniss f�r Filme angegeben!");	//TODO translate
-		alert.setContentText("Stammverzeichniss angeben?");
+		alert.setHeaderText(bundle.getString("firstStartHeader"));
+		alert.setContentText(bundle.getString("firstStartContent"));
 
 		Optional<ButtonType> result = alert.showAndWait();
 		if (result.get() == ButtonType.OK){
