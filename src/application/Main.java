@@ -1,7 +1,7 @@
 /**
  * Project HomeFlix
  * 
- * Copyright 2016  <admin@kellerkinder>
+ * Copyright 2016-2017  <admin@kellerkinder>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,9 +22,7 @@
 package application;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Properties;
@@ -38,7 +36,6 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
@@ -46,21 +43,20 @@ public class Main extends Application {
 	
 	public Stage primaryStage;
 	private String path;
-	private InputStream inputStream;
 	private String streamingPathWin = System.getProperty("user.home") + "\\Documents\\HomeFlix";
 	private String streamingPathLinux = System.getProperty("user.home") + "/HomeFlix";
 	private String color = "ee3523";
 	private String autoUpdate = "0";
 	private String mode = "local";	//local or streaming
+	private String local = System.getProperty("user.language")+"_"+System.getProperty("user.country");
 	private double size = 12;
-	private int local = 0;
-	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	//Windows: C:/Users/"User"/Documents/HomeFlix
-	private File dirLinux = new File(System.getProperty("user.home") + "/HomeFlix");
-	private File fileWin = new File(dirWin + "/config.xml");	//Windows: C:/Users/"User"/Documents/HomeFlix/config.xml
-	private File fileLinux = new File(dirLinux + "/config.xml");
-	Properties props = new Properties();
 	private ResourceBundle bundle;
 	private MainWindowController mainWindowController;
+	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	//Windows: C:/Users/"User"/Documents/HomeFlix
+	private File dirLinux = new File(System.getProperty("user.home") + "/HomeFlix");	//Linux: /home/"User"/HomeFlix
+	private File fileWin = new File(dirWin + "/config.xml");	//Windows: C:/Users/"User"/Documents/HomeFlix/config.xml
+	private File fileLinux = new File(dirLinux + "/config.xml");	//Linux: /home/"User"/HomeFlix/config.xml
+	Properties props = new Properties();
 	
 	@Override
 	public void start(Stage primaryStage) {
@@ -80,78 +76,50 @@ public class Main extends Application {
 		primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/recources/Homeflix_Icon_64x64.png"))); //adds application icon
 
 		mainWindowController = loader.getController();	//Link of FXMLController and controller class
-		mainWindowController.setAutoUpdate(autoUpdate);	//set autoupdate
+		mainWindowController.setAutoUpdate(autoUpdate);	//set auto-update
 		mainWindowController.setMain(this);	//call setMain
 		
-		//dir exists -> check config.xml
+		//Linux					if directory exists -> check config.xml
 		if(System.getProperty("os.name").equals("Linux")){
-			if(dirLinux.exists() == true){
-				if (fileLinux.exists() != true) {
-					mainWindowController.setPath(firstStart());
-					if(System.getProperty("os.name").equals("Linux")){
-						mainWindowController.setStreamingPath(streamingPathLinux);
-					}else{
-						mainWindowController.setStreamingPath(streamingPathWin);
-					}
-					mainWindowController.setColor(color);
-					mainWindowController.setSize(size);
-					mainWindowController.setAutoUpdate(autoUpdate);
-					mainWindowController.setLoaclUI(local);
-					mainWindowController.setMode(mode);
-					mainWindowController.saveSettings();
-					Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
-					System.exit(0);	//finishes itself
-				}else{
-					loadSettings();
-				}	
-			}else{
-			dirLinux.mkdir();
-			mainWindowController.setPath(firstStart());
-			mainWindowController.setStreamingPath(streamingPathLinux);
-			mainWindowController.setColor(color);
-			mainWindowController.setSize(size);
-			mainWindowController.setAutoUpdate(autoUpdate);
-			mainWindowController.setLoaclUI(local);
-			mainWindowController.setMode(mode);
-			mainWindowController.saveSettings();
-			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
-			System.exit(0);	//finishes itself
+			if(dirLinux.exists() != true){
+				dirLinux.mkdir();
+			}else if(fileLinux.exists() != true){
+				mainWindowController.setPath(firstStart());
+				mainWindowController.setStreamingPath(streamingPathLinux);
+				mainWindowController.setColor(color);
+				mainWindowController.setSize(size);
+				mainWindowController.setAutoUpdate(autoUpdate);
+				mainWindowController.setLocal(local);
+				mainWindowController.setMode(mode);
+				mainWindowController.saveSettings("l");
+				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
+				System.exit(0);	//finishes itself
 			}
+		//windows
 		}else{
-			if(dirWin.exists() == true){
-				if (fileWin.exists() != true) {
-					mainWindowController.setPath(firstStart());
-					mainWindowController.setStreamingPath(streamingPathWin);
-					mainWindowController.setColor(color);
-					mainWindowController.setSize(size);
-					mainWindowController.setAutoUpdate(autoUpdate);
-					mainWindowController.setLoaclUI(local);
-					mainWindowController.setMode(mode);
-					mainWindowController.saveSettings();
-					Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
-					System.exit(0);	//finishes itself
-				}else{
-					loadSettings();
-				}	
-			}else{
-			dirWin.mkdir();
-			mainWindowController.setPath(firstStart());
-			mainWindowController.setStreamingPath(streamingPathWin);
-			mainWindowController.setColor(color);
-			mainWindowController.setSize(size);
-			mainWindowController.setAutoUpdate(autoUpdate);
-			mainWindowController.setLoaclUI(local);
-			mainWindowController.setMode(mode);
-			mainWindowController.saveSettings();
-			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
-			System.exit(0);	//finishes itself
-			}
+			if(dirWin.exists() != true){
+				dirWin.mkdir();
+			}else if(fileWin.exists() != true){
+				mainWindowController.setPath(firstStart());
+				mainWindowController.setStreamingPath(streamingPathWin);
+				mainWindowController.setColor(color);
+				mainWindowController.setSize(size);
+				mainWindowController.setAutoUpdate(autoUpdate);
+				mainWindowController.setLocal(local);
+				mainWindowController.setMode(mode);
+				mainWindowController.saveSettings("k");
+				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
+				System.exit(0);	//finishes itself
+			}	
 		}
 		
+		mainWindowController.loadSettings();
 		mainWindowController.loadStreamingSettings();
+		mainWindowController.initUI();
+		mainWindowController.initActions();
+		mainWindowController.initTabel();
+		mainWindowController.setLocalUI();
 		mainWindowController.applyColor();	//set theme color
-		mainWindowController.cbLocal.getSelectionModel().select(mainWindowController.getLocal()); //set local
-		mainWindowController.mainColor.setValue(Color.valueOf(mainWindowController.getColor()));
 		
 		mainWindowController.dbController.main(); //initialize database controller
 		mainWindowController.dbController.createDatabase(); //creating the database
@@ -165,12 +133,11 @@ public class Main extends Application {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println(System.getProperty("user.language")+"_"+System.getProperty("user.country"));
 	}
 	
 	//Method for first Start
 	private String firstStart(){
-		System.out.println(System.getProperty("user.language")+"_"+System.getProperty("user.country"));
+		MainWindowController.firststart = true;
 		switch(System.getProperty("user.language")+"_"+System.getProperty("user.country")){
 		case "en_US":	bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//us_english
 				break;
@@ -197,34 +164,7 @@ public class Main extends Application {
 		}
 		return path;
 	}
-	
-	//lädt die einstellungen aus der XML
-	public void loadSettings(){
-		try {
-			if(System.getProperty("os.name").equals("Linux")){
-				inputStream = new FileInputStream(fileLinux);
-			}else{
-				inputStream = new FileInputStream(fileWin);
-			}
-			props.loadFromXML(inputStream);
-			path = props.getProperty("path");	//setzt Propselement in Pfad
-			if(System.getProperty("os.name").equals("Linux")){
-				streamingPathLinux = props.getProperty("streamingPath");
-			}else{
-				streamingPathWin = props.getProperty("streamingPath");
-			}
-			color = props.getProperty("color");
-			size = Double.parseDouble(props.getProperty("size"));
-			autoUpdate = props.getProperty("autoUpdate");
-			local = Integer.parseInt(props.getProperty("local"));
-			mode = props.getProperty("mode");
-			inputStream.close();
-		} catch (IOException e) {
-			System.out.println("An error has occurred!");
-			e.printStackTrace();
-		}
-	}
-	
+
 	public static void main(String[] args) {
 		launch(args);
 	}

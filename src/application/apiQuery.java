@@ -25,7 +25,7 @@ public class apiQuery{
 	private MainWindowController mainWindowController;
 	private Image im;
 	
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings("deprecation") //TODO
 	void startQuery(String input){
 		URL url = null;
 		Scanner sc = null;

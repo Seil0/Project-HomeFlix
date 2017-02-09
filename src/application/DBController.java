@@ -223,9 +223,9 @@ public class DBController {
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local"); 
 			while (rs.next()) {
 				if(rs.getString(4).equals("favorite_black")){
-					mainWindowController.newDaten.add( new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_black)));
+					mainWindowController.newData.add( new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_black)));
 				}else{
-					mainWindowController.newDaten.add( new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_border_black)));
+					mainWindowController.newData.add( new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_border_black)));
 				}
 			}
 			stmt.close();
@@ -259,9 +259,9 @@ public class DBController {
 			stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local WHERE titel = '"+name+"';" );
 			if(rs.getString(4).equals("favorite_black")){
-				mainWindowController.newDaten.set(i, new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3),  new ImageView(favorite_black)));
+				mainWindowController.newData.set(i, new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3),  new ImageView(favorite_black)));
 			}else{
-				mainWindowController.newDaten.set(i, new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_border_black)));
+				mainWindowController.newData.set(i, new streamUiData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_border_black)));
 			}
 			stmt.close();
 			rs.close();
@@ -359,7 +359,7 @@ public class DBController {
 	}
 	
 	void ausgeben(){
-	System.out.println("Eintr�ge ausgeben ... \n"); 
+	System.out.println("Eintraege ausgeben ... \n"); 
 	try { 
 		Statement stmt = connection.createStatement(); 
 		ResultSet rs = stmt.executeQuery("SELECT * FROM film_local"); 
@@ -461,7 +461,7 @@ public class DBController {
 		}
 	}
 	
-//entfernt die Endung
+//removes the ending
 	private String cutOffEnd (String str) {
 
 		if (str == null) return null;
