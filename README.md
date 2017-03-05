@@ -1,7 +1,8 @@
 # Project-HomeFlix
 
-Project HomeFlix is a Kellerkinder Project, that alowes you to sort all your local saved movies in clean UI.    
-This is the dec branch please commit all changes her.         
+
+Project HomeFlix is a Kellerkinder Project, that alowes you to sort all your local saved movies in clean UI.     
+The dev branch is **only merged** into master when a **new release** is released. Please commit all changes to [dev](https://github.com/Seil0/Project-HomeFlix/tree/dev).
 
 Librarys used in this Project:  
 JFoenix: https://github.com/jfoenixadmin/JFoenix   
