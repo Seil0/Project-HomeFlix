@@ -195,7 +195,7 @@ public class DBController {
 						ps.close();
 						psS.close();
 					}catch (SQLException ea) { 
-						System.err.println("Konnte nicht ausgefï¿½hrt werden"); 
+						System.err.println("Konnte nicht ausgeführt werden"); 
 						ea.printStackTrace(); 
 					}
 				}else {

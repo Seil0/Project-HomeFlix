@@ -16,7 +16,7 @@ public class streamUiData {
 	private final IntegerProperty episode = new SimpleIntegerProperty();
 	private final DoubleProperty rating = new SimpleDoubleProperty();
 	private final StringProperty resolution = new SimpleStringProperty();
-	 final StringProperty titel = new SimpleStringProperty();
+	private final StringProperty titel = new SimpleStringProperty();
 	private final StringProperty streamUrl = new SimpleStringProperty();
 	private final SimpleObjectProperty<ImageView> image = new SimpleObjectProperty<>();
 	

@@ -16,11 +16,13 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.text.TextFlow?>
 
 <AnchorPane fx:id="anpane" prefHeight="600.0" prefWidth="950.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.MainWindowController">
 	<children>
 		<TreeTableView fx:id="treeTableViewfilm" layoutX="14.0" layoutY="88.0" prefHeight="400.0" prefWidth="360.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="553.0" AnchorPane.topAnchor="88.0" />
 		<JFXTextArea fx:id="ta1" layoutX="385.0" layoutY="42.0" maxWidth="503.0" minWidth="275.0" prefHeight="546.0" prefWidth="293.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="410.0" AnchorPane.rightAnchor="222.0" AnchorPane.topAnchor="44.0" />
+      <TextFlow fx:id="textFlow" layoutX="496.0" layoutY="131.0" prefHeight="200.0" prefWidth="200.0" visible="false" AnchorPane.bottomAnchor="15.0" AnchorPane.leftAnchor="410.0" AnchorPane.rightAnchor="220.0" AnchorPane.topAnchor="44.0" />
 		<JFXButton fx:id="playbtn" contentDisplay="CENTER" layoutX="690.0" layoutY="363.0" onAction="#playbtnclicked" prefHeight="25.0" prefWidth="198.0" AnchorPane.bottomAnchor="212.0" AnchorPane.rightAnchor="12.0">
          <font>
             <Font name="System Bold" size="14.0" />

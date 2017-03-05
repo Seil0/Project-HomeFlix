@@ -12,15 +12,23 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 
-public class updater {
+public class updater extends Thread{
 	
-	public updater(MainWindowController m){
-		mainWindowController=m;
-	}
-
 	private MainWindowController mainWindowController;
+	private String buildURL;
+	private String downloadLink;
+	private String aktBuildNumber;
+	private String buildNumber;
 	
-	void update(String buildURL,String downloadLink,String aktBuildNumber,String buildNumber){
+	public updater(MainWindowController m, String buildURL,String downloadLink,String aktBuildNumber,String buildNumber){
+		mainWindowController=m;
+		this.buildURL=buildURL;
+		this.downloadLink=downloadLink;
+		this.aktBuildNumber=aktBuildNumber;
+		this.buildNumber=buildNumber;
+	}
+	
+	public void run(){
 		System.out.println("check for updates ...");
 		try {
 			URL url = new URL(buildURL); //URL der Datei mit aktueller Versionsnummer
@@ -37,27 +45,27 @@ public class updater {
 		int iaktVersion = Integer.parseInt(aktBuildNumber.replace(".", ""));
 		
 		if(iversion >= iaktVersion){
-			mainWindowController.updateBtn.setText(mainWindowController.bundle.getString("updateBtnNotavail"));
+//			mainWindowController.updateBtn.setText(mainWindowController.bundle.getString("updateBtnNotavail"));
 			System.out.println("no update available");
 		}else{
-			mainWindowController.updateBtn.setText(mainWindowController.bundle.getString("updateBtnavail"));
+//			mainWindowController.updateBtn.setText(mainWindowController.bundle.getString("updateBtnavail"));
 			System.out.println("update available");
-		try {
-			URL website;
-			URL downloadURL = new URL(downloadLink);
-			BufferedReader in = new BufferedReader(new InputStreamReader(downloadURL.openStream()));
-			String updateDataURL = in.readLine();
-			website = new URL(updateDataURL);	//Update URL
-			ReadableByteChannel rbc = Channels.newChannel(website.openStream());	//open new Stream/Channel
-			FileOutputStream fos = new FileOutputStream("ProjectHomeFlix.jar");	//nea fileoutputstram for ProjectHomeFLix.jar
-			fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);	//gets file from 0 to max size
-			fos.close();	//close fos (extrem wichtig!)
-			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
-			System.exit(0);	//finishes itself
-		} catch (IOException e) {
-			//in case there is an error
-			mainWindowController.showErrorMsg(mainWindowController.errorUpdateD, e);
-		}
+			try {
+				URL website;
+				URL downloadURL = new URL(downloadLink);
+				BufferedReader in = new BufferedReader(new InputStreamReader(downloadURL.openStream()));
+				String updateDataURL = in.readLine();
+				website = new URL(updateDataURL);	//Update URL
+				ReadableByteChannel rbc = Channels.newChannel(website.openStream());	//open new Stream/Channel
+				FileOutputStream fos = new FileOutputStream("ProjectHomeFlix.jar");	//nea fileoutputstram for ProjectHomeFLix.jar
+				fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);	//gets file from 0 to max size
+				fos.close();	//close fos (extrem wichtig!)
+				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
+				System.exit(0);	//finishes itself
+			} catch (IOException e) {
+				//in case there is an error
+				mainWindowController.showErrorMsg(mainWindowController.errorUpdateD, e);
+			}
 		}
 	}
 }

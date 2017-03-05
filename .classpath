@@ -7,5 +7,6 @@
 	<classpathentry kind="lib" path="src/libraries/commons-lang3-3.5.jar"/>
 	<classpathentry kind="lib" path="src/libraries/jfoenix-1.1.0.jar"/>
 	<classpathentry kind="lib" path="src/libraries/sqlite-jdbc-3.16.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Jannik/Downloads/flow-8.0.7.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

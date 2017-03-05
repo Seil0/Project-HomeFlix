@@ -32,19 +32,19 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.Thread.State;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
-
 import org.apache.commons.lang3.SystemUtils;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXColorPicker;
-import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXSlider;
 import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
@@ -66,11 +66,13 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
+import javafx.scene.control.TreeTableColumn.SortType;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -81,12 +83,11 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
 import javafx.util.Duration;
 
-public class MainWindowController {
-	private ObservableList<String> locals = FXCollections.observableArrayList("english (en_US)", "deutsch (de_DE)");
-	
+public class MainWindowController {	
 	@FXML
 	private AnchorPane anpane;
 	@FXML
@@ -103,6 +104,10 @@ public class MainWindowController {
 	private TableView<streamUiData> tableViewStreamingdata;
 	@FXML
 	JFXTextArea ta1;
+	@FXML
+	TextFlow textFlow;
+	@FXML
+	ScrollPane scrollPane;
 	@FXML
 	private JFXButton menubtn;
 	@FXML
@@ -140,11 +145,9 @@ public class MainWindowController {
     @FXML
     public JFXColorPicker mainColor;
     @FXML
-    public	ChoiceBox<String> cbLocal = new ChoiceBox<>(locals);
+    public	ChoiceBox<String> cbLocal = new ChoiceBox<>();
     @FXML
     public JFXSlider sliderFontSize;
-    @FXML
-    private JFXDialog dialog = new JFXDialog();
     @FXML
     private Label versionlbl;
     @FXML
@@ -154,7 +157,6 @@ public class MainWindowController {
     @FXML 
     ImageView image1;
     private ImageView imv1;
-    
     
     @FXML
     TreeItem<streamUiData> root = new TreeItem<>(new streamUiData(1, 1, 1, 5.0,"1", "filme","1", imv1));
@@ -186,9 +188,9 @@ public class MainWindowController {
 	private boolean streamingSettingsTrue = false;
 	static boolean firststart = false;
 	private int hashA = -2055934614;
-	private String version = "0.4.99";
-	private String buildNumber = "114";
-	private String versionName = "plasma cow (pre Release)";
+	private String version = "0.5.0";
+	private String buildNumber = "117";
+	private String versionName = "plasma cow";
 	private String buildURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/buildNumber.txt";
 	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt";
 	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");
@@ -243,8 +245,9 @@ public class MainWindowController {
 	ResourceBundle bundle;
 
 	private ObservableList<streamUiData> filterData = FXCollections.observableArrayList();
-	ObservableList<streamUiData> newData = FXCollections.observableArrayList();
-	ObservableList<streamUiData> streamData = FXCollections.observableArrayList();
+	private ObservableList<String> locals = FXCollections.observableArrayList("english (en_US)", "deutsch (de_DE)");
+	ObservableList<streamUiData> newData = FXCollections.observableArrayList();		//TODO rename to localFilms
+	ObservableList<streamUiData> streamData = FXCollections.observableArrayList();	//TODO rename to streamingFilms
 	ObservableList<streamUiData> streamingData = FXCollections.observableArrayList();
 	private ImageView menu_icon_black = new ImageView(new Image("recources/icons/menu_icon_black.png"));
 	private ImageView menu_icon_white = new ImageView(new Image("recources/icons/menu_icon_white.png"));
@@ -279,7 +282,7 @@ public class MainWindowController {
 		if(settingstrue == true){
 			settingsAnchor.setVisible(false);
 			setPath(tfPath.getText());
-			saveSettings("a");
+			saveSettings();
 			settingstrue = false;
 		}
 		if(streamingSettingsTrue == true){
@@ -387,7 +390,7 @@ public class MainWindowController {
 		}else{
 			settingsAnchor.setVisible(false);
 			setPath(tfPath.getText());
-			saveSettings("b");
+			saveSettings();
 			settingstrue = false;
 		}
 	}
@@ -419,7 +422,7 @@ public class MainWindowController {
 			setMode("local");
 			switchBtn.setText("streaming");
 		}
-		saveSettings("c");
+		saveSettings();
 		root.getChildren().remove(0,root.getChildren().size());
 		addDataUI();
 		settingsAnchor.setVisible(false);
@@ -439,7 +442,7 @@ public class MainWindowController {
 	@FXML
 	private void tfPathAction(){
 		setPath(tfPath.getText());
-		saveSettings("d");
+		saveSettings();
 	}
 	
 	@FXML
@@ -449,7 +452,7 @@ public class MainWindowController {
             System.out.println("No Directory selected");
         }else{
         	setPath(selectedFolder.getAbsolutePath());
-        	saveSettings("e");
+        	saveSettings();
         	tfPath.setText(getPath());
 			try {
 				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
@@ -469,7 +472,13 @@ public class MainWindowController {
 	
 	@FXML
 	private void updateBtnAction(){
-		Updater.update(buildURL, downloadLink, aktBuildNumber, buildNumber);
+//		Updater.update(buildURL, downloadLink, aktBuildNumber, buildNumber);
+		System.out.println(Updater.getState());
+		if(Updater.getState() == State.NEW){
+			Updater.start();
+		}else{
+			Updater.run();
+		}
 	}
 	
 	@FXML
@@ -479,7 +488,7 @@ public class MainWindowController {
     	}else{
     		setAutoUpdate("0");
     	}
-		saveSettings("f");
+		saveSettings();
 	}
 	
 	@FXML
@@ -494,7 +503,7 @@ public class MainWindowController {
 				System.out.println("No Directory selected");
 		}else{
 			setStreamingPath(selectedStreamingFolder.getAbsolutePath());
-			saveSettings("g");
+			saveSettings();
 			tfStreamingPath.setText(getStreamingPath());
 			try {
 				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
@@ -508,8 +517,8 @@ public class MainWindowController {
 	
 	
 	//"Main" Method called in Main.java main() when starting 
-	public void setMain(Main main) {
-		Updater = new updater(this);
+	void setMain(Main main) {
+		Updater = new updater(this,buildURL, downloadLink, aktBuildNumber, buildNumber);
 		ApiQuery = new apiQuery(this);
 		dbController = new DBController(this);	
 	}
@@ -572,17 +581,22 @@ public class MainWindowController {
 	//Initializing the actions
 	void initActions(){
 		
-		//TODO unterscheiden zwischen streaming und local
         tfsearch.textProperty().addListener(new ChangeListener<String>() {
     	    @Override
     	    public void changed(ObservableValue<? extends String> observable,String oldValue, String newValue) {
-    	    	int counter = newData.size();
+            	ObservableList<streamUiData> helpData;
     	    	filterData.removeAll(filterData);
     	    	root.getChildren().remove(0,root.getChildren().size());
     	    	
-    	    	for(int i = 0; i < counter; i++){
-    	    		if(newData.get(i).getTitel().toLowerCase().contains(tfsearch.getText().toLowerCase())){
-    	    			filterData.add(newData.get(i));	//add data from newDaten to filteredData where title contains search input
+  	    		if(mode.equals("local")){
+  	            	helpData = newData;
+  	    		}else{
+  	    			helpData = streamData;
+  	    		}
+    	    	
+    	    	for(int i = 0; i < helpData.size(); i++){
+    	    		if(helpData.get(i).getTitel().toLowerCase().contains(tfsearch.getText().toLowerCase())){
+    	    			filterData.add(helpData.get(i));	//add data from newDaten to filteredData where title contains search input
     	    		}
     	    	}
     	    	
@@ -602,7 +616,7 @@ public class MainWindowController {
         	  local = local.substring(local.length()-6,local.length()-1);
         	  setLocal(local);
         	  setLocalUI();
-        	  saveSettings("h");
+        	  saveSettings();
           }
         });
         
@@ -611,7 +625,7 @@ public class MainWindowController {
 			public void changed(ObservableValue<? extends Number> ov,Number old_val, Number new_val) {
 				setSize(sliderFontSize.getValue()); 
 				ta1.setFont(Font.font("System", size));
-				saveSettings("i");
+				saveSettings();
 			 }
         });
         
@@ -658,6 +672,58 @@ public class MainWindowController {
 				refreshTable();
 			}
 	    	});
+        
+        /**
+         * TODO fix bug when sort by ASCENDING, wrong order
+         */
+        columnRating.sortTypeProperty().addListener(new ChangeListener<SortType>() {
+            @Override
+            public void changed(ObservableValue<? extends SortType> paramObservableValue, SortType paramT1, SortType paramT2) {
+            	System.out.println("NAME Clicked -- sortType = " + paramT1 + ", SortType=" + paramT2);
+            	ArrayList<Integer> fav_true = new ArrayList<Integer>();
+            	ArrayList<Integer> fav_false = new ArrayList<Integer>();
+            	ObservableList<streamUiData> helpData;
+  	    		filterData.removeAll(filterData);
+  	    		root.getChildren().remove(0,root.getChildren().size());
+  	    		
+  	    		if(mode.equals("local")){
+  	            	helpData = newData;
+  	    		}else{
+  	    			helpData = streamData;
+  	    		}
+              
+  	    		
+  	    		for(int i = 0;i<helpData.size();i++){
+  	    			if(helpData.get(i).getRating()==1.0){
+  	    				fav_true.add(i);
+  	    			}else{
+  	    				fav_false.add(i);
+  	    			}
+  	    		}
+  	    		if(paramT2.toString().equals("DESCENDING")){
+  	    			System.out.println("Absteigend");
+  	  	    		for(int i = 0;i<fav_true.size();i++){
+  	  	    			filterData.add(helpData.get(fav_true.get(i)));
+  	  	    		}
+  	  	    		for(int i = 0;i<fav_false.size();i++){
+  	  	    			filterData.add(helpData.get(fav_false.get(i)));
+  	  	    		}
+  	    		}else{
+  	  	    		for(int i = 0;i<fav_false.size();i++){
+  	  	    			filterData.add(helpData.get(fav_false.get(i)));
+  	  	    		}
+  	  	    		for(int i = 0;i<fav_true.size();i++){
+  	  	    			filterData.add(helpData.get(fav_true.get(i)));
+  	  	    		}
+  	    		}
+  	    		
+  	    		System.out.println(filterData.size());
+    	    	for(int i = 0; i < filterData.size(); i++){
+//    	    		System.out.println(filterData.get(i).getTitel()+"; "+filterData.get(i).getRating());
+    				root.getChildren().add(new TreeItem<streamUiData>(filterData.get(i)));	//add filtered data to root node after search
+    			}
+            }
+      });
 	}
 	
 	//initialize UI elements
@@ -671,11 +737,12 @@ public class MainWindowController {
 		mainColor.setValue(Color.valueOf(getColor()));
 		
         updateBtn.setFont(Font.font("System", 12));
+        cbLocal.setItems(locals);
         
         //TODO rework!
         if(autoUpdate.equals("1")){
     		autoupdateBtn.setSelected(true);
-    		Updater.update(buildURL, downloadLink, aktBuildNumber, buildNumber);
+    		Updater.start();
     	}else{
     		autoupdateBtn.setSelected(false);
     	}
@@ -834,7 +901,7 @@ public class MainWindowController {
 		parallelTransition.play();
 	}
 	
-	public void setLocalUI(){
+	void setLocalUI(){
 		switch(getLocal()){
 		case "en_US":	
 			bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//us_english
@@ -898,7 +965,7 @@ public class MainWindowController {
 		type = bundle.getString("type");
 	}
 	
-	public void showErrorMsg(String msg, IOException exception){
+	void showErrorMsg(String msg, IOException exception){
 		Alert alert = new Alert(AlertType.ERROR);
     	alert.setTitle("Error");
     	alert.setHeaderText("");
@@ -932,8 +999,7 @@ public class MainWindowController {
 	}
 	
 	//saves the Settings
-	public void saveSettings(String a){
-		System.out.println("saving, "+a);
+	public void saveSettings(){
 		OutputStream outputStream;	//new output-stream
 		try {
 			props.setProperty("path", getPath());	//writes path into property
@@ -993,7 +1059,7 @@ public class MainWindowController {
 		StringBuilder sb = new StringBuilder(input);
 		sb.delete(0, 2);
 		this.color = sb.toString();
-		saveSettings("j");
+		saveSettings();
 	}
 	
 	//getter and setter

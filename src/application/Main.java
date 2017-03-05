@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.ResourceBundle;
 
 import javafx.application.Application;
@@ -41,7 +40,7 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 	
-	public Stage primaryStage;
+	private Stage primaryStage;
 	private String path;
 	private String streamingPathWin = System.getProperty("user.home") + "\\Documents\\HomeFlix";
 	private String streamingPathLinux = System.getProperty("user.home") + "/HomeFlix";
@@ -56,7 +55,6 @@ public class Main extends Application {
 	private File dirLinux = new File(System.getProperty("user.home") + "/HomeFlix");	//Linux: /home/"User"/HomeFlix
 	private File fileWin = new File(dirWin + "/config.xml");	//Windows: C:/Users/"User"/Documents/HomeFlix/config.xml
 	private File fileLinux = new File(dirLinux + "/config.xml");	//Linux: /home/"User"/HomeFlix/config.xml
-	Properties props = new Properties();
 	
 	@Override
 	public void start(Stage primaryStage) {
@@ -64,7 +62,7 @@ public class Main extends Application {
 		mainWindow();
 	}
 	
-	public void mainWindow(){
+	private void mainWindow(){
 	
 		try {
 		FXMLLoader loader = new FXMLLoader(Main.class.getResource("MainWindow.fxml"));
@@ -91,7 +89,7 @@ public class Main extends Application {
 				mainWindowController.setAutoUpdate(autoUpdate);
 				mainWindowController.setLocal(local);
 				mainWindowController.setMode(mode);
-				mainWindowController.saveSettings("l");
+				mainWindowController.saveSettings();
 				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
 				System.exit(0);	//finishes itself
 			}
@@ -107,7 +105,7 @@ public class Main extends Application {
 				mainWindowController.setAutoUpdate(autoUpdate);
 				mainWindowController.setLocal(local);
 				mainWindowController.setMode(mode);
-				mainWindowController.saveSettings("k");
+				mainWindowController.saveSettings();
 				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
 				System.exit(0);	//finishes itself
 			}	
@@ -141,7 +139,7 @@ public class Main extends Application {
 		switch(System.getProperty("user.language")+"_"+System.getProperty("user.country")){
 		case "en_US":	bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//us_english
 				break;
-     	case "de_DE":	bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.GERMAN);	//german
+     	case "de_DE":	bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.GERMAN);	//German
      			break;
      	default:		bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//default local
      			break;
