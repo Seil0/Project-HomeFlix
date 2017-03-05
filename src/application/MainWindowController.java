@@ -1,7 +1,7 @@
 /**
  * Project HomeFlix
  * 
- * Copyright 2016  <admin@kellerkinder>
+ * Copyright 2016-2017  <admin@kellerkinder>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,29 +26,25 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.Thread.State;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
-
 import org.apache.commons.lang3.SystemUtils;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXColorPicker;
-import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXSlider;
 import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
@@ -57,23 +53,26 @@ import com.jfoenix.controls.JFXToggleButton;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
-import javafx.scene.control.TreeTableColumn.CellDataFeatures;
+import javafx.scene.control.TreeTableColumn.SortType;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -84,10 +83,11 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
 import javafx.util.Duration;
 
-public class MainWindowController {
+public class MainWindowController {	
 	@FXML
 	private AnchorPane anpane;
 	@FXML
@@ -104,6 +104,10 @@ public class MainWindowController {
 	private TableView<streamUiData> tableViewStreamingdata;
 	@FXML
 	JFXTextArea ta1;
+	@FXML
+	TextFlow textFlow;
+	@FXML
+	ScrollPane scrollPane;
 	@FXML
 	private JFXButton menubtn;
 	@FXML
@@ -141,11 +145,9 @@ public class MainWindowController {
     @FXML
     public JFXColorPicker mainColor;
     @FXML
-    public	ChoiceBox<String> cbLocal;
+    public	ChoiceBox<String> cbLocal = new ChoiceBox<>();
     @FXML
     public JFXSlider sliderFontSize;
-    @FXML
-    private JFXDialog dialog = new JFXDialog();
     @FXML
     private Label versionlbl;
     @FXML
@@ -154,27 +156,27 @@ public class MainWindowController {
     private Label aulbl;
     @FXML 
     ImageView image1;
+    private ImageView imv1;
     
-    
     @FXML
-    TreeItem<streamUiData> root = new TreeItem<>(new streamUiData(1, 1, 1, 5.0,"1", "filme","1"));
+    TreeItem<streamUiData> root = new TreeItem<>(new streamUiData(1, 1, 1, 5.0,"1", "filme","1", imv1));
     @FXML
-    TreeTableColumn<streamUiData, Double> columnRating = new TreeTableColumn<>("Bewertung");
+    TreeTableColumn<streamUiData, ImageView> columnRating = new TreeTableColumn<>("Rating");
     @FXML
-    TreeTableColumn<streamUiData, String> columnTitel = new TreeTableColumn<>("Name");
+    TreeTableColumn<streamUiData, String> columnTitel = new TreeTableColumn<>("Titel");
     @FXML
-    TreeTableColumn<streamUiData, String> columnStreamUrl = new TreeTableColumn<>("Datei Name");
+    TreeTableColumn<streamUiData, String> columnStreamUrl = new TreeTableColumn<>("File Name");
     @FXML
-    TreeTableColumn<streamUiData, String> columnResolution = new TreeTableColumn<>("Auflösung");
+    TreeTableColumn<streamUiData, String> columnResolution = new TreeTableColumn<>("Resolution");
     @FXML
-    TreeTableColumn<streamUiData, Integer> columnYear = new TreeTableColumn<>("Jahr");
+    TreeTableColumn<streamUiData, Integer> columnYear = new TreeTableColumn<>("Year");
     @FXML
-    TreeTableColumn<streamUiData, Integer> columnSeason = new TreeTableColumn<>("Staffel");
+    TreeTableColumn<streamUiData, Integer> columnSeason = new TreeTableColumn<>("Season");
     @FXML
     TreeTableColumn<streamUiData, Integer> columnEpisode = new TreeTableColumn<>("Episode");
     
     @FXML
-    private TreeItem<streamUiData> streamingRoot =new TreeItem<>(new streamUiData(1 ,1 ,1 ,1.0 ,"1" ,"filme" ,"1"));
+    private TreeItem<streamUiData> streamingRoot =new TreeItem<>(new streamUiData(1 ,1 ,1 ,1.0 ,"1" ,"filme" ,"1", imv1));
     @FXML
     private TableColumn<streamUiData, String> dataNameColumn = new TableColumn<>("Datei Name");
     @FXML
@@ -184,20 +186,23 @@ public class MainWindowController {
 	private boolean menutrue = false;	//saves the position of menubtn (opened or closed)
 	private boolean settingstrue = false;
 	private boolean streamingSettingsTrue = false;
-	private String version = "0.4.0";
-	private String buildNumber = "104";
-	private String versionName = "glowing bucket";
+	static boolean firststart = false;
+	private int hashA = -2055934614;
+	private String version = "0.5.0";
+	private String buildNumber = "117";
+	private String versionName = "plasma cow";
 	private String buildURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/buildNumber.txt";
 	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt";
-	private File dir = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	
-	private File file = new File(dir + "/config.xml");	
+	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");
+	private File dirLinux = new File(System.getProperty("user.home") + "/HomeFlix");
+	private File fileWin = new File(dirWin + "/config.xml");
+	private File fileLinux = new File(dirLinux + "/config.xml");	
 	
 	String errorUpdateD;
 	String errorUpdateV;
 	private String errorPlay;
 	private String errorOpenStream;
 	private String errorMode;
-	@SuppressWarnings("unused")
 	private String errorLoad;
 	private String errorSave;
 	String noFilmFound;
@@ -211,7 +216,10 @@ public class MainWindowController {
 	private String Name;
 	private String datPath;
 	private String autoUpdate;
-	private String mode;	
+	private String mode;
+	@SuppressWarnings("unused")
+	private String ratingSortType;
+	private String local;
 	String title;
 	String year;
 	String rating;
@@ -232,15 +240,14 @@ public class MainWindowController {
 	private int last;
 	private int selected;
 	private int next;
-	private int local;
 	private File selectedFolder;
 	private File selectedStreamingFolder;
 	ResourceBundle bundle;
 
-	private ObservableList<streamUiData> newDaten = FXCollections.observableArrayList();
 	private ObservableList<streamUiData> filterData = FXCollections.observableArrayList();
-	private ObservableList<streamUiData> streamData = FXCollections.observableArrayList();
-	private ObservableList<String> locals = FXCollections.observableArrayList("english", "deutsch");
+	private ObservableList<String> locals = FXCollections.observableArrayList("english (en_US)", "deutsch (de_DE)");
+	ObservableList<streamUiData> newData = FXCollections.observableArrayList();		//TODO rename to localFilms
+	ObservableList<streamUiData> streamData = FXCollections.observableArrayList();	//TODO rename to streamingFilms
 	ObservableList<streamUiData> streamingData = FXCollections.observableArrayList();
 	private ImageView menu_icon_black = new ImageView(new Image("recources/icons/menu_icon_black.png"));
 	private ImageView menu_icon_white = new ImageView(new Image("recources/icons/menu_icon_white.png"));
@@ -251,13 +258,15 @@ public class MainWindowController {
 	private ImageView play_arrow_white = new ImageView(new Image("recources/icons/ic_play_arrow_white_18dp_1x.png"));
 	private ImageView play_arrow_black = new ImageView(new Image("recources/icons/ic_play_arrow_black_18dp_1x.png"));
 	private DirectoryChooser directoryChooser = new DirectoryChooser();
+    private MenuItem like = new MenuItem("like");
+    private MenuItem dislike = new MenuItem("dislike");	//TODO one option (like or dislike)
+	private ContextMenu menu = new ContextMenu(like, dislike);
 	Properties props = new Properties();
 	
 	private updater Updater;
 	private apiQuery ApiQuery;
-	private DBController dbController;
+	DBController dbController;
 	
-	//wenn menubtn clicked
 	/**
 	 * TODO change value of Text-color change
 	 */
@@ -298,7 +307,6 @@ public class MainWindowController {
 				System.out.println(output);
 				input.close();
 			} catch (IOException e1) {
-				// Auto-generated catch block
 				e1.printStackTrace();
 			}
 			if(output.contains("which: no vlc")||output == ""){
@@ -330,7 +338,7 @@ public class MainWindowController {
 				}
 			}else if(mode.equals("streaming")){
 				try {
-					Desktop.getDesktop().browse(new URI(datPath));	//opens the streaming url in browser (other option?)
+					Desktop.getDesktop().browse(new URI(datPath));	//open the streaming Url in browser (TODO other option?)
 				} catch (URISyntaxException | IOException e) {
 					showErrorMsg(errorOpenStream, (IOException) e);
 				}
@@ -345,7 +353,7 @@ public class MainWindowController {
 	@FXML
 	private void openfolderbtnclicked(){
 		try {
-			Desktop.getDesktop().open(new File(getPath()));	//öffnet den aktuellen Pfad
+			Desktop.getDesktop().open(new File(getPath()));	//open path when button is clicked
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -388,7 +396,7 @@ public class MainWindowController {
 	}
 	
 	/**
-	 * TODO zusätzliche infos über die dateien
+	 * TODO additional info about the "streaming.json"
 	 */
 	@FXML
 	private void streamingSettingsBtnclicked(){
@@ -419,7 +427,7 @@ public class MainWindowController {
 		addDataUI();
 		settingsAnchor.setVisible(false);
 		streamingSettingsAnchor.setVisible(false);
-		sideMenuSlideOut();		//disables sidemenu
+		sideMenuSlideOut();		//disables side-menu
 		menutrue = false;
 		settingstrue = false;
 		streamingSettingsTrue = false;
@@ -427,12 +435,6 @@ public class MainWindowController {
 	
 	@FXML
 	private void debugBtnclicked(){
-//		dbController.ausgeben();
-		dbController.getFavStatus("Zootopia");
-		dbController.favorisieren("Zootopia");
-		dbController.getFavStatus("Zootopia");
-		dbController.defavorisieren("Zootopia");
-		dbController.getFavStatus("Zootopia");
 		//for testing
 	}
 
@@ -470,7 +472,13 @@ public class MainWindowController {
 	
 	@FXML
 	private void updateBtnAction(){
-		Updater.update(buildURL, downloadLink, aktBuildNumber, buildNumber);
+//		Updater.update(buildURL, downloadLink, aktBuildNumber, buildNumber);
+		System.out.println(Updater.getState());
+		if(Updater.getState() == State.NEW){
+			Updater.start();
+		}else{
+			Updater.run();
+		}
 	}
 	
 	@FXML
@@ -508,138 +516,106 @@ public class MainWindowController {
 	}
 	
 	
-	//"Main" Methode die beim start von der Klasse Main aufgerufen wird, initialiesirung der einzellnen UI-Objekte 
-	public void setMain(Main main) {
-		
-		loadSettings();
-		initTabel();
-		initActions();
-		
-		Updater = new updater(this);
+	//"Main" Method called in Main.java main() when starting 
+	void setMain(Main main) {
+		Updater = new updater(this,buildURL, downloadLink, aktBuildNumber, buildNumber);
 		ApiQuery = new apiQuery(this);
-		dbController = new DBController(this);
-		
-		System.out.println("Mode: "+mode);	//TODO debugging
-		
-		loadStreamingSettings();
-		dbController.main();
-		
-		debugBtn.setDisable(false); 	//debugging btn for tests
-		debugBtn.setVisible(true);
-        
-        tfPath.setText(getPath());
-
-        sliderFontSize.setValue(getSize());
-        
-        cbLocal.setItems(locals);
-        
-        updateBtn.setFont(Font.font("System", 12));
-        
-        if(autoUpdate.equals("1")){
-    		autoupdateBtn.setSelected(true);
-    		Updater.update(buildURL, downloadLink, aktBuildNumber, buildNumber);
-    	}else{
-    		autoupdateBtn.setSelected(false);
-    	}
-
-    	ta1.setWrapText(true);
-    	ta1.setEditable(false);
-    	ta1.setFont(Font.font("System", getSize()));
+		dbController = new DBController(this);	
 	}
 	
-	//initialisierung der Tabellen für filme(beide Modi) und Streaming-Settings
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void initTabel(){
+	//Initialize the tables (treeTableViewfilm and tableViewStreamingdata)
+	@SuppressWarnings({ "unchecked"})	//TODO
+	void initTabel(){
 
-		//filmtabelle 
-	    columnRating.setMaxWidth(120);
-	    columnTitel.setMaxWidth(240);
+		//film Table 
+	    columnRating.setMaxWidth(80);
+	    columnTitel.setMaxWidth(260);
 	    columnStreamUrl.setMaxWidth(0);
-	    dataNameColumn.setPrefWidth(130);
+	    dataNameColumn.setPrefWidth(150);
 	    dataNameEndColumn.setPrefWidth(170);
+	    columnRating.setStyle("-fx-alignment: CENTER;");
 		
         treeTableViewfilm.setRoot(root);
         treeTableViewfilm.setColumnResizePolicy( TreeTableView.CONSTRAINED_RESIZE_POLICY );
         treeTableViewfilm.setShowRoot(false);
-		
-        //inhalt in Zelle schreiben
-        columnTitel.setCellValueFactory((CellDataFeatures<streamUiData, String> p) -> 
-        new ReadOnlyStringWrapper(p.getValue().getValue().getTitel())); 
-       
-        columnRating.setCellValueFactory((CellDataFeatures<streamUiData, Double> p) -> 
-        new ReadOnlyObjectWrapper<Double>(p.getValue().getValue().getRating()));
         
-        columnStreamUrl.setCellValueFactory((CellDataFeatures<streamUiData, String> p) -> 
-        new ReadOnlyStringWrapper(p.getValue().getValue().getStreamUrl()));
-        
-        columnResolution.setCellValueFactory((CellDataFeatures<streamUiData, String> p) -> 
-        new ReadOnlyStringWrapper(p.getValue().getValue().getResolution()));
-        
-        columnYear.setCellValueFactory((CellDataFeatures<streamUiData, Integer> p) -> 
-        new ReadOnlyObjectWrapper(p.getValue().getValue().getYear()));
-        
-        columnSeason.setCellValueFactory((CellDataFeatures<streamUiData, Integer> p) -> 
-        new ReadOnlyObjectWrapper(p.getValue().getValue().getSeason()));
-        
-        columnEpisode.setCellValueFactory((CellDataFeatures<streamUiData, Integer> p) -> 
-        new ReadOnlyObjectWrapper(p.getValue().getValue().getEpisode()));
+        //write content into cell
+        columnTitel.setCellValueFactory(cellData -> cellData.getValue().getValue().titelProperty());
+        columnRating.setCellValueFactory(cellData -> cellData.getValue().getValue().imageProperty());
+        columnStreamUrl.setCellValueFactory(cellData -> cellData.getValue().getValue().streamUrlProperty());
+        columnResolution.setCellValueFactory(cellData -> cellData.getValue().getValue().resolutionProperty());
+        columnYear.setCellValueFactory(cellData -> cellData.getValue().getValue().yearProperty().asObject());
+        columnSeason.setCellValueFactory(cellData -> cellData.getValue().getValue().seasonProperty().asObject());
+        columnEpisode.setCellValueFactory(cellData -> cellData.getValue().getValue().episodeProperty().asObject());
 
         treeTableViewfilm.getColumns().addAll(columnTitel, columnRating, columnStreamUrl, columnResolution, columnYear, columnSeason, columnEpisode);
-	    treeTableViewfilm.getColumns().get(2).setVisible(false); //blendet die Column mit den Dateinamen aus (wichtig um sie abzuspielen)
+	    treeTableViewfilm.getColumns().get(2).setVisible(false); //hide columnStreamUrl (column with file path important for the player)
 	
-	    //Changelistener für TreeTable
+	    //Change-listener for TreeTable
 	    treeTableViewfilm.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {	
 			@Override
 			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal) {
-				// last = selected; //für autoplay
-				selected = treeTableViewfilm.getSelectionModel().getSelectedIndex(); // holt aktuelles Item
+				// last = selected; //for auto-play
+				selected = treeTableViewfilm.getSelectionModel().getSelectedIndex(); //get selected item
 				last = selected - 1;
 				next = selected + 1;
-				Name = columnTitel.getCellData(selected); // holt Namen des Aktuelle Items aus der ColumnName
-				datPath = columnStreamUrl.getCellData(selected); // holt den aktuellen Datei Pfad aus der ColumnDatName
-				ta1.setText(""); // löscht Text in ta1
-				ApiQuery.startQuery(Name); // startet die api abfrage
-				ta1.positionCaret(0); // setzt die startposition des Cursors in ta1
+				Name = columnTitel.getCellData(selected); //get name of selected item
+				datPath = columnStreamUrl.getCellData(selected); //get file path of selected item
+				ta1.setText(""); //delete text in ta1
+				ApiQuery.startQuery(Name); // start api query
+				ta1.positionCaret(0); 	//set cursor position in ta1
 			}
 		});
 	    
-	    //Streaming-Settings Tabelle
+	    //context menu for treetableview  
+	    treeTableViewfilm.setContextMenu(menu);
+
+	    //Streaming-Settings Table
 	    dataNameColumn.setCellValueFactory(cellData -> cellData.getValue().titelProperty());
 	    dataNameEndColumn.setCellValueFactory(cellData -> cellData.getValue().streamUrlProperty());
 		
 	    tableViewStreamingdata.getColumns().addAll(dataNameColumn, dataNameEndColumn);
-	    tableViewStreamingdata.setItems(streamingData);
+	    tableViewStreamingdata.setItems(streamingData); 
 	}
 	
-	//initialisierung der Button Actions
-	private void initActions(){
+	//Initializing the actions
+	void initActions(){
 		
-		//TODO unterscheiden zwischen streaming und local
         tfsearch.textProperty().addListener(new ChangeListener<String>() {
-    	    @SuppressWarnings("unchecked")
-			@Override
+    	    @Override
     	    public void changed(ObservableValue<? extends String> observable,String oldValue, String newValue) {
-    	    	int counter = newDaten.size();
+            	ObservableList<streamUiData> helpData;
     	    	filterData.removeAll(filterData);
     	    	root.getChildren().remove(0,root.getChildren().size());
     	    	
-    	    	for(int i = 0; i < counter; i++){
-    	    		if(newDaten.get(i).getTitel().toLowerCase().contains(tfsearch.getText().toLowerCase())){
-    	    			filterData.add(newDaten.get(i));
+  	    		if(mode.equals("local")){
+  	            	helpData = newData;
+  	    		}else{
+  	    			helpData = streamData;
+  	    		}
+    	    	
+    	    	for(int i = 0; i < helpData.size(); i++){
+    	    		if(helpData.get(i).getTitel().toLowerCase().contains(tfsearch.getText().toLowerCase())){
+    	    			filterData.add(helpData.get(i));	//add data from newDaten to filteredData where title contains search input
     	    		}
     	    	}
     	    	
     	    	for(int i = 0; i < filterData.size(); i++){
-    				root.getChildren().addAll(new TreeItem<streamUiData>(filterData.get(i)));	//fügt daten zur Rootnode hinzu
+    				root.getChildren().add(new TreeItem<streamUiData>(filterData.get(i)));	//add filtered data to root node after search
     			}
+    	    	if(tfsearch.getText().hashCode() == hashA){
+    	    		setColor("000000");
+    	    		applyColor();
+    	    	}
     	    }
     	});
         
-        cbLocal.getSelectionModel().selectedIndexProperty()
-        .addListener(new ChangeListener<Number>() {
-          public void changed(ObservableValue<? extends Number> ov, Number value, Number new_value) { 
-        	  setLocal(new_value.intValue());
-        	  setLoaclUI(local);
+        cbLocal.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+          public void changed(ObservableValue<? extends Number> ov, Number value, Number new_value) {
+        	  String local = cbLocal.getItems().get((int) new_value).toString();
+        	  local = local.substring(local.length()-6,local.length()-1);
+        	  setLocal(local);
+        	  setLocalUI();
         	  saveSettings();
           }
         });
@@ -652,78 +628,159 @@ public class MainWindowController {
 				saveSettings();
 			 }
         });
-	}
-	
-	//lädt die Daten im angegeben Ordner in newDaten
-	void loadData(){
-			//load local Data
-			if(getPath().equals("")||getPath().equals(null)){
-				System.out.println("Kein Pfad angegeben");	//falls der Pfad null oder "" ist
-			}else{
-			String[] entries = new File(getPath()).list();
-				for(int i = 0; i < entries.length; i++){
-					String titel = ohneEndung(entries[i]);
-					String data = entries[i];
-					newDaten.add(new streamUiData(1, 1, 1, 5.0, "1", titel, data));
-				}
-			}
-
-			//load streaming Data TODO prüfen ob streaming daten vorhanden -> momentan evtl. fehler
-			String titel = null;
-        	String resolution = null;
-        	String streamUrl = null;  
-        	int season;
-        	int episode;
-        	int year;
-        	double rating = 5.0;
-        	if(getStreamingPath().equals("")||getStreamingPath().equals(null)){
-				System.out.println("Kein Pfad angegeben");	//falls der Pfad null oder "" ist
-			}else{
-			for(int i=0; i< streamingData.size(); i++){
-				String fileName = streamingPath+"/"+streamingData.get(i).getStreamUrl();
+        
+        like.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+            	if(mode.equals("streaming")){
+            		dbController.like(Name,streamData.get(selected).getStreamUrl());
+            	}else{
+				dbController.like(Name,newData.get(selected).getStreamUrl());
+            	}
+				dbController.getFavStatus(Name);
 				try {
-					JsonObject object = Json.parse(new FileReader(fileName)).asObject();
-					JsonArray items = object.get("entries").asArray();
-					
-	            	for (JsonValue item : items) {
-	            	  titel = item.asObject().getString("titel","");
-	            	  season = item.asObject().getInt("season", 0);
-	            	  episode = item.asObject().getInt("episode", 0);
-	            	  year = item.asObject().getInt("year", 0);
-	            	  resolution = item.asObject().getString("resolution", "");
-	            	  streamUrl = item.asObject().getString("streamUrl", "");
-	            	  streamData.add(new streamUiData(year, season, episode, rating, resolution, titel, streamUrl));
-	            	}
-					
-				} catch (IOException e) {
-					//Auto-generated catch block
+					dbController.refresh(Name, selected);
+				} catch (SQLException e) {
+					Alert alert = new Alert(AlertType.ERROR);
+			    	alert.setTitle("Error");
+			    	alert.setHeaderText("");
+			    	alert.setContentText("There should be an error message in the future (like problem)\nIt seems as a cat has stolen the like-methode");
 					e.printStackTrace();
 				}
+				refreshTable();
 			}
-			}	
+	    	});
+        
+        dislike.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+            	if(mode.equals("streaming")){
+            		dbController.dislike(Name,streamData.get(selected).getStreamUrl());
+            	}else{
+				dbController.dislike(Name,newData.get(selected).getStreamUrl());
+            	}
+				dbController.getFavStatus(Name);
+				try {
+					dbController.refresh(Name, selected);
+				} catch (SQLException e) {
+					Alert alert = new Alert(AlertType.ERROR);
+			    	alert.setTitle("Error");
+			    	alert.setHeaderText("");
+			    	alert.setContentText("There should be an error message in the future (dislike problem)");
+					e.printStackTrace();
+				}
+				refreshTable();
+			}
+	    	});
+        
+        /**
+         * TODO fix bug when sort by ASCENDING, wrong order
+         */
+        columnRating.sortTypeProperty().addListener(new ChangeListener<SortType>() {
+            @Override
+            public void changed(ObservableValue<? extends SortType> paramObservableValue, SortType paramT1, SortType paramT2) {
+            	System.out.println("NAME Clicked -- sortType = " + paramT1 + ", SortType=" + paramT2);
+            	ArrayList<Integer> fav_true = new ArrayList<Integer>();
+            	ArrayList<Integer> fav_false = new ArrayList<Integer>();
+            	ObservableList<streamUiData> helpData;
+  	    		filterData.removeAll(filterData);
+  	    		root.getChildren().remove(0,root.getChildren().size());
+  	    		
+  	    		if(mode.equals("local")){
+  	            	helpData = newData;
+  	    		}else{
+  	    			helpData = streamData;
+  	    		}
+              
+  	    		
+  	    		for(int i = 0;i<helpData.size();i++){
+  	    			if(helpData.get(i).getRating()==1.0){
+  	    				fav_true.add(i);
+  	    			}else{
+  	    				fav_false.add(i);
+  	    			}
+  	    		}
+  	    		if(paramT2.toString().equals("DESCENDING")){
+  	    			System.out.println("Absteigend");
+  	  	    		for(int i = 0;i<fav_true.size();i++){
+  	  	    			filterData.add(helpData.get(fav_true.get(i)));
+  	  	    		}
+  	  	    		for(int i = 0;i<fav_false.size();i++){
+  	  	    			filterData.add(helpData.get(fav_false.get(i)));
+  	  	    		}
+  	    		}else{
+  	  	    		for(int i = 0;i<fav_false.size();i++){
+  	  	    			filterData.add(helpData.get(fav_false.get(i)));
+  	  	    		}
+  	  	    		for(int i = 0;i<fav_true.size();i++){
+  	  	    			filterData.add(helpData.get(fav_true.get(i)));
+  	  	    		}
+  	    		}
+  	    		
+  	    		System.out.println(filterData.size());
+    	    	for(int i = 0; i < filterData.size(); i++){
+//    	    		System.out.println(filterData.get(i).getTitel()+"; "+filterData.get(i).getRating());
+    				root.getChildren().add(new TreeItem<streamUiData>(filterData.get(i)));	//add filtered data to root node after search
+    			}
+            }
+      });
+	}
+	
+	//initialize UI elements
+	void initUI(){
+		System.out.println("Mode: "+mode);	//TODO debugging
+		debugBtn.setDisable(true); 	//debugging button for tests
+		debugBtn.setVisible(false);
+		
+        tfPath.setText(getPath());
+        sliderFontSize.setValue(getSize());
+		mainColor.setValue(Color.valueOf(getColor()));
+		
+        updateBtn.setFont(Font.font("System", 12));
+        cbLocal.setItems(locals);
+        
+        //TODO rework!
+        if(autoUpdate.equals("1")){
+    		autoupdateBtn.setSelected(true);
+    		Updater.start();
+    	}else{
+    		autoupdateBtn.setSelected(false);
+    	}
+
+    	ta1.setWrapText(true);
+    	ta1.setEditable(false);
+    	ta1.setFont(Font.font("System", getSize()));
+	}
+	
+	private void refreshTable(){
+		if(mode.equals("local")){
+		root.getChildren().set(selected, new TreeItem<streamUiData>(newData.get(selected)));
+		}else if(mode.equals("streaming")){
+			root.getChildren().set(selected, new TreeItem<streamUiData>(streamData.get(selected)));
+		}
 	}
 	
 	void addDataUI(){
 		if(mode.equals("local")){
-			for(int i = 0; i < newDaten.size(); i++){
-				root.getChildren().add(new TreeItem<streamUiData>(newDaten.get(i)));	//fügt daten zur Rootnode hinzu
+			for(int i = 0; i < newData.size(); i++){
+				root.getChildren().add(new TreeItem<streamUiData>(newData.get(i)));	//add data to root-node
 			}
-			columnRating.setMaxWidth(120);
-		    columnTitel.setMaxWidth(240);
+			columnRating.setMaxWidth(90);
+		    columnTitel.setMaxWidth(290);
 			treeTableViewfilm.getColumns().get(3).setVisible(false);
 			treeTableViewfilm.getColumns().get(4).setVisible(false);
 			treeTableViewfilm.getColumns().get(5).setVisible(false);
 			treeTableViewfilm.getColumns().get(6).setVisible(false);
 		}else if(mode.equals("streaming")){
 			for(int i = 0; i < streamData.size(); i++){
-				root.getChildren().add(new TreeItem<streamUiData>(streamData.get(i)));	//fügt daten zur Rootnode hinzu
+				root.getChildren().add(new TreeItem<streamUiData>(streamData.get(i)));	//add data to root-node
 			}
 			columnTitel.setMaxWidth(150);
 			columnResolution.setMaxWidth(65);
-			columnRating.setMaxWidth(52.5);
-			columnYear.setMaxWidth(40);
-			columnSeason.setMaxWidth(52.5);
-			columnEpisode.setMaxWidth(0);	//disabled for ui size reasons
+			columnRating.setMaxWidth(50);
+			columnYear.setMaxWidth(43);
+			columnSeason.setMaxWidth(42);
+			columnEpisode.setMaxWidth(44);
 			treeTableViewfilm.getColumns().get(3).setVisible(true);
 			treeTableViewfilm.getColumns().get(4).setVisible(true);
 			treeTableViewfilm.getColumns().get(5).setVisible(true);
@@ -731,7 +788,7 @@ public class MainWindowController {
 		}
 	}
 	
-	private void loadStreamingSettings(){
+	void loadStreamingSettings(){
 		if(getStreamingPath().equals("")||getStreamingPath().equals(null)){
 			System.out.println("Kein Pfad angegeben");	//falls der Pfad null oder "" ist
 		}else{
@@ -740,15 +797,15 @@ public class MainWindowController {
 				if(entries[i].endsWith(".json")){
 					String titel = ohneEndung(entries[i]);
 					String data = entries[i];
-					streamingData.add(new streamUiData(1,1,1,5.0,"1",titel ,data));
+					streamingData.add(new streamUiData(1,1,1,5.0,"1",titel ,data, imv1));
 				}
 			}
 			for(int i = 0; i < streamingData.size(); i++){
-				streamingRoot.getChildren().add( new TreeItem<streamUiData>(streamingData.get(i)));	//fügt daten zur Rootnode hinzu
+				streamingRoot.getChildren().add( new TreeItem<streamUiData>(streamingData.get(i)));	//fÃ¼gt daten zur Rootnode hinzu
 			}
 		}	
 	}
-	//entfernt die Endung vom String
+	//removes the ending
 	private String ohneEndung (String str) {
 		if (str == null) return null;
 		int pos = str.lastIndexOf(".");
@@ -756,7 +813,7 @@ public class MainWindowController {
 		return str.substring(0, pos);
 	}
 	
-	//setzt die Farben für die UI-Elemente
+	//set color of UI-Elements
 	void applyColor(){
 		String style = "-fx-background-color: #"+getColor()+";";
 		String btnStyleBlack = "-fx-button-type: RAISED; -fx-background-color: #"+getColor()+"; -fx-text-fill: BLACK;";
@@ -805,9 +862,8 @@ public class MainWindowController {
 			menubtn.setGraphic(menu_icon_black);
 		}
 		
-		//das solte weg kann aber hier bleiben wicht ist dass es zum selben zeitpunkt wie aply color ausgeführt wird
 		if(mode.equals("local")){
-			switchBtn.setText("streaming");	//TODO translate
+			switchBtn.setText("streaming");
 		}else if(mode.equals("streaming")){
 			switchBtn.setText("local");
 		}
@@ -845,14 +901,20 @@ public class MainWindowController {
 		parallelTransition.play();
 	}
 	
-	public void setLoaclUI(int local){
-		switch(local){
-		case 0: bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//us_english
-				break;
-     	case 1:	bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.GERMAN);	//german
-     			break;
-     	default:bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//default local
-     			break;
+	void setLocalUI(){
+		switch(getLocal()){
+		case "en_US":	
+			bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//us_english
+			cbLocal.getSelectionModel().select(0);
+			break;
+     	case "de_DE":	
+     		bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.GERMAN);	//German
+			cbLocal.getSelectionModel().select(1);
+			break;
+     	default:		
+     		bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//default local
+			cbLocal.getSelectionModel().select(0);
+			break;
 		 }
 		infoBtn.setText(bundle.getString("info"));
 		settingsBtn.setText(bundle.getString("settings"));
@@ -903,7 +965,7 @@ public class MainWindowController {
 		type = bundle.getString("type");
 	}
 	
-	public void showErrorMsg(String msg, IOException exception){
+	void showErrorMsg(String msg, IOException exception){
 		Alert alert = new Alert(AlertType.ERROR);
     	alert.setTitle("Error");
     	alert.setHeaderText("");
@@ -938,43 +1000,61 @@ public class MainWindowController {
 	
 	//saves the Settings
 	public void saveSettings(){
+		OutputStream outputStream;	//new output-stream
 		try {
 			props.setProperty("path", getPath());	//writes path into property
 			props.setProperty("color", getColor());
 			props.setProperty("autoUpdate", getAutoUpdate());
 			props.setProperty("size", getSize().toString());
-			props.setProperty("local", Integer.toString(getLocal()));
+			props.setProperty("local", getLocal());
 			props.setProperty("streamingPath", getStreamingPath());
 			props.setProperty("mode", getMode());
-			OutputStream outputStream = new FileOutputStream(file);	//new outputstream
+			props.setProperty("ratingSortType", columnRating.getSortType().toString());
+			if(System.getProperty("os.name").equals("Linux")){
+				outputStream = new FileOutputStream(fileLinux);
+			}else{
+				outputStream = new FileOutputStream(fileWin);
+			}
 			props.storeToXML(outputStream, "Project HomeFlix settings");	//writes new .xml
 			outputStream.close();
 		} catch (IOException e) {
-			showErrorMsg(errorSave, e);
-			e.printStackTrace();
+			if(firststart == false){
+				showErrorMsg(errorLoad, e);
+				e.printStackTrace();
+			}
 		}
 	}
 	
 	//loads the Settings
 	public void loadSettings(){
+		System.out.println("loading settings ...");
+		InputStream inputStream;
 		try {
-			InputStream inputStream = new FileInputStream(file);
-			props.loadFromXML(inputStream);	//new inputstream from .xml
+			if(System.getProperty("os.name").equals("Linux")){
+				inputStream = new FileInputStream(fileLinux);
+			}else{
+				inputStream = new FileInputStream(fileWin);
+			}
+			props.loadFromXML(inputStream);	//new input-stream from .xml
 			path = props.getProperty("path");	//reads path from property
 			streamingPath = props.getProperty("streamingPath");
 			color = props.getProperty("color");
 			size = Double.parseDouble(props.getProperty("size"));
 			autoUpdate = props.getProperty("autoUpdate");
-			local = Integer.parseInt(props.getProperty("local"));
+			local = props.getProperty("local");
 			mode = props.getProperty("mode");
+			ratingSortType = props.getProperty("ratingSortType");
 			inputStream.close();
 		} catch (IOException e) {
+			if(firststart == false){
+				showErrorMsg(errorSave, e);
+				e.printStackTrace();
+			}
 //			showErrorMsg(errorLoad, e); //TODO das soll beim ersten start nicht erscheinen
-			e.printStackTrace();
 		}
 	}
 	
-	//cuts 0x of the Colorpickers return value
+	//cuts 0x of the Color-pickers return value
 	private void editColor(String input){
 		StringBuilder sb = new StringBuilder(input);
 		sb.delete(0, 2);
@@ -1023,11 +1103,11 @@ public class MainWindowController {
 		return autoUpdate;
 	}
 	
-	public void setLocal(int input){
+	public void setLocal(String input){
 		this.local = input;
 	}
 	
-	public int getLocal(){
+	public String getLocal(){
 		return local;
 	}
 	
