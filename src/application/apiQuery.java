@@ -1,13 +1,12 @@
 /**
  * apiQuery for Project HomeFlix
  * sends a query to the omdb api
- * 
- * TODO build in a caching function
  */
 package application;
 
-import java.io.DataInputStream;
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Scanner;
 
@@ -22,19 +21,21 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
+@SuppressWarnings("unused") //TODO
 public class apiQuery{
 	
-	public apiQuery(MainWindowController m){
+	public apiQuery(MainWindowController m, DBController db){
 		mainWindowController=m;
+		dbController=db;
 	}
 	
 	private MainWindowController mainWindowController;
+	private DBController dbController;
 	private Image im;
 	private int fontSize = 20;
 	private String fontFamily = "System";
 	
-	@SuppressWarnings("deprecation") //TODO
-	void startQuery(String input){
+	void startQuery(String titel, String streamUrl){
 		URL url = null;
 		Scanner sc = null;
 		String apiurl = "https://www.omdbapi.com/?";	//API URL
@@ -42,13 +43,13 @@ public class apiQuery{
 		String dataurl = null;
 		String retdata = null;
 		InputStream is = null;
-		DataInputStream dis = null;
+		BufferedReader br = null;
 
 		try {
 
 			//get film title
 			sc = new Scanner(System.in);
-			moviename = input;
+			moviename = titel;
 
 			// in case of no or "" Film title
 			if (moviename == null || moviename.equals("")) {
@@ -66,10 +67,10 @@ public class apiQuery{
 
 			url = new URL(dataurl);
 			is = url.openStream();
-			dis = new DataInputStream(is);
+			br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 
 			// lesen der Daten aus dem Antwort Stream
-			while ((retdata = dis.readLine()) != null) {
+			while ((retdata = br.readLine()) != null) {
 				//retdata in json object parsen und anschließend das json Objekt "zerschneiden"
 				System.out.println(retdata);
 				JsonObject object = Json.parse(retdata).asObject();
@@ -89,14 +90,17 @@ public class apiQuery{
 
 				String metascoreV = object.getString("Metascore", "");
 				String imdbRatingV = object.getString("imdbRating", "");
-				@SuppressWarnings("unused")
 				String imdbVotesV = object.getString("imdbVotes", "");
-				@SuppressWarnings("unused")
 				String imdbIDV = object.getString("imdbID", "");
 				String typeV = object.getString("Type", "");
 				
 				String posterURL = object.getString("Poster", "");
 				String response = object.getString("Response", "");
+				
+				dbController.addCache(	streamUrl, titelV, yearV, ratedV, releasedV, runtimeV, genreV, directorV, writerV, actorsV, plotV, languageV, countryV,
+										awardsV, metascoreV, imdbRatingV, imdbVotesV, imdbIDV, typeV, posterURL, response);
+				dbController.setCached(streamUrl);
+
 				
 //				Text titelR = new Text (object.getString("Title", "")+"\n");
 //				titelR.setFont(Font.font (fontFamily, fontSize));
@@ -221,8 +225,8 @@ public class apiQuery{
 		} finally {
 			//closes datainputStream, InputStream,Scanner if not already done
 			try {
-				if (dis != null) {
-					dis.close();
+				if (br != null) {
+					br.close();
 				}
 
 				if (is != null) {

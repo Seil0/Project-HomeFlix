@@ -99,9 +99,9 @@ public class MainWindowController {
 	@FXML
 	private VBox sideMenuVBox;
 	@FXML
-	private TreeTableView<streamUiData> treeTableViewfilm;
+	private TreeTableView<tableData> treeTableViewfilm;
 	@FXML
-	private TableView<streamUiData> tableViewStreamingdata;
+	private TableView<tableData> tableViewStreamingdata;
 	@FXML
 	JFXTextArea ta1;
 	@FXML
@@ -159,28 +159,28 @@ public class MainWindowController {
     private ImageView imv1;
     
     @FXML
-    TreeItem<streamUiData> root = new TreeItem<>(new streamUiData(1, 1, 1, 5.0,"1", "filme","1", imv1));
+    TreeItem<tableData> root = new TreeItem<>(new tableData(1, 1, 1, 5.0,"1", "filme","1", imv1, false));
     @FXML
-    TreeTableColumn<streamUiData, ImageView> columnRating = new TreeTableColumn<>("Rating");
+    TreeTableColumn<tableData, ImageView> columnRating = new TreeTableColumn<>("Rating");
     @FXML
-    TreeTableColumn<streamUiData, String> columnTitel = new TreeTableColumn<>("Titel");
+    TreeTableColumn<tableData, String> columnTitel = new TreeTableColumn<>("Titel");
     @FXML
-    TreeTableColumn<streamUiData, String> columnStreamUrl = new TreeTableColumn<>("File Name");
+    TreeTableColumn<tableData, String> columnStreamUrl = new TreeTableColumn<>("File Name");
     @FXML
-    TreeTableColumn<streamUiData, String> columnResolution = new TreeTableColumn<>("Resolution");
+    TreeTableColumn<tableData, String> columnResolution = new TreeTableColumn<>("Resolution");
     @FXML
-    TreeTableColumn<streamUiData, Integer> columnYear = new TreeTableColumn<>("Year");
+    TreeTableColumn<tableData, Integer> columnYear = new TreeTableColumn<>("Year");
     @FXML
-    TreeTableColumn<streamUiData, Integer> columnSeason = new TreeTableColumn<>("Season");
+    TreeTableColumn<tableData, Integer> columnSeason = new TreeTableColumn<>("Season");
     @FXML
-    TreeTableColumn<streamUiData, Integer> columnEpisode = new TreeTableColumn<>("Episode");
+    TreeTableColumn<tableData, Integer> columnEpisode = new TreeTableColumn<>("Episode");
     
     @FXML
-    private TreeItem<streamUiData> streamingRoot =new TreeItem<>(new streamUiData(1 ,1 ,1 ,1.0 ,"1" ,"filme" ,"1", imv1));
+    private TreeItem<tableData> streamingRoot =new TreeItem<>(new tableData(1 ,1 ,1 ,1.0 ,"1" ,"filme" ,"1", imv1, false));
     @FXML
-    private TableColumn<streamUiData, String> dataNameColumn = new TableColumn<>("Datei Name");
+    private TableColumn<tableData, String> dataNameColumn = new TableColumn<>("Datei Name");
     @FXML
-    private TableColumn<streamUiData, String> dataNameEndColumn = new TableColumn<>("Datei Name mit Endung");
+    private TableColumn<tableData, String> dataNameEndColumn = new TableColumn<>("Datei Name mit Endung");
     
 	
 	private boolean menutrue = false;	//saves the position of menubtn (opened or closed)
@@ -189,7 +189,7 @@ public class MainWindowController {
 	static boolean firststart = false;
 	private int hashA = -2055934614;
 	private String version = "0.5.0";
-	private String buildNumber = "117";
+	private String buildNumber = "119";
 	private String versionName = "plasma cow";
 	private String buildURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/buildNumber.txt";
 	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt";
@@ -213,7 +213,7 @@ public class MainWindowController {
 	private String path;
 	private String streamingPath;
 	private String color;
-	private String Name;
+	private String name;
 	private String datPath;
 	private String autoUpdate;
 	private String mode;
@@ -244,11 +244,11 @@ public class MainWindowController {
 	private File selectedStreamingFolder;
 	ResourceBundle bundle;
 
-	private ObservableList<streamUiData> filterData = FXCollections.observableArrayList();
+	private ObservableList<tableData> filterData = FXCollections.observableArrayList();
 	private ObservableList<String> locals = FXCollections.observableArrayList("english (en_US)", "deutsch (de_DE)");
-	ObservableList<streamUiData> newData = FXCollections.observableArrayList();		//TODO rename to localFilms
-	ObservableList<streamUiData> streamData = FXCollections.observableArrayList();	//TODO rename to streamingFilms
-	ObservableList<streamUiData> streamingData = FXCollections.observableArrayList();
+	ObservableList<tableData> localFilms = FXCollections.observableArrayList();
+	ObservableList<tableData> streamingFilms = FXCollections.observableArrayList();
+	ObservableList<tableData> streamingData = FXCollections.observableArrayList();
 	private ImageView menu_icon_black = new ImageView(new Image("recources/icons/menu_icon_black.png"));
 	private ImageView menu_icon_white = new ImageView(new Image("recources/icons/menu_icon_white.png"));
 	private ImageView skip_previous_white = new ImageView(new Image("recources/icons/ic_skip_previous_white_18dp_1x.png"));
@@ -338,7 +338,7 @@ public class MainWindowController {
 				}
 			}else if(mode.equals("streaming")){
 				try {
-					Desktop.getDesktop().browse(new URI(datPath));	//open the streaming Url in browser (TODO other option?)
+					Desktop.getDesktop().browse(new URI(datPath));	//open the streaming URL in browser (TODO other option?)
 				} catch (URISyntaxException | IOException e) {
 					showErrorMsg(errorOpenStream, (IOException) e);
 				}
@@ -519,8 +519,8 @@ public class MainWindowController {
 	//"Main" Method called in Main.java main() when starting 
 	void setMain(Main main) {
 		Updater = new updater(this,buildURL, downloadLink, aktBuildNumber, buildNumber);
-		ApiQuery = new apiQuery(this);
 		dbController = new DBController(this);	
+		ApiQuery = new apiQuery(this, dbController);
 	}
 	
 	//Initialize the tables (treeTableViewfilm and tableViewStreamingdata)
@@ -554,15 +554,30 @@ public class MainWindowController {
 	    //Change-listener for TreeTable
 	    treeTableViewfilm.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {	
 			@Override
-			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal) {
+			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal){
 				// last = selected; //for auto-play
 				selected = treeTableViewfilm.getSelectionModel().getSelectedIndex(); //get selected item
 				last = selected - 1;
 				next = selected + 1;
-				Name = columnTitel.getCellData(selected); //get name of selected item
+				name = columnTitel.getCellData(selected); //get name of selected item
 				datPath = columnStreamUrl.getCellData(selected); //get file path of selected item
 				ta1.setText(""); //delete text in ta1
-				ApiQuery.startQuery(Name); // start api query
+				
+				if(mode.equals("local")){
+					if(localFilms.get(selected).getCached()==true){
+						System.out.println("loading from cache: "+name);
+						dbController.readCache(datPath);
+					}else{
+						ApiQuery.startQuery(name,datPath); // start api query
+					}
+				}else{
+					if(streamingFilms.get(selected).getCached()==true){
+						System.out.println("loading from cache: "+name);
+						dbController.readCache(datPath);
+					}else{
+						ApiQuery.startQuery(name,datPath); // start api query
+					}
+				}
 				ta1.positionCaret(0); 	//set cursor position in ta1
 			}
 		});
@@ -584,14 +599,14 @@ public class MainWindowController {
         tfsearch.textProperty().addListener(new ChangeListener<String>() {
     	    @Override
     	    public void changed(ObservableValue<? extends String> observable,String oldValue, String newValue) {
-            	ObservableList<streamUiData> helpData;
+            	ObservableList<tableData> helpData;
     	    	filterData.removeAll(filterData);
     	    	root.getChildren().remove(0,root.getChildren().size());
     	    	
   	    		if(mode.equals("local")){
-  	            	helpData = newData;
+  	            	helpData = localFilms;
   	    		}else{
-  	    			helpData = streamData;
+  	    			helpData = streamingFilms;
   	    		}
     	    	
     	    	for(int i = 0; i < helpData.size(); i++){
@@ -601,7 +616,7 @@ public class MainWindowController {
     	    	}
     	    	
     	    	for(int i = 0; i < filterData.size(); i++){
-    				root.getChildren().add(new TreeItem<streamUiData>(filterData.get(i)));	//add filtered data to root node after search
+    				root.getChildren().add(new TreeItem<tableData>(filterData.get(i)));	//add filtered data to root node after search
     			}
     	    	if(tfsearch.getText().hashCode() == hashA){
     	    		setColor("000000");
@@ -633,13 +648,13 @@ public class MainWindowController {
             @Override
             public void handle(ActionEvent event) {
             	if(mode.equals("streaming")){
-            		dbController.like(Name,streamData.get(selected).getStreamUrl());
+            		dbController.like(name,streamingFilms.get(selected).getStreamUrl());
             	}else{
-				dbController.like(Name,newData.get(selected).getStreamUrl());
+				dbController.like(name,localFilms.get(selected).getStreamUrl());
             	}
-				dbController.getFavStatus(Name);
+				dbController.getFavStatus(name);
 				try {
-					dbController.refresh(Name, selected);
+					dbController.refresh(name, selected);
 				} catch (SQLException e) {
 					Alert alert = new Alert(AlertType.ERROR);
 			    	alert.setTitle("Error");
@@ -655,13 +670,13 @@ public class MainWindowController {
             @Override
             public void handle(ActionEvent event) {
             	if(mode.equals("streaming")){
-            		dbController.dislike(Name,streamData.get(selected).getStreamUrl());
+            		dbController.dislike(name,streamingFilms.get(selected).getStreamUrl());
             	}else{
-				dbController.dislike(Name,newData.get(selected).getStreamUrl());
+				dbController.dislike(name,localFilms.get(selected).getStreamUrl());
             	}
-				dbController.getFavStatus(Name);
+				dbController.getFavStatus(name);
 				try {
-					dbController.refresh(Name, selected);
+					dbController.refresh(name, selected);
 				} catch (SQLException e) {
 					Alert alert = new Alert(AlertType.ERROR);
 			    	alert.setTitle("Error");
@@ -682,14 +697,14 @@ public class MainWindowController {
             	System.out.println("NAME Clicked -- sortType = " + paramT1 + ", SortType=" + paramT2);
             	ArrayList<Integer> fav_true = new ArrayList<Integer>();
             	ArrayList<Integer> fav_false = new ArrayList<Integer>();
-            	ObservableList<streamUiData> helpData;
+            	ObservableList<tableData> helpData;
   	    		filterData.removeAll(filterData);
   	    		root.getChildren().remove(0,root.getChildren().size());
   	    		
   	    		if(mode.equals("local")){
-  	            	helpData = newData;
+  	            	helpData = localFilms;
   	    		}else{
-  	    			helpData = streamData;
+  	    			helpData = streamingFilms;
   	    		}
               
   	    		
@@ -720,7 +735,7 @@ public class MainWindowController {
   	    		System.out.println(filterData.size());
     	    	for(int i = 0; i < filterData.size(); i++){
 //    	    		System.out.println(filterData.get(i).getTitel()+"; "+filterData.get(i).getRating());
-    				root.getChildren().add(new TreeItem<streamUiData>(filterData.get(i)));	//add filtered data to root node after search
+    				root.getChildren().add(new TreeItem<tableData>(filterData.get(i)));	//add filtered data to root node after search
     			}
             }
       });
@@ -754,16 +769,16 @@ public class MainWindowController {
 	
 	private void refreshTable(){
 		if(mode.equals("local")){
-		root.getChildren().set(selected, new TreeItem<streamUiData>(newData.get(selected)));
+		root.getChildren().set(selected, new TreeItem<tableData>(localFilms.get(selected)));
 		}else if(mode.equals("streaming")){
-			root.getChildren().set(selected, new TreeItem<streamUiData>(streamData.get(selected)));
+			root.getChildren().set(selected, new TreeItem<tableData>(streamingFilms.get(selected)));
 		}
 	}
 	
 	void addDataUI(){
 		if(mode.equals("local")){
-			for(int i = 0; i < newData.size(); i++){
-				root.getChildren().add(new TreeItem<streamUiData>(newData.get(i)));	//add data to root-node
+			for(int i = 0; i < localFilms.size(); i++){
+				root.getChildren().add(new TreeItem<tableData>(localFilms.get(i)));	//add data to root-node
 			}
 			columnRating.setMaxWidth(90);
 		    columnTitel.setMaxWidth(290);
@@ -772,8 +787,8 @@ public class MainWindowController {
 			treeTableViewfilm.getColumns().get(5).setVisible(false);
 			treeTableViewfilm.getColumns().get(6).setVisible(false);
 		}else if(mode.equals("streaming")){
-			for(int i = 0; i < streamData.size(); i++){
-				root.getChildren().add(new TreeItem<streamUiData>(streamData.get(i)));	//add data to root-node
+			for(int i = 0; i < streamingFilms.size(); i++){
+				root.getChildren().add(new TreeItem<tableData>(streamingFilms.get(i)));	//add data to root-node
 			}
 			columnTitel.setMaxWidth(150);
 			columnResolution.setMaxWidth(65);
@@ -790,18 +805,18 @@ public class MainWindowController {
 	
 	void loadStreamingSettings(){
 		if(getStreamingPath().equals("")||getStreamingPath().equals(null)){
-			System.out.println("Kein Pfad angegeben");	//falls der Pfad null oder "" ist
+			System.out.println("Kein Pfad angegeben");	//if path equals "" or null
 		}else{
 		String[] entries = new File(getStreamingPath()).list();
 			for(int i = 0; i < entries.length; i++){
 				if(entries[i].endsWith(".json")){
 					String titel = ohneEndung(entries[i]);
 					String data = entries[i];
-					streamingData.add(new streamUiData(1,1,1,5.0,"1",titel ,data, imv1));
+					streamingData.add(new tableData(1,1,1,5.0,"1",titel ,data, imv1, false));
 				}
 			}
 			for(int i = 0; i < streamingData.size(); i++){
-				streamingRoot.getChildren().add( new TreeItem<streamUiData>(streamingData.get(i)));	//fügt daten zur Rootnode hinzu
+				streamingRoot.getChildren().add( new TreeItem<tableData>(streamingData.get(i)));	//adds data to root-node
 			}
 		}	
 	}
