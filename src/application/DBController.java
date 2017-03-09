@@ -25,6 +25,9 @@ import com.eclipsesource.json.JsonValue;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 
 public class DBController {
 
@@ -244,9 +247,9 @@ public class DBController {
 			rs = stmt.executeQuery("SELECT * FROM film_streaming;"); 
 			while (rs.next()) {
 				if(rs.getString(8).equals("favorite_black")){
-					mainWindowController.streamingFilms.add(new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7),  new ImageView(favorite_black),rs.getBoolean(5)));
+					mainWindowController.streamingFilms.add(new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7),  new ImageView(favorite_black),rs.getBoolean(9)));
 				}else{
-					mainWindowController.streamingFilms.add(new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), new ImageView(favorite_border_black),rs.getBoolean(5)));
+					mainWindowController.streamingFilms.add(new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), new ImageView(favorite_border_black),rs.getBoolean(9)));
 				}
 			}
 			stmt.close();
@@ -279,9 +282,9 @@ public class DBController {
 				stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery("SELECT * FROM film_streaming WHERE titel = '"+name+"';" );
 				if(rs.getString(8).equals("favorite_black")){
-					mainWindowController.streamingFilms.set(i,new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7),  new ImageView(favorite_black),rs.getBoolean(5)));
+					mainWindowController.streamingFilms.set(i,new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7),  new ImageView(favorite_black),rs.getBoolean(9)));
 				}else{
-					mainWindowController.streamingFilms.set(i,new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), new ImageView(favorite_border_black),rs.getBoolean(5)));
+					mainWindowController.streamingFilms.set(i,new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), new ImageView(favorite_border_black),rs.getBoolean(9)));
 				}
 				stmt.close();
 				rs.close();
@@ -291,7 +294,10 @@ public class DBController {
 			} 
 		} 
 	}
-	
+	/**
+	 * check if there are any entries that have been removed from the film-directory
+	 * @throws SQLException
+	 */
 	private void checkRemoveEntry() throws SQLException{
 		System.out.println("checking for entrys to remove to DB ...");
 		Statement stmt = connection.createStatement(); 
@@ -318,6 +324,12 @@ public class DBController {
 		
 	}
 	
+	/**
+	 * check if there are new films in the film-directory
+	 * @throws SQLException
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
 	private void checkAddEntry() throws SQLException, FileNotFoundException, IOException{	//TODO sort alphabetical
 		System.out.println("checking for entrys to add to DB ...");
 		String[] entries = new File(mainWindowController.getPath()).list();
@@ -494,7 +506,7 @@ public class DBController {
 	
 	void addCache(	String streamUrl, String Title, String Year, String Rated, String Released, String Runtime, String Genre, String Director,
 					String Writer, String Actors, String Plot, String Language, String Country, String Awards, String Metascore, String imdbRating,
-					String imdbVotes, String imdbID, String Type, String Poster, String Response) throws SQLException{
+					String Type, String imdbVotes, String imdbID, String Poster, String Response) throws SQLException{
 		PreparedStatement ps = connection.prepareStatement("insert into cache values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 		
 		System.out.println("adding to cache...");
@@ -528,28 +540,62 @@ public class DBController {
 	
 	void readCache(String streamUrl){
 		try{
-			Statement stmt = connection.createStatement(); 
-			ResultSet rs = stmt.executeQuery("SELECT * FROM cache WHERE streamUrl='"+streamUrl+"';"); 
+			Statement stmt = connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM cache WHERE streamUrl='"+streamUrl+"';");
+			ArrayList<Text> nameText = new ArrayList<Text>();
+			ArrayList<Text> responseText = new ArrayList<Text>();
+			String fontFamily = mainWindowController.fontFamily;
+			Image im;
+			int fontSize = (int) Math.round(mainWindowController.size);
+			int j=2;
 			
-			mainWindowController.ta1.appendText(mainWindowController.title+": "+rs.getString(2)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.year+": "+ rs.getString(3)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.rating+": "+rs.getString(4)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.publishedOn+": "+rs.getString(5)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.duration+": "+rs.getString(6)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.genre+": "+rs.getString(7)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.director+": "+rs.getString(8)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.writer+": "+rs.getString(9)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.actors+": "+rs.getString(10)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.plot+": "+rs.getString(11)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.language+": "+rs.getString(12)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.country+": "+rs.getString(13)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.awards+": "+rs.getString(14)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.metascore+": "+rs.getString(15)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.imdbRating+": "+rs.getString(16)+"\n");
-			mainWindowController.ta1.appendText(mainWindowController.type+": "+rs.getString(19)+"\n");
+			nameText.add(0, new Text(mainWindowController.title+": "));
+			nameText.add(1, new Text(mainWindowController.year+": "));
+			nameText.add(2, new Text(mainWindowController.rating+": "));
+			nameText.add(3, new Text(mainWindowController.publishedOn+": "));
+			nameText.add(4, new Text(mainWindowController.duration+": "));
+			nameText.add(5, new Text(mainWindowController.genre+": "));
+			nameText.add(6, new Text(mainWindowController.director+": "));
+			nameText.add(7, new Text(mainWindowController.writer+": "));
+			nameText.add(8, new Text(mainWindowController.actors+": "));
+			nameText.add(9, new Text(mainWindowController.plot+": "));
+			nameText.add(10, new Text(mainWindowController.language+": "));
+			nameText.add(11, new Text(mainWindowController.country+": "));
+			nameText.add(12, new Text(mainWindowController.awards+": "));
+			nameText.add(13, new Text(mainWindowController.metascore+": "));
+			nameText.add(14, new Text(mainWindowController.imdbRating+": "));
+			nameText.add(15, new Text(mainWindowController.type+": "));
+			
+			for(int i=0; i<15; i++){
+				responseText.add(new Text(rs.getString(j)+"\n"));
+				j++;
+			}
+			responseText.add(new Text(rs.getString(19)+"\n"));
+			im = new Image(rs.getString(20));
 			
 			stmt.close();
 			rs.close();
+			
+			for(int i=0; i<nameText.size(); i++){
+				nameText.get(i).setFont(Font.font (fontFamily, FontWeight.BOLD, fontSize));
+				responseText.get(i).setFont(Font.font(fontFamily, fontSize));
+			}
+			
+			mainWindowController.textFlow.getChildren().remove(0, mainWindowController.textFlow.getChildren().size());
+			
+			for(int i=0;i<nameText.size(); i++){
+				mainWindowController.textFlow.getChildren().addAll(nameText.get(i),responseText.get(i));
+			}
+			
+			//TODO separate cache for posters
+			try{
+				mainWindowController.image1.setImage(im);
+			}catch (Exception e){
+				mainWindowController.image1.setImage(new Image("recources/icons/close_black_2048x2048.png"));
+				e.printStackTrace();
+			}
+			mainWindowController.image1.setImage(im);
+			
 		}catch (SQLException e) {
 			System.out.println("Ups! an error occured!");
 			e.printStackTrace();

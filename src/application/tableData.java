@@ -17,19 +17,30 @@ public class tableData {
 	private final IntegerProperty episode = new SimpleIntegerProperty();
 	private final DoubleProperty rating = new SimpleDoubleProperty();
 	private final StringProperty resolution = new SimpleStringProperty();
-	private final StringProperty titel = new SimpleStringProperty();
+	private final StringProperty title = new SimpleStringProperty();
 	private final StringProperty streamUrl = new SimpleStringProperty();
 	private final SimpleObjectProperty<ImageView> image = new SimpleObjectProperty<>();
 	private final BooleanProperty cached = new SimpleBooleanProperty();
 	
-	//tableData is the data-type of tree-table-view
-	public tableData (final int year, final int season, final int episode, final double rating, final String resolution, final String titel, final String streamUrl, final ImageView image, final boolean cached) {
+	/**
+	 * tableData is the data-type of tree-table-view
+	 * @param year: the release year of the film
+	 * @param season: season if it's a series
+	 * @param episode: episode if it's a series
+	 * @param rating: indicator for favourites, used for sorting the items
+	 * @param resolution: resolution of the film
+	 * @param titel: title of the film
+	 * @param streamUrl: the concrete path to the file or the URL
+	 * @param image: the favourite icon
+	 * @param cached: indicator for caching status
+	 */
+	public tableData (final int year, final int season, final int episode, final double rating, final String resolution, final String title, final String streamUrl, final ImageView image, final boolean cached) {
 		this.year.set(year);
 		this.season.set(season);
 		this.episode.set(episode);
 		this.rating.set(rating);
 		this.resolution.set(resolution);
-		this.titel.set(titel);
+		this.title.set(title);
 		this.streamUrl.set(streamUrl);
 		this.image.set(image);
 		this.cached.set(cached);
@@ -55,8 +66,8 @@ public class tableData {
 		return resolution;
 	}
 	
-	public StringProperty titelProperty(){
-		return titel;
+	public StringProperty titleProperty(){
+		return title;
 	}
 	
 	public StringProperty streamUrlProperty(){
@@ -92,8 +103,8 @@ public class tableData {
 		return resolutionProperty().get();
 	}
 	
-	public final String getTitel() {
-		return titelProperty().get();
+	public final String getTitle() {
+		return titleProperty().get();
 	}
 	
 	public final String getStreamUrl() {
@@ -129,8 +140,8 @@ public class tableData {
 		resolutionProperty().set(resolution);
 	}
 	
-	public final void setTitel(String titel) {
-		titelProperty().set(titel);
+	public final void setTitle(String title) {
+		titleProperty().set(title);
 	}
 
 	public final void setStreamUrl(String streamUrl) {

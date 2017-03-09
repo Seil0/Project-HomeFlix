@@ -3,11 +3,11 @@
 <?import com.jfoenix.controls.JFXButton?>
 <?import com.jfoenix.controls.JFXColorPicker?>
 <?import com.jfoenix.controls.JFXSlider?>
-<?import com.jfoenix.controls.JFXTextArea?>
 <?import com.jfoenix.controls.JFXTextField?>
 <?import com.jfoenix.controls.JFXToggleButton?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TreeTableView?>
 <?import javafx.scene.image.Image?>
@@ -20,9 +20,12 @@
 
 <AnchorPane fx:id="anpane" prefHeight="600.0" prefWidth="950.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.MainWindowController">
 	<children>
-		<TreeTableView fx:id="treeTableViewfilm" layoutX="14.0" layoutY="88.0" prefHeight="400.0" prefWidth="360.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="553.0" AnchorPane.topAnchor="88.0" />
-		<JFXTextArea fx:id="ta1" layoutX="385.0" layoutY="42.0" maxWidth="503.0" minWidth="275.0" prefHeight="546.0" prefWidth="293.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="410.0" AnchorPane.rightAnchor="222.0" AnchorPane.topAnchor="44.0" />
-      <TextFlow fx:id="textFlow" layoutX="496.0" layoutY="131.0" prefHeight="200.0" prefWidth="200.0" visible="false" AnchorPane.bottomAnchor="15.0" AnchorPane.leftAnchor="410.0" AnchorPane.rightAnchor="220.0" AnchorPane.topAnchor="44.0" />
+      <ScrollPane fx:id="scrollPane" fitToWidth="true" layoutX="408.0" layoutY="44.0" prefHeight="544.0" prefWidth="320.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="408.0" AnchorPane.rightAnchor="222.0" AnchorPane.topAnchor="44.0">
+         <content>
+            <TextFlow fx:id="textFlow" accessibleRole="TEXT_AREA" maxHeight="544.0" maxWidth="320.0" visible="true" />
+         </content>
+      </ScrollPane>
+		<TreeTableView fx:id="treeTableViewfilm" layoutX="14.0" layoutY="88.0" prefHeight="500.0" prefWidth="375.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="568.0" AnchorPane.topAnchor="88.0" />
 		<JFXButton fx:id="playbtn" contentDisplay="CENTER" layoutX="690.0" layoutY="363.0" onAction="#playbtnclicked" prefHeight="25.0" prefWidth="198.0" AnchorPane.bottomAnchor="212.0" AnchorPane.rightAnchor="12.0">
          <font>
             <Font name="System Bold" size="14.0" />
@@ -31,7 +34,7 @@
          <font>
             <Font name="System Bold" size="14.0" />
          </font></JFXButton>
-		<JFXTextField fx:id="tfsearch" layoutX="12.0" layoutY="44.0" maxWidth="477.0" minWidth="359.0" prefHeight="31.0" prefWidth="359.0" promptText="Suche ..." AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="553.0" AnchorPane.topAnchor="44.0">
+		<JFXTextField fx:id="tfsearch" layoutX="12.0" layoutY="44.0" maxWidth="477.0" minWidth="359.0" prefHeight="31.0" prefWidth="370.0" promptText="Suche ..." AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="568.0" AnchorPane.topAnchor="44.0">
          <font>
             <Font name="Arial" size="12.0" />
          </font></JFXTextField>

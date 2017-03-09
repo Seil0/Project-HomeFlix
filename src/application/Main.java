@@ -48,7 +48,7 @@ public class Main extends Application {
 	private String autoUpdate = "0";
 	private String mode = "local";	//local or streaming
 	private String local = System.getProperty("user.language")+"_"+System.getProperty("user.country");
-	private double size = 12;
+	private double size = 17;
 	private ResourceBundle bundle;
 	private MainWindowController mainWindowController;
 	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	//Windows: C:/Users/"User"/Documents/HomeFlix

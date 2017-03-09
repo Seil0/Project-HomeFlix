@@ -46,7 +46,6 @@ import org.apache.commons.lang3.SystemUtils;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXColorPicker;
 import com.jfoenix.controls.JFXSlider;
-import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXToggleButton;
 
@@ -102,8 +101,6 @@ public class MainWindowController {
 	private TreeTableView<tableData> treeTableViewfilm;
 	@FXML
 	private TableView<tableData> tableViewStreamingdata;
-	@FXML
-	JFXTextArea ta1;
 	@FXML
 	TextFlow textFlow;
 	@FXML
@@ -181,7 +178,6 @@ public class MainWindowController {
     private TableColumn<tableData, String> dataNameColumn = new TableColumn<>("Datei Name");
     @FXML
     private TableColumn<tableData, String> dataNameEndColumn = new TableColumn<>("Datei Name mit Endung");
-    
 	
 	private boolean menutrue = false;	//saves the position of menubtn (opened or closed)
 	private boolean settingstrue = false;
@@ -189,7 +185,7 @@ public class MainWindowController {
 	static boolean firststart = false;
 	private int hashA = -2055934614;
 	private String version = "0.5.0";
-	private String buildNumber = "119";
+	private String buildNumber = "121";
 	private String versionName = "plasma cow";
 	private String buildURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/buildNumber.txt";
 	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt";
@@ -220,6 +216,7 @@ public class MainWindowController {
 	@SuppressWarnings("unused")
 	private String ratingSortType;
 	private String local;
+	String fontFamily = "System";	//TODO -> in mainwindowcontroller machen
 	String title;
 	String year;
 	String rating;
@@ -236,7 +233,7 @@ public class MainWindowController {
 	String metascore;
 	String imdbRating;
 	String type;	
-	private double size;
+	double size;
 	private int last;
 	private int selected;
 	private int next;
@@ -540,7 +537,7 @@ public class MainWindowController {
         treeTableViewfilm.setShowRoot(false);
         
         //write content into cell
-        columnTitel.setCellValueFactory(cellData -> cellData.getValue().getValue().titelProperty());
+        columnTitel.setCellValueFactory(cellData -> cellData.getValue().getValue().titleProperty());
         columnRating.setCellValueFactory(cellData -> cellData.getValue().getValue().imageProperty());
         columnStreamUrl.setCellValueFactory(cellData -> cellData.getValue().getValue().streamUrlProperty());
         columnResolution.setCellValueFactory(cellData -> cellData.getValue().getValue().resolutionProperty());
@@ -561,7 +558,6 @@ public class MainWindowController {
 				next = selected + 1;
 				name = columnTitel.getCellData(selected); //get name of selected item
 				datPath = columnStreamUrl.getCellData(selected); //get file path of selected item
-				ta1.setText(""); //delete text in ta1
 				
 				if(mode.equals("local")){
 					if(localFilms.get(selected).getCached()==true){
@@ -571,6 +567,7 @@ public class MainWindowController {
 						ApiQuery.startQuery(name,datPath); // start api query
 					}
 				}else{
+					System.out.println(streamingFilms.size());
 					if(streamingFilms.get(selected).getCached()==true){
 						System.out.println("loading from cache: "+name);
 						dbController.readCache(datPath);
@@ -578,7 +575,6 @@ public class MainWindowController {
 						ApiQuery.startQuery(name,datPath); // start api query
 					}
 				}
-				ta1.positionCaret(0); 	//set cursor position in ta1
 			}
 		});
 	    
@@ -586,7 +582,7 @@ public class MainWindowController {
 	    treeTableViewfilm.setContextMenu(menu);
 
 	    //Streaming-Settings Table
-	    dataNameColumn.setCellValueFactory(cellData -> cellData.getValue().titelProperty());
+	    dataNameColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
 	    dataNameEndColumn.setCellValueFactory(cellData -> cellData.getValue().streamUrlProperty());
 		
 	    tableViewStreamingdata.getColumns().addAll(dataNameColumn, dataNameEndColumn);
@@ -610,7 +606,7 @@ public class MainWindowController {
   	    		}
     	    	
     	    	for(int i = 0; i < helpData.size(); i++){
-    	    		if(helpData.get(i).getTitel().toLowerCase().contains(tfsearch.getText().toLowerCase())){
+    	    		if(helpData.get(i).getTitle().toLowerCase().contains(tfsearch.getText().toLowerCase())){
     	    			filterData.add(helpData.get(i));	//add data from newDaten to filteredData where title contains search input
     	    		}
     	    	}
@@ -639,7 +635,12 @@ public class MainWindowController {
 			 @Override
 			public void changed(ObservableValue<? extends Number> ov,Number old_val, Number new_val) {
 				setSize(sliderFontSize.getValue()); 
-				ta1.setFont(Font.font("System", size));
+				
+				if(name != null){
+					dbController.readCache(datPath);
+				}
+
+//				ta1.setFont(Font.font("System", size));
 				saveSettings();
 			 }
         });
@@ -699,6 +700,7 @@ public class MainWindowController {
             	ArrayList<Integer> fav_false = new ArrayList<Integer>();
             	ObservableList<tableData> helpData;
   	    		filterData.removeAll(filterData);
+//  	    		treeTableViewfilm.getSelectionModel().clearSelection(selected);
   	    		root.getChildren().remove(0,root.getChildren().size());
   	    		
   	    		if(mode.equals("local")){
@@ -761,10 +763,6 @@ public class MainWindowController {
     	}else{
     		autoupdateBtn.setSelected(false);
     	}
-
-    	ta1.setWrapText(true);
-    	ta1.setEditable(false);
-    	ta1.setFont(Font.font("System", getSize()));
 	}
 	
 	private void refreshTable(){
@@ -780,7 +778,7 @@ public class MainWindowController {
 			for(int i = 0; i < localFilms.size(); i++){
 				root.getChildren().add(new TreeItem<tableData>(localFilms.get(i)));	//add data to root-node
 			}
-			columnRating.setMaxWidth(90);
+			columnRating.setMaxWidth(85);
 		    columnTitel.setMaxWidth(290);
 			treeTableViewfilm.getColumns().get(3).setVisible(false);
 			treeTableViewfilm.getColumns().get(4).setVisible(false);
