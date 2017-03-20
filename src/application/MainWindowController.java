@@ -260,6 +260,7 @@ public class MainWindowController {
 	private ContextMenu menu = new ContextMenu(like, dislike);
 	Properties props = new Properties();
 	
+	private Main main;
 	private updater Updater;
 	private apiQuery ApiQuery;
 	DBController dbController;
@@ -317,6 +318,7 @@ public class MainWindowController {
 				alert.setHeaderText("");
 	        	alert.setTitle("Info");
 	        	alert.setContentText(linuxBugText);
+	        	alert.initOwner(main.primaryStage);
 	        	alert.showAndWait();
 			}else{
 				try {
@@ -372,6 +374,7 @@ public class MainWindowController {
     	alert.setTitle("Info");
     	alert.setHeaderText("Project HomeFlix");
     	alert.setContentText(infoText);
+    	alert.initOwner(main.primaryStage);
     	alert.showAndWait();
 	}
 	
@@ -515,6 +518,7 @@ public class MainWindowController {
 	
 	//"Main" Method called in Main.java main() when starting 
 	void setMain(Main main) {
+		this.main = main;
 		Updater = new updater(this,buildURL, downloadLink, aktBuildNumber, buildNumber);
 		dbController = new DBController(this);	
 		ApiQuery = new apiQuery(this, dbController);
@@ -983,6 +987,7 @@ public class MainWindowController {
     	alert.setTitle("Error");
     	alert.setHeaderText("");
     	alert.setContentText(msg);
+    	alert.initOwner(main.primaryStage);
     	
     	// Create expandable Exception.
     	StringWriter sw = new StringWriter();

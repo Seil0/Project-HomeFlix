@@ -40,7 +40,7 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 	
-	private Stage primaryStage;
+	Stage primaryStage;
 	private String path;
 	private String streamingPathWin = System.getProperty("user.home") + "\\Documents\\HomeFlix";
 	private String streamingPathLinux = System.getProperty("user.home") + "/HomeFlix";
