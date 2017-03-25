@@ -45,9 +45,9 @@ public class Main extends Application {
 	private String streamingPathWin = System.getProperty("user.home") + "\\Documents\\HomeFlix";
 	private String streamingPathLinux = System.getProperty("user.home") + "/HomeFlix";
 	private String color = "ee3523";
-	private String autoUpdate = "0";
 	private String mode = "local";	//local or streaming
 	private String local = System.getProperty("user.language")+"_"+System.getProperty("user.country");
+	private boolean autoUpdate = false;
 	private double size = 17;
 	private ResourceBundle bundle;
 	private MainWindowController mainWindowController;
@@ -77,7 +77,7 @@ public class Main extends Application {
 		mainWindowController.setAutoUpdate(autoUpdate);	//set auto-update
 		mainWindowController.setMain(this);	//call setMain
 		
-		//Linux					if directory exists -> check config.xml
+		//Linux	if directory exists -> check config.xml
 		if(System.getProperty("os.name").equals("Linux")){
 			if(dirLinux.exists() != true){
 				dirLinux.mkdir();

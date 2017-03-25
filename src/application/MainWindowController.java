@@ -182,6 +182,7 @@ public class MainWindowController {
 	private boolean menutrue = false;	//saves the position of menubtn (opened or closed)
 	private boolean settingstrue = false;
 	private boolean streamingSettingsTrue = false;
+	private boolean autoUpdate = false;
 	static boolean firststart = false;
 	private int hashA = -2055934614;
 	private String version = "0.5.0";
@@ -196,22 +197,20 @@ public class MainWindowController {
 	
 	String errorUpdateD;
 	String errorUpdateV;
+	String noFilmFound;
 	private String errorPlay;
 	private String errorOpenStream;
 	private String errorMode;
 	private String errorLoad;
 	private String errorSave;
-	String noFilmFound;
 	private String infoText;
 	private String linuxBugText;
 	private String vlcNotInstalled;
-	private String aktBuildNumber;
 	private String path;
 	private String streamingPath;
 	private String color;
 	private String name;
 	private String datPath;
-	private String autoUpdate;
 	private String mode;
 	@SuppressWarnings("unused")
 	private String ratingSortType;
@@ -472,21 +471,21 @@ public class MainWindowController {
 	
 	@FXML
 	private void updateBtnAction(){
-//		Updater.update(buildURL, downloadLink, aktBuildNumber, buildNumber);
 		System.out.println(Updater.getState());
 		if(Updater.getState() == State.NEW){
 			Updater.start();
 		}else{
 			Updater.run();
 		}
+		
 	}
 	
 	@FXML
 	private void autoupdateBtnAction(){
-		if(autoUpdate.equals("0")){
-    		setAutoUpdate("1");
+		if(autoUpdate){
+    		setAutoUpdate(false);
     	}else{
-    		setAutoUpdate("0");
+    		setAutoUpdate(true);
     	}
 		saveSettings();
 	}
@@ -519,7 +518,7 @@ public class MainWindowController {
 	//"Main" Method called in Main.java main() when starting 
 	void setMain(Main main) {
 		this.main = main;
-		Updater = new updater(this,buildURL, downloadLink, aktBuildNumber, buildNumber);
+		Updater = new updater(this,buildURL, downloadLink, buildNumber);
 		dbController = new DBController(this);	
 		ApiQuery = new apiQuery(this, dbController);
 	}
@@ -760,10 +759,14 @@ public class MainWindowController {
         updateBtn.setFont(Font.font("System", 12));
         cbLocal.setItems(locals);
         
-        //TODO rework!
-        if(autoUpdate.equals("1")){
+        if(autoUpdate){
     		autoupdateBtn.setSelected(true);
-    		Updater.start();
+    		try {
+    			Updater.start();
+				Updater.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
     	}else{
     		autoupdateBtn.setSelected(false);
     	}
@@ -1022,7 +1025,7 @@ public class MainWindowController {
 		try {
 			props.setProperty("path", getPath());	//writes path into property
 			props.setProperty("color", getColor());
-			props.setProperty("autoUpdate", getAutoUpdate());
+			props.setProperty("autoUpdate", String.valueOf(isAutoUpdate()));
 			props.setProperty("size", getSize().toString());
 			props.setProperty("local", getLocal());
 			props.setProperty("streamingPath", getStreamingPath());
@@ -1058,7 +1061,7 @@ public class MainWindowController {
 			streamingPath = props.getProperty("streamingPath");
 			color = props.getProperty("color");
 			size = Double.parseDouble(props.getProperty("size"));
-			autoUpdate = props.getProperty("autoUpdate");
+			autoUpdate = Boolean.parseBoolean(props.getProperty("autoUpdate"));
 			local = props.getProperty("local");
 			mode = props.getProperty("mode");
 			ratingSortType = props.getProperty("ratingSortType");
@@ -1068,7 +1071,7 @@ public class MainWindowController {
 				showErrorMsg(errorSave, e);
 				e.printStackTrace();
 			}
-//			showErrorMsg(errorLoad, e); //TODO das soll beim ersten start nicht erscheinen
+//			showErrorMsg(errorLoad, e); //TODO This should not be visible at first startup
 		}
 	}
 	
@@ -1113,11 +1116,11 @@ public class MainWindowController {
 		return size;
 	}
 	
-	public void setAutoUpdate(String input){
+	public void setAutoUpdate(boolean input){
 		this.autoUpdate = input;
 	}
 	
-	public String getAutoUpdate(){
+	public boolean isAutoUpdate(){
 		return autoUpdate;
 	}
 	

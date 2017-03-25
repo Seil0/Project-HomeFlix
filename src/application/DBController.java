@@ -232,7 +232,7 @@ public class DBController {
 		try { 
 			//load local Data
 			Statement stmt = connection.createStatement(); 
-			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local"); 
+			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local ORDER BY titel"); 
 			while (rs.next()) {
 				if(rs.getString(4).equals("favorite_black")){
 					mainWindowController.localFilms.add( new tableData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_black),rs.getBoolean(5)));
@@ -244,7 +244,7 @@ public class DBController {
 			rs.close();
 			
 			//load streaming Data TODO check if there are streaming data before loading -> maybe there is an issue now
-			rs = stmt.executeQuery("SELECT * FROM film_streaming;"); 
+			rs = stmt.executeQuery("SELECT * FROM film_streaming ORDER BY titel;"); 
 			while (rs.next()) {
 				if(rs.getString(8).equals("favorite_black")){
 					mainWindowController.streamingFilms.add(new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7),  new ImageView(favorite_black),rs.getBoolean(9)));
@@ -330,7 +330,7 @@ public class DBController {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	private void checkAddEntry() throws SQLException, FileNotFoundException, IOException{	//TODO sort alphabetical
+	private void checkAddEntry() throws SQLException, FileNotFoundException, IOException{
 		System.out.println("checking for entrys to add to DB ...");
 		String[] entries = new File(mainWindowController.getPath()).list();
 		Statement stmt = connection.createStatement();
