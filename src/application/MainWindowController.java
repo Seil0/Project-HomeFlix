@@ -41,8 +41,6 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
-import org.apache.commons.lang3.SystemUtils;
-
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXColorPicker;
 import com.jfoenix.controls.JFXSlider;
@@ -290,8 +288,9 @@ public class MainWindowController {
 	
 	@FXML
 	private void playbtnclicked(){
-		if(SystemUtils.IS_OS_LINUX){
-			System.out.println("This is Linux");
+		System.out.println(System.getProperty("os.name"));
+		if(System.getProperty("os.name").contains("Linux")){
+			System.out.println("This is "+System.getProperty("os.name"));
 			String line;
 			String output = "";
 			Process p;
@@ -326,8 +325,8 @@ public class MainWindowController {
 					showErrorMsg(errorPlay,e);
 				}
 			}
-		}else if(SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_MAC_OSX){
-			System.out.println("This is Windows or Mac OSX");
+		}else if(System.getProperty("os.name").contains("Windows") || System.getProperty("os.name").contains("Mac OS X")){
+			System.out.println("This is "+System.getProperty("os.name"));
 			if(mode.equals("local")){
 				try {
 					Desktop.getDesktop().open(new File(getPath()+"\\"+ datPath));

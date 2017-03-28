@@ -14,6 +14,7 @@ import java.nio.channels.ReadableByteChannel;
 
 import javafx.application.Platform;
 
+//TODO rework the process after the update is downloaded, need to replace the old config.xml
 public class updater extends Thread{
 	
 	private MainWindowController mainWindowController;
