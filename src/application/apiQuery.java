@@ -21,13 +21,15 @@ import javafx.scene.text.Text;
 
 public class apiQuery{
 	
-	public apiQuery(MainWindowController m, DBController db){
+	public apiQuery(MainWindowController m, DBController db, Main main){
 		mainWindowController=m;
 		dbController=db;
+		this.main = main;
 	}
 	
 	private MainWindowController mainWindowController;
 	private DBController dbController;
+	private Main main;
 	private Image im;
 	private String[] responseString = new String[20];
 	ArrayList<Text> responseText = new ArrayList<Text>();
@@ -42,7 +44,7 @@ public class apiQuery{
 		String retdata = null;
 		InputStream is = null;
 		BufferedReader br = null;
-		String fontFamily = mainWindowController.fontFamily;
+		String fontFamily = main.getFONT_FAMILY();
 		int fontSize = (int) Math.round(mainWindowController.size);
 		
 		responseText.removeAll(responseText);

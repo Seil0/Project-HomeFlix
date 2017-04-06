@@ -1,4 +1,5 @@
 /**
+ * @author Jannik
  * DBController for Project HomeFlix
  * connection is in manual commit!
  */
@@ -31,11 +32,13 @@ import javafx.scene.text.Text;
 
 public class DBController {
 
-	public DBController(MainWindowController m) {
+	public DBController(MainWindowController m, Main main) {
 		mainWindowController = m;
+		this.main = main;
 	}
 
 	private MainWindowController mainWindowController;
+	private Main main;
 	private String DB_PATH = System.getProperty("user.home") + "\\Documents\\HomeFlix" + "\\" + "Homeflix.db"; //path to database file
 	private Image favorite_black = new Image("recources/icons/ic_favorite_black_18dp_1x.png");
 	private Image favorite_border_black = new Image("recources/icons/ic_favorite_border_black_18dp_1x.png");
@@ -329,8 +332,10 @@ public class DBController {
 	 * @throws SQLException
 	 * @throws FileNotFoundException
 	 * @throws IOException
+	 * if lastName != filmsStreamData.get(b) then set i = 0, file changed
 	 */
 	private void checkAddEntry() throws SQLException, FileNotFoundException, IOException{
+		String lastName = "";
 		System.out.println("checking for entrys to add to DB ...");
 		String[] entries = new File(mainWindowController.getPath()).list();
 		Statement stmt = connection.createStatement();
@@ -348,16 +353,20 @@ public class DBController {
 		}
 		
 		for(int b=0; b<filmsStreamURL.size(); b++){
-			if(filmsdbStreamURL.contains(filmsStreamURL.get(b))){
-			}else{
+			if(filmsdbStreamURL.contains(filmsStreamURL.get(b))) {
+			} else {
+				if(lastName != "" && lastName != filmsStreamData.get(b)) {
+					i = 0;
+				}
+				lastName = filmsStreamData.get(b);
 				JsonObject object = Json.parse(new FileReader(filmsStreamData.get(b))).asObject();
 				JsonArray items = object.get("entries").asArray();
-				System.out.println(items.size()+", "+i);
+				System.out.println(items.size()+", "+i+"; "+b);
 					String streamURL = items.get(i).asObject().getString("streamUrl","");
 					String titel = items.get(i).asObject().getString("titel","");
 					
 					if(streamURL.equals(filmsStreamURL.get(b))){
-						System.out.println("hinzufï¿½gen \""+titel+"\"");
+						System.out.println("hinzufügen \""+titel+"\"");
 						
 						ps.setInt(1, items.get(i).asObject().getInt("year", 0));
 						ps.setInt(2, items.get(i).asObject().getInt("season", 0));
@@ -544,7 +553,7 @@ public class DBController {
 			ResultSet rs = stmt.executeQuery("SELECT * FROM cache WHERE streamUrl='"+streamUrl+"';");
 			ArrayList<Text> nameText = new ArrayList<Text>();
 			ArrayList<Text> responseText = new ArrayList<Text>();
-			String fontFamily = mainWindowController.fontFamily;
+			String fontFamily = main.getFONT_FAMILY();
 			Image im;
 			int fontSize = (int) Math.round(mainWindowController.size);
 			int j=2;

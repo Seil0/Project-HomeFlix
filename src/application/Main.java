@@ -42,19 +42,22 @@ public class Main extends Application {
 	
 	Stage primaryStage;
 	private String path;
-	private String streamingPathWin = System.getProperty("user.home") + "\\Documents\\HomeFlix";
-	private String streamingPathLinux = System.getProperty("user.home") + "/HomeFlix";
-	private String color = "ee3523";
-	private String mode = "local";	//local or streaming
+//	private String streamingPathWin = System.getProperty("user.home") + "\\Documents\\HomeFlix";
+//	private String streamingPathLinux = System.getProperty("user.home") + "/HomeFlix";
+	private String COLOR = "ee3523";
+	private String FONT_FAMILY = "System";
+	private String mode = "local";	//local or streaming TODO
 	private String local = System.getProperty("user.language")+"_"+System.getProperty("user.country");
-	private boolean autoUpdate = false;
-	private double size = 17;
+	private boolean AUTO_UPDATE = false;
+	private double FONT_SIZE = 17;
 	private ResourceBundle bundle;
 	private MainWindowController mainWindowController;
-	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");	//Windows: C:/Users/"User"/Documents/HomeFlix
-	private File dirLinux = new File(System.getProperty("user.home") + "/HomeFlix");	//Linux: /home/"User"/HomeFlix
-	private File fileWin = new File(dirWin + "/config.xml");	//Windows: C:/Users/"User"/Documents/HomeFlix/config.xml
-	private File fileLinux = new File(dirLinux + "/config.xml");	//Linux: /home/"User"/HomeFlix/config.xml
+	private File directory;
+	private File settingsFile;
+	private String dirWin = System.getProperty("user.home") + "/Documents/HomeFlix";	//Windows: C:/Users/"User"/Documents/HomeFlix
+	private String dirLinux = System.getProperty("user.home") + "/HomeFlix";	//Linux: /home/"User"/HomeFlix
+	private String fileWin = dirWin + "/config.xml";	//Windows: C:/Users/"User"/Documents/HomeFlix/config.xml
+	private String fileLinux = dirLinux + "/config.xml";	//Linux: /home/"User"/HomeFlix/config.xml
 	
 	@Override
 	public void start(Stage primaryStage) {
@@ -74,42 +77,65 @@ public class Main extends Application {
 		primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/recources/Homeflix_Icon_64x64.png"))); //adds application icon
 
 		mainWindowController = loader.getController();	//Link of FXMLController and controller class
-		mainWindowController.setAutoUpdate(autoUpdate);	//set auto-update
+		mainWindowController.setAutoUpdate(AUTO_UPDATE);	//set auto-update
 		mainWindowController.setMain(this);	//call setMain
 		
 		//Linux	if directory exists -> check config.xml
-		if(System.getProperty("os.name").equals("Linux")){
-			if(dirLinux.exists() != true){
-				dirLinux.mkdir();
-			}else if(fileLinux.exists() != true){
-				mainWindowController.setPath(firstStart());
-				mainWindowController.setStreamingPath(streamingPathLinux);
-				mainWindowController.setColor(color);
-				mainWindowController.setSize(size);
-				mainWindowController.setAutoUpdate(autoUpdate);
-				mainWindowController.setLocal(local);
-				mainWindowController.setMode(mode);
-				mainWindowController.saveSettings();
-				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
-				System.exit(0);	//finishes itself
-			}
-		//windows
-		}else{
-			if(dirWin.exists() != true){
-				dirWin.mkdir();
-			}else if(fileWin.exists() != true){
-				mainWindowController.setPath(firstStart());
-				mainWindowController.setStreamingPath(streamingPathWin);
-				mainWindowController.setColor(color);
-				mainWindowController.setSize(size);
-				mainWindowController.setAutoUpdate(autoUpdate);
-				mainWindowController.setLocal(local);
-				mainWindowController.setMode(mode);
-				mainWindowController.saveSettings();
-				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
-				System.exit(0);	//finishes itself
-			}	
+		if(System.getProperty("os.name").equals("Linux")) {
+			directory = new File(dirLinux);
+			settingsFile = new File(fileLinux);
+		} else {
+			directory = new File(dirWin);
+			settingsFile = new File(fileWin);
 		}
+		
+		if(settingsFile.exists() != true){
+			directory.mkdir();
+			mainWindowController.setPath(firstStart());
+			mainWindowController.setStreamingPath(directory.getAbsolutePath());
+			mainWindowController.setColor(COLOR);
+			mainWindowController.setSize(FONT_SIZE);
+			mainWindowController.setAutoUpdate(AUTO_UPDATE);
+			mainWindowController.setLocal(local);
+			mainWindowController.setMode(mode);
+			mainWindowController.saveSettings();
+			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
+			System.exit(0);	//finishes itse
+		}
+		
+		
+//		if(System.getProperty("os.name").equals("Linux")){
+//			if(dirLinux.exists() != true){
+//				dirLinux.mkdir();
+//			}else if(fileLinux.exists() != true) {
+//				mainWindowController.setPath(firstStart());
+//				mainWindowController.setStreamingPath(streamingPathLinux);
+//				mainWindowController.setColor(COLOR);
+//				mainWindowController.setSize(FONT_SIZE);
+//				mainWindowController.setAutoUpdate(AUTO_UPDATE);
+//				mainWindowController.setLocal(local);
+//				mainWindowController.setMode(mode);
+//				mainWindowController.saveSettings();
+//				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
+//				System.exit(0);	//finishes itself
+//			}
+//		//windows
+//		}else{
+//			if(dirWin.exists() != true){
+//				dirWin.mkdir();
+//			}else if(fileWin.exists() != true){
+//				mainWindowController.setPath(firstStart());
+//				mainWindowController.setStreamingPath(streamingPathWin);
+//				mainWindowController.setColor(COLOR);
+//				mainWindowController.setSize(FONT_SIZE);
+//				mainWindowController.setAutoUpdate(AUTO_UPDATE);
+//				mainWindowController.setLocal(local);
+//				mainWindowController.setMode(mode);
+//				mainWindowController.saveSettings();
+//				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
+//				System.exit(0);	//finishes itself
+//			}	
+//		}
 		
 		mainWindowController.loadSettings();
 		mainWindowController.loadStreamingSettings();
@@ -165,5 +191,13 @@ public class Main extends Application {
 
 	public static void main(String[] args) {
 		launch(args);
+	}
+
+	public String getFONT_FAMILY() {
+		return FONT_FAMILY;
+	}
+
+	public void setFONT_FAMILY(String FONT_FAMILY) {
+		this.FONT_FAMILY = FONT_FAMILY;
 	}
 }

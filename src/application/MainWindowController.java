@@ -213,7 +213,6 @@ public class MainWindowController {
 	@SuppressWarnings("unused")
 	private String ratingSortType;
 	private String local;
-	String fontFamily = "System";	//TODO -> in mainwindowcontroller machen
 	String title;
 	String year;
 	String rating;
@@ -518,8 +517,8 @@ public class MainWindowController {
 	void setMain(Main main) {
 		this.main = main;
 		Updater = new updater(this,buildURL, downloadLink, buildNumber);
-		dbController = new DBController(this);	
-		ApiQuery = new apiQuery(this, dbController);
+		dbController = new DBController(this, this.main);	
+		ApiQuery = new apiQuery(this, dbController, this.main);
 	}
 	
 	//Initialize the tables (treeTableViewfilm and tableViewStreamingdata)
