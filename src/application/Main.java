@@ -56,8 +56,6 @@ public class Main extends Application {
 	private File settingsFile;
 	private String dirWin = System.getProperty("user.home") + "/Documents/HomeFlix";	//Windows: C:/Users/"User"/Documents/HomeFlix
 	private String dirLinux = System.getProperty("user.home") + "/HomeFlix";	//Linux: /home/"User"/HomeFlix
-	private String fileWin = dirWin + "/config.xml";	//Windows: C:/Users/"User"/Documents/HomeFlix/config.xml
-	private String fileLinux = dirLinux + "/config.xml";	//Linux: /home/"User"/HomeFlix/config.xml
 	
 	@Override
 	public void start(Stage primaryStage) {
@@ -80,13 +78,18 @@ public class Main extends Application {
 		mainWindowController.setAutoUpdate(AUTO_UPDATE);	//set auto-update
 		mainWindowController.setMain(this);	//call setMain
 		
-		//Linux	if directory exists -> check config.xml
+		/**Linux else Windows, check if directory & config exist
+		 * Windows: config file: 	C:/Users/"User"/Documents/HomeFlix/config.xml
+		 * 			directory:		C:/Users/"User"/Documents/HomeFlix
+		 * Linux: 	config file: 	/home/"User"/HomeFlix/config.xml
+		 * 			directory: 		/home/"User"/HomeFlix
+		 */
 		if(System.getProperty("os.name").equals("Linux")) {
 			directory = new File(dirLinux);
-			settingsFile = new File(fileLinux);
+			settingsFile = new File(dirLinux + "/config.xml");
 		} else {
 			directory = new File(dirWin);
-			settingsFile = new File(fileWin);
+			settingsFile = new File(dirWin + "/config.xml");
 		}
 		
 		if(settingsFile.exists() != true){
@@ -103,7 +106,7 @@ public class Main extends Application {
 			System.exit(0);	//finishes itse
 		}
 		
-		
+		//TODO remove when tested under Linux
 //		if(System.getProperty("os.name").equals("Linux")){
 //			if(dirLinux.exists() != true){
 //				dirLinux.mkdir();
