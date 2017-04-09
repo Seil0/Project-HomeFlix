@@ -4,12 +4,17 @@
  */
 package application;
 
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Scanner;
+
+import javax.imageio.ImageIO;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
@@ -32,6 +37,7 @@ public class apiQuery{
 	private Main main;
 	private Image im;
 	private String[] responseString = new String[20];
+	private String posterCache;
 	ArrayList<Text> responseText = new ArrayList<Text>();
 	ArrayList<Text> nameText = new ArrayList<Text>();
 	
@@ -42,9 +48,11 @@ public class apiQuery{
 		String moviename = null;
 		String dataurl = null;
 		String retdata = null;
+		String posterPath = null;
 		InputStream is = null;
 		BufferedReader br = null;
 		String fontFamily = main.getFONT_FAMILY();
+		posterCache = main.getPosterCache().toString();
 		int fontSize = (int) Math.round(mainWindowController.size);
 		
 		responseText.removeAll(responseText);
@@ -101,10 +109,23 @@ public class apiQuery{
 				responseString[18] = object.getString("Poster", "");
 				responseString[19] = object.getString("Response", "");
 				
+				//adding poster to cache
+				BufferedImage originalImage = ImageIO.read(new URL(responseString[18]));//change path to where file is located
+			    int type = originalImage.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : originalImage.getType();
+			    BufferedImage resizeImagePNG = resizeImage(originalImage, type, 198, 297);
+			    if(System.getProperty("os.name").equals("Linux")) {
+			    	posterPath = posterCache+"/"+titel+".png";
+			    	ImageIO.write(resizeImagePNG, "png", new File(posterCache+"/"+titel+".png")); //change path where you want it saved
+			    } else {
+			    	ImageIO.write(resizeImagePNG, "png", new File(posterCache+"\\"+titel+".png")); //change path where you want it saved
+			    	posterPath = posterCache+"\\"+titel+".png";
+			    }
+		    	System.out.println("adding poster to cache: "+posterPath);
+				
 				//adding strings to the cache
 				dbController.addCache(	streamUrl, responseString[0], responseString[1],responseString[2], responseString[3], responseString[4], responseString[5],
 										responseString[6], responseString[7], responseString[8], responseString[9], responseString[10],responseString[11], responseString[12],
-										responseString[13], responseString[14], responseString[15], responseString[16], responseString[17], responseString[18],
+										responseString[13], responseString[14], responseString[15], responseString[16], responseString[17], posterPath,
 										responseString[19]);
 				dbController.setCached(streamUrl);
 				
@@ -180,5 +201,14 @@ public class apiQuery{
 				;
 			}
 		}
+	}
+		
+	private static BufferedImage resizeImage(BufferedImage originalImage, int type, int IMG_WIDTH, int IMG_HEIGHT) {
+		    BufferedImage resizedImage = new BufferedImage(IMG_WIDTH, IMG_HEIGHT, type);
+		    Graphics2D g = resizedImage.createGraphics();
+		    g.drawImage(originalImage, 0, 0, IMG_WIDTH, IMG_HEIGHT, null);
+		    g.dispose();
+
+		    return resizedImage;
 	}
 }

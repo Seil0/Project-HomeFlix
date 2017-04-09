@@ -23,7 +23,6 @@ import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
-
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
@@ -518,7 +517,7 @@ public class DBController {
 					String Type, String imdbVotes, String imdbID, String Poster, String Response) throws SQLException{
 		PreparedStatement ps = connection.prepareStatement("insert into cache values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 		
-		System.out.println("adding to cache...");
+		System.out.println("adding to cache: " + Title);
 		ps.setString(1,streamUrl);
 		ps.setString(2,Title);
 		ps.setString(3,Year);
@@ -579,8 +578,8 @@ public class DBController {
 				responseText.add(new Text(rs.getString(j)+"\n"));
 				j++;
 			}
-			responseText.add(new Text(rs.getString(19)+"\n"));
-			im = new Image(rs.getString(20));
+			responseText.add(new Text(rs.getString(19)+"\n"));		
+			im = new Image(new File(rs.getString(20)).toURI().toString());
 			
 			stmt.close();
 			rs.close();
@@ -596,7 +595,6 @@ public class DBController {
 				mainWindowController.textFlow.getChildren().addAll(nameText.get(i),responseText.get(i));
 			}
 			
-			//TODO separate cache for posters
 			try{
 				mainWindowController.image1.setImage(im);
 			}catch (Exception e){

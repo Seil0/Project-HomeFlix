@@ -54,6 +54,7 @@ public class Main extends Application {
 	private MainWindowController mainWindowController;
 	private File directory;
 	private File settingsFile;
+	private File posterCache;
 	private String dirWin = System.getProperty("user.home") + "/Documents/HomeFlix";	//Windows: C:/Users/"User"/Documents/HomeFlix
 	private String dirLinux = System.getProperty("user.home") + "/HomeFlix";	//Linux: /home/"User"/HomeFlix
 	
@@ -92,7 +93,9 @@ public class Main extends Application {
 			settingsFile = new File(dirWin + "/config.xml");
 		}
 		
-		if(settingsFile.exists() != true){
+		posterCache = new File(directory+"/posterCache");
+		
+		if(!settingsFile.exists()){
 			directory.mkdir();
 			mainWindowController.setPath(firstStart());
 			mainWindowController.setStreamingPath(directory.getAbsolutePath());
@@ -106,6 +109,9 @@ public class Main extends Application {
 			System.exit(0);	//finishes itse
 		}
 		
+		if(!posterCache.exists()) {
+			posterCache.mkdir();
+		}
 		//TODO remove when tested under Linux
 //		if(System.getProperty("os.name").equals("Linux")){
 //			if(dirLinux.exists() != true){
@@ -202,5 +208,13 @@ public class Main extends Application {
 
 	public void setFONT_FAMILY(String FONT_FAMILY) {
 		this.FONT_FAMILY = FONT_FAMILY;
+	}
+
+	public File getPosterCache() {
+		return posterCache;
+	}
+
+	public void setPosterCache(File posterCache) {
+		this.posterCache = posterCache;
 	}
 }
