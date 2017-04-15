@@ -19,6 +19,7 @@
  * MA 02110-1301, USA.
  * 
  */
+
 package application;
 
 import java.io.File;
@@ -112,39 +113,6 @@ public class Main extends Application {
 		if(!posterCache.exists()) {
 			posterCache.mkdir();
 		}
-		//TODO remove when tested under Linux
-//		if(System.getProperty("os.name").equals("Linux")){
-//			if(dirLinux.exists() != true){
-//				dirLinux.mkdir();
-//			}else if(fileLinux.exists() != true) {
-//				mainWindowController.setPath(firstStart());
-//				mainWindowController.setStreamingPath(streamingPathLinux);
-//				mainWindowController.setColor(COLOR);
-//				mainWindowController.setSize(FONT_SIZE);
-//				mainWindowController.setAutoUpdate(AUTO_UPDATE);
-//				mainWindowController.setLocal(local);
-//				mainWindowController.setMode(mode);
-//				mainWindowController.saveSettings();
-//				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
-//				System.exit(0);	//finishes itself
-//			}
-//		//windows
-//		}else{
-//			if(dirWin.exists() != true){
-//				dirWin.mkdir();
-//			}else if(fileWin.exists() != true){
-//				mainWindowController.setPath(firstStart());
-//				mainWindowController.setStreamingPath(streamingPathWin);
-//				mainWindowController.setColor(COLOR);
-//				mainWindowController.setSize(FONT_SIZE);
-//				mainWindowController.setAutoUpdate(AUTO_UPDATE);
-//				mainWindowController.setLocal(local);
-//				mainWindowController.setMode(mode);
-//				mainWindowController.saveSettings();
-//				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
-//				System.exit(0);	//finishes itself
-//			}	
-//		}
 		
 		mainWindowController.loadSettings();
 		mainWindowController.loadStreamingSettings();
