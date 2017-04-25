@@ -5,16 +5,18 @@
 package application;
 
 import java.io.BufferedReader;
-import java.io.FileOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
+import javax.swing.ProgressMonitor;
+import javax.swing.ProgressMonitorInputStream;
+
+import org.apache.commons.io.FileUtils;
 
 import javafx.application.Platform;
 
-//TODO rework the process after the update is downloaded, need to replace the old config.xml
 public class updater extends Thread{
 	
 	private MainWindowController mainWindowController;
@@ -60,15 +62,24 @@ public class updater extends Thread{
 	         });
 			System.out.println("update available");
 			try {
-				URL website;
+				//get the download-Data URL
 				URL downloadURL = new URL(downloadLink);
 				BufferedReader in = new BufferedReader(new InputStreamReader(downloadURL.openStream()));
 				String updateDataURL = in.readLine();
-				website = new URL(updateDataURL);	//Update URL
-				ReadableByteChannel rbc = Channels.newChannel(website.openStream());	//open new Stream/Channel
-				FileOutputStream fos = new FileOutputStream("ProjectHomeFlix.jar");	//new FileOutputStream for ProjectHomeFLix.jar
-				fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);	//gets file from 0 to max size
-				fos.close();	//close fos (extrem wichtig!)
+				
+				//open new Http connection, ProgressMonitorInputStream for downloading the data
+				HttpURLConnection conn = (HttpURLConnection) new URL(updateDataURL).openConnection();
+				ProgressMonitorInputStream pmis = new ProgressMonitorInputStream(null, "Downloading...", conn.getInputStream());
+				ProgressMonitor pm = pmis.getProgressMonitor();
+		        pm.setMillisToDecideToPopup(0);
+		        pm.setMillisToPopup(0);
+		        pm.setMinimum(0);// tell the progress bar that we start at the beginning of the stream
+		        pm.setMaximum(conn.getContentLength());// tell the progress bar the total number of bytes we are going to read.
+				FileUtils.copyInputStreamToFile(pmis, new File("ProjectHomeFlix.jar"));
+
+				
+				//need to check if the old config file is compatible TODO
+				
 				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
 				System.exit(0);	//finishes itself
 			} catch (IOException e) {

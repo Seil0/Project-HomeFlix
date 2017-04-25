@@ -183,7 +183,7 @@ public class MainWindowController {
 	private boolean autoUpdate = false;
 	static boolean firststart = false;
 	private int hashA = -2055934614;
-	private String version = "0.5.0";
+	private String version = "0.5.1";
 	private String buildNumber = "121";
 	private String versionName = "plasma cow";
 	private String buildURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/buildNumber.txt";
@@ -204,6 +204,7 @@ public class MainWindowController {
 	private String infoText;
 	private String linuxBugText;
 	private String vlcNotInstalled;
+	private String currentWorkingDirectory;
 	private String path;
 	private String streamingPath;
 	private String color;
@@ -1136,5 +1137,13 @@ public class MainWindowController {
 	
 	public String getMode(){
 		return mode;
+	}
+
+	public String getCurrentWorkingDirectory() {
+		return currentWorkingDirectory;
+	}
+
+	public void setCurrentWorkingDirectory(String currentWorkingDirectory) {
+		this.currentWorkingDirectory = currentWorkingDirectory;
 	}
 }

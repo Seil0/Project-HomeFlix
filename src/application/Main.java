@@ -43,6 +43,7 @@ public class Main extends Application {
 	
 	Stage primaryStage;
 	private String path;
+	 String currentWorkingDirectory;
 //	private String streamingPathWin = System.getProperty("user.home") + "\\Documents\\HomeFlix";
 //	private String streamingPathLinux = System.getProperty("user.home") + "/HomeFlix";
 	private String COLOR = "ee3523";
@@ -60,7 +61,8 @@ public class Main extends Application {
 	private String dirLinux = System.getProperty("user.home") + "/HomeFlix";	//Linux: /home/"User"/HomeFlix
 	
 	@Override
-	public void start(Stage primaryStage) {
+	public void start(Stage primaryStage) throws IOException {
+		currentWorkingDirectory = new java.io.File( "." ).getCanonicalPath();
 		this.primaryStage = primaryStage;
 		mainWindow();
 	}
@@ -78,6 +80,7 @@ public class Main extends Application {
 
 		mainWindowController = loader.getController();	//Link of FXMLController and controller class
 		mainWindowController.setAutoUpdate(AUTO_UPDATE);	//set auto-update
+		mainWindowController.setCurrentWorkingDirectory(currentWorkingDirectory);
 		mainWindowController.setMain(this);	//call setMain
 		
 		/**Linux else Windows, check if directory & config exist
