@@ -5,61 +5,78 @@
 package application;
 
 import java.io.BufferedReader;
-import java.io.FileOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
+import javax.swing.ProgressMonitor;
+import javax.swing.ProgressMonitorInputStream;
+
+import org.apache.commons.io.FileUtils;
+
+import javafx.application.Platform;
 
 public class updater extends Thread{
 	
 	private MainWindowController mainWindowController;
 	private String buildURL;
 	private String downloadLink;
-	private String aktBuildNumber;
+	private String updateBuildNumber;
 	private String buildNumber;
 	
-	public updater(MainWindowController m, String buildURL,String downloadLink,String aktBuildNumber,String buildNumber){
+	public updater(MainWindowController m, String buildURL,String downloadLink,String buildNumber){
 		mainWindowController=m;
 		this.buildURL=buildURL;
 		this.downloadLink=downloadLink;
-		this.aktBuildNumber=aktBuildNumber;
 		this.buildNumber=buildNumber;
 	}
 	
 	public void run(){
 		System.out.println("check for updates ...");
+		Platform.runLater(() -> {
+			mainWindowController.updateBtn.setText(mainWindowController.bundle.getString("checkingUpdates"));
+         });
 		try {
-			URL url = new URL(buildURL); //URL der Datei mit aktueller Versionsnummer
+			URL url = new URL(buildURL); //URL of the text file with the current build number
 	        BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-	        aktBuildNumber = in.readLine();	//schreibt inputstream in String
+	        updateBuildNumber = in.readLine();	//write InputStream in String
 	        in.close();
 		} catch (IOException e1) {
 			mainWindowController.showErrorMsg(mainWindowController.errorUpdateV, e1);
 		}
-		System.out.println("Build: "+buildNumber+", Update: "+aktBuildNumber);
+		System.out.println("Build: "+buildNumber+", Update: "+updateBuildNumber);
 		
-		//vergleicht die Versionsnummern, bei aktversion > version wird ein Update durchgrf�hrt
+		//Compares the program BuildNumber with the current BuildNumber if  program BuildNumber <  current BuildNumber then perform a update
 		int iversion = Integer.parseInt(buildNumber);
-		int iaktVersion = Integer.parseInt(aktBuildNumber.replace(".", ""));
+		int iaktVersion = Integer.parseInt(updateBuildNumber.replace(".", ""));
 		
 		if(iversion >= iaktVersion){
-//			mainWindowController.updateBtn.setText(mainWindowController.bundle.getString("updateBtnNotavail"));
+			Platform.runLater(() -> {
+				mainWindowController.updateBtn.setText(mainWindowController.bundle.getString("updateBtnNotavail"));
+	         });
 			System.out.println("no update available");
 		}else{
-//			mainWindowController.updateBtn.setText(mainWindowController.bundle.getString("updateBtnavail"));
+			Platform.runLater(() -> {
+				mainWindowController.updateBtn.setText(mainWindowController.bundle.getString("updateBtnavail"));
+	         });
 			System.out.println("update available");
 			try {
-				URL website;
+				//get the download-Data URL
 				URL downloadURL = new URL(downloadLink);
 				BufferedReader in = new BufferedReader(new InputStreamReader(downloadURL.openStream()));
 				String updateDataURL = in.readLine();
-				website = new URL(updateDataURL);	//Update URL
-				ReadableByteChannel rbc = Channels.newChannel(website.openStream());	//open new Stream/Channel
-				FileOutputStream fos = new FileOutputStream("ProjectHomeFlix.jar");	//nea fileoutputstram for ProjectHomeFLix.jar
-				fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);	//gets file from 0 to max size
-				fos.close();	//close fos (extrem wichtig!)
+				
+				//open new Http connection, ProgressMonitorInputStream for downloading the data
+				HttpURLConnection conn = (HttpURLConnection) new URL(updateDataURL).openConnection();
+				ProgressMonitorInputStream pmis = new ProgressMonitorInputStream(null, "Downloading...", conn.getInputStream());
+				ProgressMonitor pm = pmis.getProgressMonitor();
+		        pm.setMillisToDecideToPopup(0);
+		        pm.setMillisToPopup(0);
+		        pm.setMinimum(0);// tell the progress bar that we start at the beginning of the stream
+		        pm.setMaximum(conn.getContentLength());// tell the progress bar the total number of bytes we are going to read.
+				FileUtils.copyInputStreamToFile(pmis, new File("ProjectHomeFlix.jar"));			
+				
 				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
 				System.exit(0);	//finishes itself
 			} catch (IOException e) {
