@@ -7,7 +7,8 @@ The dev branch is **only merged** into master when a **new release** is released
 Librarys used in this Project:  
 JFoenix: https://github.com/jfoenixadmin/JFoenix   
 minimal-json: https://github.com/ralfstx/minimal-json      
-sqlite-jdbc: https://github.com/xerial/sqlite-jdbc
+sqlite-jdbc: https://github.com/xerial/sqlite-jdbc      
+apache commons io : https://commons.apache.org/proper/commons-io/
 
 ## Installation
 
