@@ -245,7 +245,7 @@ public class DBController {
 			stmt.close();
 			rs.close();
 			
-			//load streaming Data TODO check if there are streaming data before loading -> maybe there is an issue now
+			//load streaming Data FIXME check if there are streaming data before loading -> maybe there is an issue now
 			rs = stmt.executeQuery("SELECT * FROM film_streaming ORDER BY titel;"); 
 			while (rs.next()) {
 				if(rs.getString(8).equals("favorite_black")){
@@ -264,7 +264,7 @@ public class DBController {
 	}
 	
 	//Refreshes the data in mainWindowController.newDaten and mainWindowController.streamData
-	//TODO it seems that there is an issue at the moment with streaming refreshing wrong entry if there is more than one with the same name
+	//FIXME it seems that there is an issue at the moment with streaming refreshing wrong entry if there is more than one with the same name
 	void refresh(String name,int i) throws SQLException{
 		System.out.println("refresh ...");
 		Statement stmt;		

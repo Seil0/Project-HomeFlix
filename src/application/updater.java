@@ -75,10 +75,7 @@ public class updater extends Thread{
 		        pm.setMillisToPopup(0);
 		        pm.setMinimum(0);// tell the progress bar that we start at the beginning of the stream
 		        pm.setMaximum(conn.getContentLength());// tell the progress bar the total number of bytes we are going to read.
-				FileUtils.copyInputStreamToFile(pmis, new File("ProjectHomeFlix.jar"));
-
-				
-				//need to check if the old config file is compatible TODO
+				FileUtils.copyInputStreamToFile(pmis, new File("ProjectHomeFlix.jar"));			
 				
 				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
 				System.exit(0);	//finishes itself

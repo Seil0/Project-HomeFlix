@@ -38,15 +38,14 @@ public class apiQuery{
 	private Image im;
 	private String[] responseString = new String[20];
 	private String posterCache;
+	private String apiURL = "https://www.omdbapi.com/?";
 	ArrayList<Text> responseText = new ArrayList<Text>();
 	ArrayList<Text> nameText = new ArrayList<Text>();
 	
 	void startQuery(String titel, String streamUrl){
-		URL url = null;
+		URL queryURL = null;
 		Scanner sc = null;
-		String apiurl = "https://www.omdbapi.com/?";	//API URL
 		String moviename = null;
-		String dataurl = null;
 		String retdata = null;
 		String posterPath = null;
 		InputStream is = null;
@@ -72,17 +71,15 @@ public class apiQuery{
 			//remove unwanted blank
 			moviename = moviename.trim();
 
-			//replace blank with + for api-query
+			//replace blank with +
 			moviename = moviename.replace(" ", "+");
 
-			//URL wird zusammengestellt abfragetypen: http,json,xml (muss json sein um späteres trennen zu ermöglichen)
-			dataurl = apiurl + "t=" + moviename + "&plot=full&r=json";
-
-			url = new URL(dataurl);
-			is = url.openStream();
+			//queryURL is apiURL and additional parameters, response-types: http,json,xml (must be json, since the response is processed with minimal-json )
+			queryURL = new URL(apiURL + "t=" + moviename + "&plot=full&r=json");
+			is = queryURL.openStream();
 			br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 
-			// read data from response Stream
+			//read data from response Stream
 			while ((retdata = br.readLine()) != null) {
 				//cut the json response into separate strings
 				System.out.println(retdata);
@@ -197,8 +194,8 @@ public class apiQuery{
 				if (sc != null) {
 					sc.close();
 				}
-			} catch (Exception e2) {
-				;
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}

@@ -104,7 +104,7 @@ public class MainWindowController {
 	@FXML
 	ScrollPane scrollPane;
 	@FXML
-	private JFXButton menubtn;
+	private JFXButton menubtn;	//TODO switch to hamburger menu
 	@FXML
 	private JFXButton playbtn;
 	@FXML
@@ -177,14 +177,14 @@ public class MainWindowController {
     @FXML
     private TableColumn<tableData, String> dataNameEndColumn = new TableColumn<>("Datei Name mit Endung");
 	
-	private boolean menutrue = false;	//saves the position of menubtn (opened or closed)
+	private boolean menutrue = false;	//saves the position of menuBtn (opened or closed)
 	private boolean settingstrue = false;
 	private boolean streamingSettingsTrue = false;
 	private boolean autoUpdate = false;
 	static boolean firststart = false;
 	private int hashA = -2055934614;
 	private String version = "0.5.1";
-	private String buildNumber = "121";
+	private String buildNumber = "125";
 	private String versionName = "plasma cow";
 	private String buildURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/buildNumber.txt";
 	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt";
@@ -239,7 +239,7 @@ public class MainWindowController {
 	ResourceBundle bundle;
 
 	private ObservableList<tableData> filterData = FXCollections.observableArrayList();
-	private ObservableList<String> locals = FXCollections.observableArrayList("english (en_US)", "deutsch (de_DE)");
+	private ObservableList<String> locals = FXCollections.observableArrayList("English (en_US)", "Deutsch (de_DE)");
 	ObservableList<tableData> localFilms = FXCollections.observableArrayList();
 	ObservableList<tableData> streamingFilms = FXCollections.observableArrayList();
 	ObservableList<tableData> streamingData = FXCollections.observableArrayList();
@@ -514,7 +514,9 @@ public class MainWindowController {
 	}
 	
 	
-	//"Main" Method called in Main.java main() when starting 
+	/**"Main" Method called in Main.java main() when starting
+	 * Initialize other objects: Updater, dbController and ApiQuery
+	 */
 	void setMain(Main main) {
 		this.main = main;
 		Updater = new updater(this,buildURL, downloadLink, buildNumber);
@@ -531,7 +533,7 @@ public class MainWindowController {
 	    columnTitel.setMaxWidth(260);
 	    columnStreamUrl.setMaxWidth(0);
 	    dataNameColumn.setPrefWidth(150);
-	    dataNameEndColumn.setPrefWidth(170);
+	    dataNameEndColumn.setPrefWidth(220);
 	    columnRating.setStyle("-fx-alignment: CENTER;");
 		
         treeTableViewfilm.setRoot(root);
@@ -626,7 +628,7 @@ public class MainWindowController {
         cbLocal.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
           public void changed(ObservableValue<? extends Number> ov, Number value, Number new_value) {
         	  String local = cbLocal.getItems().get((int) new_value).toString();
-        	  local = local.substring(local.length()-6,local.length()-1);
+        	  local = local.substring(local.length()-6,local.length()-1);	//reading only en_US from English (en_US)
         	  setLocal(local);
         	  setLocalUI();
         	  saveSettings();
@@ -692,7 +694,7 @@ public class MainWindowController {
 	    	});
         
         /**
-         * TODO fix bug when sort by ASCENDING, wrong order
+         * FIXME fix bug when sort by ASCENDING, wrong order
          */
         columnRating.sortTypeProperty().addListener(new ChangeListener<SortType>() {
             @Override
@@ -923,7 +925,7 @@ public class MainWindowController {
 	void setLocalUI(){
 		switch(getLocal()){
 		case "en_US":	
-			bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//us_english
+			bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//us_English
 			cbLocal.getSelectionModel().select(0);
 			break;
      	case "de_DE":	
@@ -1020,6 +1022,7 @@ public class MainWindowController {
 	
 	//saves the Settings
 	public void saveSettings(){
+		System.out.println("saving settings ...");
 		OutputStream outputStream;	//new output-stream
 		try {
 			props.setProperty("path", getPath());	//writes path into property
@@ -1056,14 +1059,26 @@ public class MainWindowController {
 				inputStream = new FileInputStream(fileWin);
 			}
 			props.loadFromXML(inputStream);	//new input-stream from .xml
-			path = props.getProperty("path");	//reads path from property
+			path = props.getProperty("path");	//read path from property
 			streamingPath = props.getProperty("streamingPath");
 			color = props.getProperty("color");
 			size = Double.parseDouble(props.getProperty("size"));
 			autoUpdate = Boolean.parseBoolean(props.getProperty("autoUpdate"));
 			local = props.getProperty("local");
-			mode = props.getProperty("mode");
 			ratingSortType = props.getProperty("ratingSortType");
+			
+			switch (props.getProperty("mode")) {
+			case "local":
+				mode = "local";
+				break;
+			case "streaming":
+				mode = "streaming";
+				break;
+			default:
+				mode = "local";
+				break;
+			}
+			
 			inputStream.close();
 		} catch (IOException e) {
 			if(firststart == false){

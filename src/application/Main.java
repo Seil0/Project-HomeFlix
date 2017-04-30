@@ -44,8 +44,6 @@ public class Main extends Application {
 	Stage primaryStage;
 	private String path;
 	 String currentWorkingDirectory;
-//	private String streamingPathWin = System.getProperty("user.home") + "\\Documents\\HomeFlix";
-//	private String streamingPathLinux = System.getProperty("user.home") + "/HomeFlix";
 	private String COLOR = "ee3523";
 	private String FONT_FAMILY = "System";
 	private String mode = "local";	//local or streaming TODO
@@ -110,7 +108,7 @@ public class Main extends Application {
 			mainWindowController.setMode(mode);
 			mainWindowController.saveSettings();
 			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
-			System.exit(0);	//finishes itse
+			System.exit(0);	//finishes it self
 		}
 		
 		if(!posterCache.exists()) {
