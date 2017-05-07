@@ -17,7 +17,7 @@ import org.apache.commons.io.FileUtils;
 
 import javafx.application.Platform;
 
-public class updater extends Thread{
+public class updater implements Runnable{
 	
 	private MainWindowController mainWindowController;
 	private String buildURL;

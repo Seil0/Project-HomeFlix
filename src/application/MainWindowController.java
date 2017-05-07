@@ -32,7 +32,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.Thread.State;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -184,7 +183,7 @@ public class MainWindowController {
 	static boolean firststart = false;
 	private int hashA = -2055934614;
 	private String version = "0.5.1";
-	private String buildNumber = "125";
+	private String buildNumber = "127";
 	private String versionName = "plasma cow";
 	private String buildURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/buildNumber.txt";
 	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt";
@@ -470,13 +469,9 @@ public class MainWindowController {
 	
 	@FXML
 	private void updateBtnAction(){
-		System.out.println(Updater.getState());
-		if(Updater.getState() == State.NEW){
-			Updater.start();
-		}else{
-			Updater.run();
-		}
-		
+		Thread updateThread = new Thread(Updater);
+		updateThread.setName("Updater");
+		updateThread.start();	
 	}
 	
 	@FXML
@@ -763,8 +758,10 @@ public class MainWindowController {
         if(autoUpdate){
     		autoupdateBtn.setSelected(true);
     		try {
-    			Updater.start();
-				Updater.join();
+    			Thread updateThread = new Thread(Updater);
+    			updateThread.setName("Updater");
+    			updateThread.start();
+    			updateThread.join();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
