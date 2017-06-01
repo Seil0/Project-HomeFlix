@@ -80,14 +80,9 @@ public class updater implements Runnable{
 	         });
 			System.out.println("update available");
 			System.out.println("download link: " + browserDownloadUrl);
-			try {
-				//get the download-Data URL
-				URL downloadURL = new URL(browserDownloadUrl);
-				BufferedReader in = new BufferedReader(new InputStreamReader(downloadURL.openStream()));
-				String updateDataURL = in.readLine();
-				
+			try {		
 				//open new Http connection, ProgressMonitorInputStream for downloading the data
-				HttpURLConnection conn = (HttpURLConnection) new URL(updateDataURL).openConnection();
+				HttpURLConnection conn = (HttpURLConnection) new URL(browserDownloadUrl).openConnection();
 				ProgressMonitorInputStream pmis = new ProgressMonitorInputStream(null, "Downloading...", conn.getInputStream());
 				ProgressMonitor pm = pmis.getProgressMonitor();
 		        pm.setMillisToDecideToPopup(0);
