@@ -185,8 +185,6 @@ public class MainWindowController {
 	private String version = "0.5.1";
 	private String buildNumber = "127";
 	private String versionName = "plasma cow";
-	private String buildURL = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/buildNumber.txt";
-	private String downloadLink = "https://raw.githubusercontent.com/Seil0/Project-HomeFlix/master/updates/downloadLink.txt";
 	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");
 	private File dirLinux = new File(System.getProperty("user.home") + "/HomeFlix");
 	private File fileWin = new File(dirWin + "/config.xml");
@@ -514,7 +512,7 @@ public class MainWindowController {
 	 */
 	void setMain(Main main) {
 		this.main = main;
-		Updater = new updater(this,buildURL, downloadLink, buildNumber);
+		Updater = new updater(this, buildNumber);
 		dbController = new DBController(this, this.main);	
 		ApiQuery = new apiQuery(this, dbController, this.main);
 	}
