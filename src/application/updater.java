@@ -49,8 +49,9 @@ public class updater implements Runnable{
 			apiOutput = ina.readLine();
 	        ina.close();
 		} catch (IOException e1) {
-			mainWindowController.showErrorMsg(mainWindowController.errorUpdateV, e1);
-			e1.printStackTrace();
+			Platform.runLater(() -> {
+				mainWindowController.showErrorMsg(mainWindowController.errorUpdateV, e1);
+			});
 		}
 
     	JsonObject object = Json.parse(apiOutput).asObject();
