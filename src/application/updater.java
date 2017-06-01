@@ -49,8 +49,9 @@ public class updater implements Runnable{
 			apiOutput = ina.readLine();
 	        ina.close();
 		} catch (IOException e1) {
-			mainWindowController.showErrorMsg(mainWindowController.errorUpdateV, e1);
-			e1.printStackTrace();
+			Platform.runLater(() -> {
+				mainWindowController.showErrorMsg(mainWindowController.errorUpdateV, e1);
+			});
 		}
 
     	JsonObject object = Json.parse(apiOutput).asObject();
@@ -89,8 +90,9 @@ public class updater implements Runnable{
 		        pm.setMillisToPopup(0);
 		        pm.setMinimum(0);// tell the progress bar that we start at the beginning of the stream
 		        pm.setMaximum(conn.getContentLength());// tell the progress bar the total number of bytes we are going to read.
-				FileUtils.copyInputStreamToFile(pmis, new File("ProjectHomeFlix.jar"));			
-				
+				FileUtils.copyInputStreamToFile(pmis, new File("ProjectHomeFlix_update.jar"));	//download update			
+				org.apache.commons.io.FileUtils.copyFile(new File("ProjectHomeFlix_update.jar"), new File("ProjectHomeFlix.jar"));	//TODO rename update to old name
+				org.apache.commons.io.FileUtils.deleteQuietly(new File("ProjectHomeFlix_update.jar"));	//delete update
 				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
 				System.exit(0);	//finishes itself
 			} catch (IOException e) {
