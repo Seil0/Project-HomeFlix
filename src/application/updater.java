@@ -15,20 +15,25 @@ import javax.swing.ProgressMonitorInputStream;
 
 import org.apache.commons.io.FileUtils;
 
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonValue;
+
 import javafx.application.Platform;
 
-public class updater extends Thread{
+public class updater implements Runnable{
 	
 	private MainWindowController mainWindowController;
-	private String buildURL;
-	private String downloadLink;
-	private String updateBuildNumber;
 	private String buildNumber;
+	private String apiOutput;
+	private String updateBuildNumber;	//tag_name from Github
+	private String browserDownloadUrl;	//update download link
+	private String githubApi = "https://api.github.com/repos/Seil0/Project-HomeFlix/releases/latest";
 	
-	public updater(MainWindowController m, String buildURL,String downloadLink,String buildNumber){
+	
+	public updater(MainWindowController m, String buildNumber){
 		mainWindowController=m;
-		this.buildURL=buildURL;
-		this.downloadLink=downloadLink;
 		this.buildNumber=buildNumber;
 	}
 	
@@ -37,14 +42,27 @@ public class updater extends Thread{
 		Platform.runLater(() -> {
 			mainWindowController.updateBtn.setText(mainWindowController.bundle.getString("checkingUpdates"));
          });
-		try {
-			URL url = new URL(buildURL); //URL of the text file with the current build number
-	        BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-	        updateBuildNumber = in.readLine();	//write InputStream in String
-	        in.close();
+
+        try {
+			URL githubApiUrl = new URL(githubApi);
+	        BufferedReader ina = new BufferedReader(new InputStreamReader(githubApiUrl.openStream()));
+			apiOutput = ina.readLine();
+	        ina.close();
 		} catch (IOException e1) {
 			mainWindowController.showErrorMsg(mainWindowController.errorUpdateV, e1);
+			e1.printStackTrace();
 		}
+
+    	JsonObject object = Json.parse(apiOutput).asObject();
+    	JsonArray objectAssets = Json.parse(apiOutput).asObject().get("assets").asArray();
+    	
+    	updateBuildNumber = object.getString("tag_name", "");
+//    	updateName = object.getString("name", "");
+//    	updateChanges = object.getString("body", "");
+    	for (JsonValue asset : objectAssets) {
+    		browserDownloadUrl = asset.asObject().getString("browser_download_url", "");
+    		
+    	}
 		System.out.println("Build: "+buildNumber+", Update: "+updateBuildNumber);
 		
 		//Compares the program BuildNumber with the current BuildNumber if  program BuildNumber <  current BuildNumber then perform a update
@@ -61,9 +79,10 @@ public class updater extends Thread{
 				mainWindowController.updateBtn.setText(mainWindowController.bundle.getString("updateBtnavail"));
 	         });
 			System.out.println("update available");
+			System.out.println("download link: " + browserDownloadUrl);
 			try {
 				//get the download-Data URL
-				URL downloadURL = new URL(downloadLink);
+				URL downloadURL = new URL(browserDownloadUrl);
 				BufferedReader in = new BufferedReader(new InputStreamReader(downloadURL.openStream()));
 				String updateDataURL = in.readLine();
 				
@@ -80,8 +99,9 @@ public class updater extends Thread{
 				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
 				System.exit(0);	//finishes itself
 			} catch (IOException e) {
-				//in case there is an error
-				mainWindowController.showErrorMsg(mainWindowController.errorUpdateD, e);
+				Platform.runLater(() -> {
+					mainWindowController.showErrorMsg(mainWindowController.errorUpdateD, e);
+				});
 			}
 		}
 	}
