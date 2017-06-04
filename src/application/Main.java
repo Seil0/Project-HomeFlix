@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.ResourceBundle;
-
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -43,7 +42,7 @@ public class Main extends Application {
 	
 	Stage primaryStage;
 	private String path;
-	 String currentWorkingDirectory;
+	String currentWorkingDirectory;
 	private String COLOR = "ee3523";
 	private String FONT_FAMILY = "System";
 	private String mode = "local";	//local or streaming TODO
@@ -61,12 +60,12 @@ public class Main extends Application {
 	@Override
 	public void start(Stage primaryStage) throws IOException {
 		currentWorkingDirectory = new java.io.File( "." ).getCanonicalPath();
-		this.primaryStage = primaryStage;
+		this.primaryStage = primaryStage;	
 		mainWindow();
 	}
 	
 	private void mainWindow(){
-	
+
 		try {
 		FXMLLoader loader = new FXMLLoader(Main.class.getResource("MainWindow.fxml"));
 		AnchorPane pane = loader.load();

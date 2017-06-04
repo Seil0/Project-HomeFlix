@@ -138,7 +138,6 @@ public class apiQuery{
 					im = new Image("recources/icons/close_black_2048x2048.png");
 					mainWindowController.image1.setImage(im);
 				}else{
-				//
 					nameText.add(0, new Text(mainWindowController.title+": "));
 					nameText.add(1, new Text(mainWindowController.year+": "));
 					nameText.add(2, new Text(mainWindowController.rating+": "));
@@ -155,7 +154,6 @@ public class apiQuery{
 					nameText.add(13, new Text(mainWindowController.metascore+": "));
 					nameText.add(14, new Text(mainWindowController.imdbRating+": "));
 					nameText.add(15, new Text(mainWindowController.type+": "));
-
 
 					for(int i=0; i<nameText.size(); i++){
 						nameText.get(i).setFont(Font.font (fontFamily, FontWeight.BOLD, fontSize));	
