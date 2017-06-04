@@ -40,7 +40,7 @@
          </font></JFXTextField>
       <ImageView fx:id="image1" fitHeight="297.0" fitWidth="198.0" layoutX="481.0" layoutY="46.0" pickOnBounds="true" preserveRatio="true" AnchorPane.rightAnchor="12.0" AnchorPane.topAnchor="44.0">
          <image>
-            <Image url="@../recources/Homeflix_Poster.png" />
+            <Image url="@../resources/Homeflix_Poster.png" />
          </image></ImageView>
       <JFXButton fx:id="returnBtn" contentDisplay="CENTER" layoutX="690.0" layoutY="443.0" onAction="#returnBtnclicked" prefHeight="25.0" prefWidth="90.0" AnchorPane.bottomAnchor="132.0" AnchorPane.rightAnchor="120.0" />
       <JFXButton fx:id="forwardBtn" contentDisplay="CENTER" layoutX="798.0" layoutY="443.0" onAction="#forwardBtnclicked" prefHeight="25.0" prefWidth="90.0" AnchorPane.bottomAnchor="132.0" AnchorPane.rightAnchor="12.0" />

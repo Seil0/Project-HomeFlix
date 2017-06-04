@@ -39,8 +39,8 @@ public class DBController {
 	private MainWindowController mainWindowController;
 	private Main main;
 	private String DB_PATH = System.getProperty("user.home") + "\\Documents\\HomeFlix" + "\\" + "Homeflix.db"; //path to database file
-	private Image favorite_black = new Image("recources/icons/ic_favorite_black_18dp_1x.png");
-	private Image favorite_border_black = new Image("recources/icons/ic_favorite_border_black_18dp_1x.png");
+	private Image favorite_black = new Image("resources/icons/ic_favorite_black_18dp_1x.png");
+	private Image favorite_border_black = new Image("resources/icons/ic_favorite_border_black_18dp_1x.png");
 	private List<String> filmsdbAll = new ArrayList<String>();
 	private List<String> filmsdbLocal = new ArrayList<String>();
 	private List<String> filmsdbStream = new ArrayList<String>();
@@ -198,7 +198,7 @@ public class DBController {
 						ps.close();
 						psS.close();
 					}catch (SQLException ea) { 
-						System.err.println("Konnte nicht ausgeführt werden"); 
+						System.err.println("Konnte nicht ausgefï¿½hrt werden"); 
 						ea.printStackTrace(); 
 					}
 				}else {
@@ -365,7 +365,7 @@ public class DBController {
 					String titel = items.get(i).asObject().getString("titel","");
 					
 					if(streamURL.equals(filmsStreamURL.get(b))){
-						System.out.println("hinzufügen \""+titel+"\"");
+						System.out.println("hinzufï¿½gen \""+titel+"\"");
 						
 						ps.setInt(1, items.get(i).asObject().getInt("year", 0));
 						ps.setInt(2, items.get(i).asObject().getInt("season", 0));
@@ -598,7 +598,7 @@ public class DBController {
 			try{
 				mainWindowController.image1.setImage(im);
 			}catch (Exception e){
-				mainWindowController.image1.setImage(new Image("recources/icons/close_black_2048x2048.png"));
+				mainWindowController.image1.setImage(new Image("resources/icons/close_black_2048x2048.png"));
 				e.printStackTrace();
 			}
 			mainWindowController.image1.setImage(im);

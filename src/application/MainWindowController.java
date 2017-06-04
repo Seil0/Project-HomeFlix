@@ -240,14 +240,14 @@ public class MainWindowController {
 	ObservableList<tableData> localFilms = FXCollections.observableArrayList();
 	ObservableList<tableData> streamingFilms = FXCollections.observableArrayList();
 	ObservableList<tableData> streamingData = FXCollections.observableArrayList();
-	private ImageView menu_icon_black = new ImageView(new Image("recources/icons/menu_icon_black.png"));
-	private ImageView menu_icon_white = new ImageView(new Image("recources/icons/menu_icon_white.png"));
-	private ImageView skip_previous_white = new ImageView(new Image("recources/icons/ic_skip_previous_white_18dp_1x.png"));
-	private ImageView skip_previous_black = new ImageView(new Image("recources/icons/ic_skip_previous_black_18dp_1x.png"));
-	private ImageView skip_next_white = new ImageView(new Image("recources/icons/ic_skip_next_white_18dp_1x.png"));
-	private ImageView skip_next_black = new ImageView(new Image("recources/icons/ic_skip_next_black_18dp_1x.png"));
-	private ImageView play_arrow_white = new ImageView(new Image("recources/icons/ic_play_arrow_white_18dp_1x.png"));
-	private ImageView play_arrow_black = new ImageView(new Image("recources/icons/ic_play_arrow_black_18dp_1x.png"));
+	private ImageView menu_icon_black = new ImageView(new Image("resources/icons/menu_icon_black.png"));
+	private ImageView menu_icon_white = new ImageView(new Image("resources/icons/menu_icon_white.png"));
+	private ImageView skip_previous_white = new ImageView(new Image("resources/icons/ic_skip_previous_white_18dp_1x.png"));
+	private ImageView skip_previous_black = new ImageView(new Image("resources/icons/ic_skip_previous_black_18dp_1x.png"));
+	private ImageView skip_next_white = new ImageView(new Image("resources/icons/ic_skip_next_white_18dp_1x.png"));
+	private ImageView skip_next_black = new ImageView(new Image("resources/icons/ic_skip_next_black_18dp_1x.png"));
+	private ImageView play_arrow_white = new ImageView(new Image("resources/icons/ic_play_arrow_white_18dp_1x.png"));
+	private ImageView play_arrow_black = new ImageView(new Image("resources/icons/ic_play_arrow_black_18dp_1x.png"));
 	private DirectoryChooser directoryChooser = new DirectoryChooser();
     private MenuItem like = new MenuItem("like");
     private MenuItem dislike = new MenuItem("dislike");	//TODO one option (like or dislike)
@@ -920,15 +920,15 @@ public class MainWindowController {
 	void setLocalUI(){
 		switch(getLocal()){
 		case "en_US":	
-			bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//us_English
+			bundle = ResourceBundle.getBundle("resources.HomeFlix-Local", Locale.US);	//us_English
 			cbLocal.getSelectionModel().select(0);
 			break;
      	case "de_DE":	
-     		bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.GERMAN);	//German
+     		bundle = ResourceBundle.getBundle("resources.HomeFlix-Local", Locale.GERMAN);	//German
 			cbLocal.getSelectionModel().select(1);
 			break;
      	default:		
-     		bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//default local
+     		bundle = ResourceBundle.getBundle("resources.HomeFlix-Local", Locale.US);	//default local
 			cbLocal.getSelectionModel().select(0);
 			break;
 		 }

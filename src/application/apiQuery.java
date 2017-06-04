@@ -135,7 +135,7 @@ public class apiQuery{
 				//if response == false then show mainWindowController.noFilmFound else create new Texts and add them to flowText
 				if(responseString[19].equals("False")){
 					mainWindowController.textFlow.getChildren().add(new Text(mainWindowController.noFilmFound));
-					im = new Image("recources/icons/close_black_2048x2048.png");
+					im = new Image("resources/icons/close_black_2048x2048.png");
 					mainWindowController.image1.setImage(im);
 				}else{
 					nameText.add(0, new Text(mainWindowController.title+": "));
@@ -167,7 +167,7 @@ public class apiQuery{
 					
 					//if there is no poster
 					if(responseString[18].equals("N/A")){
-						im = new Image("recources/icons/close_black_2048x2048.png");
+						im = new Image("resources/icons/close_black_2048x2048.png");
 					}else{
 						im = new Image(responseString[18]);
 					}

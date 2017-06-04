@@ -73,7 +73,7 @@ public class Main extends Application {
 		primaryStage.setMinWidth(900.00);
 		primaryStage.setResizable(false);
 		primaryStage.setTitle("Project HomeFlix");
-		primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/recources/Homeflix_Icon_64x64.png"))); //adds application icon
+		primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/resources/Homeflix_Icon_64x64.png"))); //adds application icon
 
 		mainWindowController = loader.getController();	//Link of FXMLController and controller class
 		mainWindowController.setAutoUpdate(AUTO_UPDATE);	//set auto-update
@@ -140,11 +140,11 @@ public class Main extends Application {
 	private String firstStart(){
 		MainWindowController.firststart = true;
 		switch(System.getProperty("user.language")+"_"+System.getProperty("user.country")){
-		case "en_US":	bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//us_english
+		case "en_US":	bundle = ResourceBundle.getBundle("resources.HomeFlix-Local", Locale.US);	//us_english
 				break;
-     	case "de_DE":	bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.GERMAN);	//German
+     	case "de_DE":	bundle = ResourceBundle.getBundle("resources.HomeFlix-Local", Locale.GERMAN);	//German
      			break;
-     	default:		bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//default local
+     	default:		bundle = ResourceBundle.getBundle("resources.HomeFlix-Local", Locale.US);	//default local
      			break;
 		 }
 		
