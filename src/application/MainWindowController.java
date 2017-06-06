@@ -199,7 +199,6 @@ public class MainWindowController {
 	private String errorLoad;
 	private String errorSave;
 	private String infoText;
-	private String linuxBugText;
 	private String vlcNotInstalled;
 	private String currentWorkingDirectory;
 	private String path;
@@ -308,16 +307,9 @@ public class MainWindowController {
 	        	alert.setTitle("Info");
 	        	alert.setContentText(vlcNotInstalled);
 	        	alert.showAndWait();
-			}else if(datPath.contains(" ")){
-				Alert alert = new Alert(AlertType.INFORMATION);
-				alert.setHeaderText("");
-	        	alert.setTitle("Info");
-	        	alert.setContentText(linuxBugText);
-	        	alert.initOwner(main.primaryStage);
-	        	alert.showAndWait();
 			}else{
 				try {
-					Runtime.getRuntime().exec("vlc "+getPath()+"/"+ datPath);
+					Runtime.getRuntime().exec(new String[] { "vlc", getPath()+"/"+ datPath});
 				} catch (IOException e) {
 					showErrorMsg(errorPlay,e);
 				}
@@ -332,7 +324,7 @@ public class MainWindowController {
 				}
 			}else if(mode.equals("streaming")){
 				try {
-					Desktop.getDesktop().browse(new URI(datPath));	//open the streaming URL in browser (TODO other option?)
+					Desktop.getDesktop().browse(new URI(datPath));	//open the streaming URL in browser
 				} catch (URISyntaxException | IOException e) {
 					showErrorMsg(errorOpenStream, (IOException) e);
 				}
@@ -960,7 +952,6 @@ public class MainWindowController {
 		errorSave = bundle.getString("errorSave");
 		noFilmFound = bundle.getString("noFilmFound");
 		infoText = bundle.getString("version")+" "+version+" (Build: "+buildNumber+") "+versionName+bundle.getString("infoText");
-		linuxBugText = bundle.getString("linuxBug");
 		vlcNotInstalled = bundle.getString("vlcNotInstalled");
 		
 		title = bundle.getString("title");

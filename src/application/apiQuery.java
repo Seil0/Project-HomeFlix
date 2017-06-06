@@ -176,6 +176,7 @@ public class apiQuery{
 			}
 
 		} catch (Exception e) {
+			mainWindowController.textFlow.getChildren().remove(0, mainWindowController.textFlow.getChildren().size());
 			mainWindowController.textFlow.getChildren().add(new Text(e.toString()));
 			System.out.println(e);
 		} finally {
