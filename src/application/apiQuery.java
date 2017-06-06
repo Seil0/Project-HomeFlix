@@ -38,7 +38,8 @@ public class apiQuery{
 	private Image im;
 	private String[] responseString = new String[20];
 	private String posterCache;
-	private String apiURL = "https://www.omdbapi.com/?";
+	private String apiURL = "https://www.omdbapi.com/?apikey=";
+	private String apiKey = "b9f9fd23";
 	ArrayList<Text> responseText = new ArrayList<Text>();
 	ArrayList<Text> nameText = new ArrayList<Text>();
 	
@@ -75,7 +76,7 @@ public class apiQuery{
 			moviename = moviename.replace(" ", "+");
 
 			//queryURL is apiURL and additional parameters, response-types: http,json,xml (must be json, since the response is processed with minimal-json )
-			queryURL = new URL(apiURL + "t=" + moviename + "&plot=full&r=json");
+			queryURL = new URL(apiURL + apiKey + "&t=" + moviename + "&plot=full&r=json");
 			is = queryURL.openStream();
 			br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 
@@ -133,7 +134,7 @@ public class apiQuery{
 				}
 				
 				//if response == false then show mainWindowController.noFilmFound else create new Texts and add them to flowText
-				if(responseString[19].equals("False")){
+				if(retdata.contains("\"Response\":\"False\"")){	//TODO + FIXME
 					mainWindowController.textFlow.getChildren().add(new Text(mainWindowController.noFilmFound));
 					im = new Image("resources/icons/close_black_2048x2048.png");
 					mainWindowController.image1.setImage(im);
