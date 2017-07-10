@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.ResourceBundle;
-
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -43,7 +42,7 @@ public class Main extends Application {
 	
 	Stage primaryStage;
 	private String path;
-	 String currentWorkingDirectory;
+	String currentWorkingDirectory;
 	private String COLOR = "ee3523";
 	private String FONT_FAMILY = "System";
 	private String mode = "local";	//local or streaming TODO
@@ -61,12 +60,12 @@ public class Main extends Application {
 	@Override
 	public void start(Stage primaryStage) throws IOException {
 		currentWorkingDirectory = new java.io.File( "." ).getCanonicalPath();
-		this.primaryStage = primaryStage;
+		this.primaryStage = primaryStage;	
 		mainWindow();
 	}
 	
 	private void mainWindow(){
-	
+
 		try {
 		FXMLLoader loader = new FXMLLoader(Main.class.getResource("MainWindow.fxml"));
 		AnchorPane pane = loader.load();
@@ -74,7 +73,7 @@ public class Main extends Application {
 		primaryStage.setMinWidth(900.00);
 		primaryStage.setResizable(false);
 		primaryStage.setTitle("Project HomeFlix");
-		primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/recources/Homeflix_Icon_64x64.png"))); //adds application icon
+		primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/resources/Homeflix_Icon_64x64.png"))); //adds application icon
 
 		mainWindowController = loader.getController();	//Link of FXMLController and controller class
 		mainWindowController.setAutoUpdate(AUTO_UPDATE);	//set auto-update
@@ -129,7 +128,7 @@ public class Main extends Application {
 		mainWindowController.addDataUI();
 		
 		Scene scene = new Scene(pane);	//create new scene, append pane to scene
-		
+		scene.getStylesheets().add(Main.class.getResource("MainWindow.css").toExternalForm());
 		primaryStage.setScene(scene);	//append scene to stage
 		primaryStage.show();	//show stage
 		} catch (IOException e) {
@@ -141,11 +140,11 @@ public class Main extends Application {
 	private String firstStart(){
 		MainWindowController.firststart = true;
 		switch(System.getProperty("user.language")+"_"+System.getProperty("user.country")){
-		case "en_US":	bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//us_english
+		case "en_US":	bundle = ResourceBundle.getBundle("resources.HomeFlix-Local", Locale.US);	//us_english
 				break;
-     	case "de_DE":	bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.GERMAN);	//German
+     	case "de_DE":	bundle = ResourceBundle.getBundle("resources.HomeFlix-Local", Locale.GERMAN);	//German
      			break;
-     	default:		bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//default local
+     	default:		bundle = ResourceBundle.getBundle("resources.HomeFlix-Local", Locale.US);	//default local
      			break;
 		 }
 		

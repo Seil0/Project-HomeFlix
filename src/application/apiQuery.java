@@ -38,7 +38,8 @@ public class apiQuery{
 	private Image im;
 	private String[] responseString = new String[20];
 	private String posterCache;
-	private String apiURL = "https://www.omdbapi.com/?";
+	private String apiURL = "https://www.omdbapi.com/?apikey=";
+	private String apiKey = "b9f9fd23";
 	ArrayList<Text> responseText = new ArrayList<Text>();
 	ArrayList<Text> nameText = new ArrayList<Text>();
 	
@@ -75,7 +76,7 @@ public class apiQuery{
 			moviename = moviename.replace(" ", "+");
 
 			//queryURL is apiURL and additional parameters, response-types: http,json,xml (must be json, since the response is processed with minimal-json )
-			queryURL = new URL(apiURL + "t=" + moviename + "&plot=full&r=json");
+			queryURL = new URL(apiURL + apiKey + "&t=" + moviename + "&plot=full&r=json");
 			is = queryURL.openStream();
 			br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 
@@ -133,12 +134,11 @@ public class apiQuery{
 				}
 				
 				//if response == false then show mainWindowController.noFilmFound else create new Texts and add them to flowText
-				if(responseString[19].equals("False")){
+				if(retdata.contains("\"Response\":\"False\"")){	//TODO + FIXME
 					mainWindowController.textFlow.getChildren().add(new Text(mainWindowController.noFilmFound));
-					im = new Image("recources/icons/close_black_2048x2048.png");
+					im = new Image("resources/icons/close_black_2048x2048.png");
 					mainWindowController.image1.setImage(im);
 				}else{
-				//
 					nameText.add(0, new Text(mainWindowController.title+": "));
 					nameText.add(1, new Text(mainWindowController.year+": "));
 					nameText.add(2, new Text(mainWindowController.rating+": "));
@@ -156,7 +156,6 @@ public class apiQuery{
 					nameText.add(14, new Text(mainWindowController.imdbRating+": "));
 					nameText.add(15, new Text(mainWindowController.type+": "));
 
-
 					for(int i=0; i<nameText.size(); i++){
 						nameText.get(i).setFont(Font.font (fontFamily, FontWeight.BOLD, fontSize));	
 					}
@@ -169,7 +168,7 @@ public class apiQuery{
 					
 					//if there is no poster
 					if(responseString[18].equals("N/A")){
-						im = new Image("recources/icons/close_black_2048x2048.png");
+						im = new Image("resources/icons/close_black_2048x2048.png");
 					}else{
 						im = new Image(responseString[18]);
 					}
@@ -178,6 +177,7 @@ public class apiQuery{
 			}
 
 		} catch (Exception e) {
+			mainWindowController.textFlow.getChildren().remove(0, mainWindowController.textFlow.getChildren().size());
 			mainWindowController.textFlow.getChildren().add(new Text(e.toString()));
 			System.out.println(e);
 		} finally {

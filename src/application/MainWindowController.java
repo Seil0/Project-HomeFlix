@@ -42,9 +42,11 @@ import java.util.Properties;
 import java.util.ResourceBundle;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXColorPicker;
+import com.jfoenix.controls.JFXHamburger;
 import com.jfoenix.controls.JFXSlider;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXToggleButton;
+import com.jfoenix.transitions.hamburger.HamburgerBackArrowBasicTransition;
 
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
@@ -72,6 +74,7 @@ import javafx.scene.control.TreeTableColumn.SortType;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -103,8 +106,6 @@ public class MainWindowController {
 	@FXML
 	ScrollPane scrollPane;
 	@FXML
-	private JFXButton menubtn;	//TODO switch to hamburger menu
-	@FXML
 	private JFXButton playbtn;
 	@FXML
 	private JFXButton openfolderbtn;
@@ -129,6 +130,8 @@ public class MainWindowController {
     @FXML
     private JFXButton streamingDirectoryBtn;
     @FXML
+    private JFXHamburger menuHam;
+    @FXML
     private JFXToggleButton autoupdateBtn;
     @FXML
     public JFXTextField tfPath;
@@ -143,13 +146,20 @@ public class MainWindowController {
     @FXML
     public JFXSlider sliderFontSize;
     @FXML
-    private Label versionlbl;
+    private Label versionLabel;
     @FXML
-    private Label sizelbl;
+    private Label fontsizeLabel;
     @FXML
-    private Label aulbl;
+    private Label autoUpdateLabel;
+    @FXML
+    private Label settingsHead1Label;
+    @FXML
+    private Label mainColorLabel;
+    @FXML
+    private Label localLabel;
     @FXML 
     ImageView image1;
+    
     private ImageView imv1;
     
     @FXML
@@ -176,15 +186,15 @@ public class MainWindowController {
     @FXML
     private TableColumn<tableData, String> dataNameEndColumn = new TableColumn<>("Datei Name mit Endung");
 	
-	private boolean menutrue = false;	//saves the position of menuBtn (opened or closed)
-	private boolean settingstrue = false;
+	private boolean menuTrue = false;	//saves the position of menuBtn (opened or closed)
+	private boolean settingsTrue = false;
 	private boolean streamingSettingsTrue = false;
 	private boolean autoUpdate = false;
 	static boolean firststart = false;
 	private int hashA = -2055934614;
-	private String version = "0.5.1";
-	private String buildNumber = "127";
-	private String versionName = "plasma cow";
+	private String version = "0.5.2";
+	private String buildNumber = "129";
+	private String versionName = "solidify cow";
 	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");
 	private File dirLinux = new File(System.getProperty("user.home") + "/HomeFlix");
 	private File fileWin = new File(dirWin + "/config.xml");
@@ -199,7 +209,6 @@ public class MainWindowController {
 	private String errorLoad;
 	private String errorSave;
 	private String infoText;
-	private String linuxBugText;
 	private String vlcNotInstalled;
 	private String currentWorkingDirectory;
 	private String path;
@@ -240,14 +249,12 @@ public class MainWindowController {
 	ObservableList<tableData> localFilms = FXCollections.observableArrayList();
 	ObservableList<tableData> streamingFilms = FXCollections.observableArrayList();
 	ObservableList<tableData> streamingData = FXCollections.observableArrayList();
-	private ImageView menu_icon_black = new ImageView(new Image("recources/icons/menu_icon_black.png"));
-	private ImageView menu_icon_white = new ImageView(new Image("recources/icons/menu_icon_white.png"));
-	private ImageView skip_previous_white = new ImageView(new Image("recources/icons/ic_skip_previous_white_18dp_1x.png"));
-	private ImageView skip_previous_black = new ImageView(new Image("recources/icons/ic_skip_previous_black_18dp_1x.png"));
-	private ImageView skip_next_white = new ImageView(new Image("recources/icons/ic_skip_next_white_18dp_1x.png"));
-	private ImageView skip_next_black = new ImageView(new Image("recources/icons/ic_skip_next_black_18dp_1x.png"));
-	private ImageView play_arrow_white = new ImageView(new Image("recources/icons/ic_play_arrow_white_18dp_1x.png"));
-	private ImageView play_arrow_black = new ImageView(new Image("recources/icons/ic_play_arrow_black_18dp_1x.png"));
+	private ImageView skip_previous_white = new ImageView(new Image("resources/icons/ic_skip_previous_white_18dp_1x.png"));
+	private ImageView skip_previous_black = new ImageView(new Image("resources/icons/ic_skip_previous_black_18dp_1x.png"));
+	private ImageView skip_next_white = new ImageView(new Image("resources/icons/ic_skip_next_white_18dp_1x.png"));
+	private ImageView skip_next_black = new ImageView(new Image("resources/icons/ic_skip_next_black_18dp_1x.png"));
+	private ImageView play_arrow_white = new ImageView(new Image("resources/icons/ic_play_arrow_white_18dp_1x.png"));
+	private ImageView play_arrow_black = new ImageView(new Image("resources/icons/ic_play_arrow_black_18dp_1x.png"));
 	private DirectoryChooser directoryChooser = new DirectoryChooser();
     private MenuItem like = new MenuItem("like");
     private MenuItem dislike = new MenuItem("dislike");	//TODO one option (like or dislike)
@@ -258,30 +265,6 @@ public class MainWindowController {
 	private updater Updater;
 	private apiQuery ApiQuery;
 	DBController dbController;
-	
-	/**
-	 * TODO change value of Text-color change
-	 */
-	@FXML
-	private void menubtnclicked(){
-		if(menutrue == false){
-			sideMenuSlideIn();
-			menutrue = true;
-		}else{
-			sideMenuSlideOut();
-			menutrue = false;
-		}
-		if(settingstrue == true){
-			settingsAnchor.setVisible(false);
-			setPath(tfPath.getText());
-			saveSettings();
-			settingstrue = false;
-		}
-		if(streamingSettingsTrue == true){
-			streamingSettingsAnchor.setVisible(false);
-			streamingSettingsTrue = false;
-		}
-	}
 	
 	@FXML
 	private void playbtnclicked(){
@@ -308,16 +291,9 @@ public class MainWindowController {
 	        	alert.setTitle("Info");
 	        	alert.setContentText(vlcNotInstalled);
 	        	alert.showAndWait();
-			}else if(datPath.contains(" ")){
-				Alert alert = new Alert(AlertType.INFORMATION);
-				alert.setHeaderText("");
-	        	alert.setTitle("Info");
-	        	alert.setContentText(linuxBugText);
-	        	alert.initOwner(main.primaryStage);
-	        	alert.showAndWait();
 			}else{
 				try {
-					Runtime.getRuntime().exec("vlc "+getPath()+"/"+ datPath);
+					Runtime.getRuntime().exec(new String[] { "vlc", getPath()+"/"+ datPath});
 				} catch (IOException e) {
 					showErrorMsg(errorPlay,e);
 				}
@@ -332,7 +308,7 @@ public class MainWindowController {
 				}
 			}else if(mode.equals("streaming")){
 				try {
-					Desktop.getDesktop().browse(new URI(datPath));	//open the streaming URL in browser (TODO other option?)
+					Desktop.getDesktop().browse(new URI(datPath));	//open the streaming URL in browser
 				} catch (URISyntaxException | IOException e) {
 					showErrorMsg(errorOpenStream, (IOException) e);
 				}
@@ -375,18 +351,18 @@ public class MainWindowController {
 	
 	@FXML
 	private void settingsBtnclicked(){
-		if(settingstrue == false){
+		if(settingsTrue == false){
 			if(streamingSettingsTrue == true){
 				streamingSettingsAnchor.setVisible(false);
 				streamingSettingsTrue = false;
 			}
 			settingsAnchor.setVisible(true);	
-			settingstrue = true;
+			settingsTrue = true;
 		}else{
 			settingsAnchor.setVisible(false);
 			setPath(tfPath.getText());
 			saveSettings();
-			settingstrue = false;
+			settingsTrue = false;
 		}
 	}
 	
@@ -396,9 +372,9 @@ public class MainWindowController {
 	@FXML
 	private void streamingSettingsBtnclicked(){
 		if(streamingSettingsTrue == false){
-			if(settingstrue == true){
+			if(settingsTrue == true){
 				settingsAnchor.setVisible(false);
-				settingstrue = false;
+				settingsTrue = false;
 			}
 			streamingSettingsAnchor.setVisible(true);			
 			streamingSettingsTrue = true;	
@@ -423,8 +399,8 @@ public class MainWindowController {
 		settingsAnchor.setVisible(false);
 		streamingSettingsAnchor.setVisible(false);
 		sideMenuSlideOut();		//disables side-menu
-		menutrue = false;
-		settingstrue = false;
+		menuTrue = false;
+		settingsTrue = false;
 		streamingSettingsTrue = false;
 	}
 	
@@ -588,6 +564,32 @@ public class MainWindowController {
 	
 	//Initializing the actions
 	void initActions(){
+		
+		HamburgerBackArrowBasicTransition burgerTask = new HamburgerBackArrowBasicTransition(menuHam);
+		menuHam.addEventHandler(MouseEvent.MOUSE_PRESSED, (e)->{
+	    	if(menuTrue == false){
+				sideMenuSlideIn();
+				burgerTask.setRate(1.0);
+				burgerTask.play();
+				menuTrue = true;
+			}else{
+				sideMenuSlideOut();
+				burgerTask.setRate(-1.0);
+				burgerTask.play();
+				menuTrue = false;
+			}
+			if(settingsTrue == true){
+				settingsAnchor.setVisible(false);
+				setPath(tfPath.getText());
+				saveSettings();
+				settingsTrue = false;
+			}
+			if(streamingSettingsTrue == true){
+				streamingSettingsAnchor.setVisible(false);
+				streamingSettingsTrue = false;
+			}
+			
+		});
 		
         tfsearch.textProperty().addListener(new ChangeListener<String>() {
     	    @Override
@@ -858,7 +860,7 @@ public class MainWindowController {
 			playbtn.setGraphic(play_arrow_white);
 			returnBtn.setGraphic(skip_previous_white);
 			forwardBtn.setGraphic(skip_next_white);
-			menubtn.setGraphic(menu_icon_white);
+			menuHam.getStyleClass().add("jfx-hamburgerW");
 		}else{
 			settingsBtn.setStyle("-fx-text-fill: BLACK;");
 			streamingSettingsBtn.setStyle("-fx-text-fill: BLACK;");
@@ -875,7 +877,7 @@ public class MainWindowController {
 			playbtn.setGraphic(play_arrow_black);
 			returnBtn.setGraphic(skip_previous_black);
 			forwardBtn.setGraphic(skip_next_black);
-			menubtn.setGraphic(menu_icon_black);
+			menuHam.getStyleClass().add("jfx-hamburgerB");
 		}
 		
 		if(mode.equals("local")){
@@ -920,15 +922,15 @@ public class MainWindowController {
 	void setLocalUI(){
 		switch(getLocal()){
 		case "en_US":	
-			bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//us_English
+			bundle = ResourceBundle.getBundle("resources.HomeFlix-Local", Locale.US);	//us_English
 			cbLocal.getSelectionModel().select(0);
 			break;
      	case "de_DE":	
-     		bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.GERMAN);	//German
+     		bundle = ResourceBundle.getBundle("resources.HomeFlix-Local", Locale.GERMAN);	//German
 			cbLocal.getSelectionModel().select(1);
 			break;
      	default:		
-     		bundle = ResourceBundle.getBundle("recources.HomeFlix-Local", Locale.US);	//default local
+     		bundle = ResourceBundle.getBundle("resources.HomeFlix-Local", Locale.US);	//default local
 			cbLocal.getSelectionModel().select(0);
 			break;
 		 }
@@ -942,9 +944,12 @@ public class MainWindowController {
 		updateBtn.setText(bundle.getString("checkUpdates"));
 		directoryBtn.setText(bundle.getString("chooseFolder"));
 		streamingDirectoryBtn.setText(bundle.getString("chooseFolder"));
-		sizelbl.setText(bundle.getString("fontSize"));
-		aulbl.setText(bundle.getString("autoUpdate"));
-		versionlbl.setText(bundle.getString("version")+" "+version+" (Build: "+buildNumber+")");
+		settingsHead1Label.setText(bundle.getString("settingsHead1Label"));
+		mainColorLabel.setText(bundle.getString("mainColorLabel"));
+		fontsizeLabel.setText(bundle.getString("fontsizeLabel"));
+		localLabel.setText(bundle.getString("localLabel"));
+		autoUpdateLabel.setText(bundle.getString("autoUpdateLabel"));
+		versionLabel.setText(bundle.getString("version")+" "+version+" (Build: "+buildNumber+")");
 		columnTitel.setText(bundle.getString("columnName"));
 		columnRating.setText(bundle.getString("columnRating"));
 		columnStreamUrl.setText(bundle.getString("columnStreamUrl"));
@@ -960,7 +965,6 @@ public class MainWindowController {
 		errorSave = bundle.getString("errorSave");
 		noFilmFound = bundle.getString("noFilmFound");
 		infoText = bundle.getString("version")+" "+version+" (Build: "+buildNumber+") "+versionName+bundle.getString("infoText");
-		linuxBugText = bundle.getString("linuxBug");
 		vlcNotInstalled = bundle.getString("vlcNotInstalled");
 		
 		title = bundle.getString("title");
