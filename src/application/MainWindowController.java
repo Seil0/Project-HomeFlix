@@ -192,9 +192,9 @@ public class MainWindowController {
 	private boolean autoUpdate = false;
 	static boolean firststart = false;
 	private int hashA = -2055934614;
-	private String version = "0.5.1";
+	private String version = "0.5.2";
 	private String buildNumber = "129";
-	private String versionName = "plasma cow";
+	private String versionName = "solidify cow";
 	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");
 	private File dirLinux = new File(System.getProperty("user.home") + "/HomeFlix");
 	private File fileWin = new File(dirWin + "/config.xml");
