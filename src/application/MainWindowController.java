@@ -266,6 +266,7 @@ public class MainWindowController {
 	private apiQuery ApiQuery;
 	DBController dbController;
 	
+	//TODO add streaming support to Linux!
 	@FXML
 	private void playbtnclicked(){
 		System.out.println(System.getProperty("os.name"));
