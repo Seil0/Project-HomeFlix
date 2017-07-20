@@ -266,58 +266,65 @@ public class MainWindowController {
 	private apiQuery ApiQuery;
 	DBController dbController;
 	
-	//TODO add streaming support to Linux!
 	@FXML
-	private void playbtnclicked(){
-		System.out.println(System.getProperty("os.name"));
-		if(System.getProperty("os.name").contains("Linux")){
-			System.out.println("This is "+System.getProperty("os.name"));
-			String line;
-			String output = "";
-			Process p;
-			try {
-				p = Runtime.getRuntime().exec("which vlc");
-				BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-				while ((line = input.readLine()) != null) {
-				output = line;
-				}
-				System.out.println(output);
-				input.close();
-			} catch (IOException e1) {
-				e1.printStackTrace();
+	private void playbtnclicked(){	
+		if (mode.equals("streaming")) {
+			if (Desktop.isDesktopSupported()) {
+				new Thread(() -> {
+					try {
+				        Desktop.getDesktop().browse(new URI(datPath));	//open the streaming URL in browser
+				    } catch (IOException | URISyntaxException e) {
+				    	e.printStackTrace();
+				        showErrorMsg(errorOpenStream, (IOException) e);
+				    }
+				}).start();	
+			} else {
+				System.out.println("Desktop not supported");
 			}
-			if(output.contains("which: no vlc")||output == ""){
-				Alert alert = new Alert(AlertType.INFORMATION);
-				alert.setHeaderText("");
-	        	alert.setTitle("Info");
-	        	alert.setContentText(vlcNotInstalled);
-	        	alert.showAndWait();
-			}else{
+		}else if (mode.equals("local")) {
+			if(System.getProperty("os.name").contains("Linux")){
+				System.out.println("This is "+System.getProperty("os.name"));
+				String line;
+				String output = "";
+				Process p;
 				try {
-					Runtime.getRuntime().exec(new String[] { "vlc", getPath()+"/"+ datPath});
-				} catch (IOException e) {
-					showErrorMsg(errorPlay,e);
+					p = Runtime.getRuntime().exec("which vlc");
+					BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+					while ((line = input.readLine()) != null) {
+						output = line;
+					}
+					System.out.println(output);
+					input.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
 				}
-			}
-		}else if(System.getProperty("os.name").contains("Windows") || System.getProperty("os.name").contains("Mac OS X")){
-			System.out.println("This is "+System.getProperty("os.name"));
-			if(mode.equals("local")){
-				try {
-					Desktop.getDesktop().open(new File(getPath()+"\\"+ datPath));
-				} catch (IOException e) {
-					showErrorMsg(errorPlay,e);
+				if(output.contains("which: no vlc")||output == ""){
+					Alert alert = new Alert(AlertType.INFORMATION);
+					alert.setHeaderText("");
+		        	alert.setTitle("Info");
+		        	alert.setContentText(vlcNotInstalled);
+		        	alert.showAndWait();
+				}else{
+					try {
+						Runtime.getRuntime().exec(new String[] { "vlc", getPath()+"/"+ datPath});
+					} catch (IOException e) {
+						showErrorMsg(errorPlay,e);
+					}
 				}
-			}else if(mode.equals("streaming")){
-				try {
-					Desktop.getDesktop().browse(new URI(datPath));	//open the streaming URL in browser
-				} catch (URISyntaxException | IOException e) {
-					showErrorMsg(errorOpenStream, (IOException) e);
-				}
-			}else{
-				IOException e = new IOException("error");
-				showErrorMsg(errorMode, e);
-				
-			}
+			}else if(System.getProperty("os.name").contains("Windows") || System.getProperty("os.name").contains("Mac OS X")){
+				System.out.println("This is "+System.getProperty("os.name"));
+					try {
+						Desktop.getDesktop().open(new File(getPath()+"\\"+ datPath));
+					} catch (IOException e) {
+						showErrorMsg(errorPlay,e);
+					}
+			} else {
+				System.out.println("It seems like your operating system is not supported, please contact a developer!");
+				System.out.println("Error code is: nsos; OS is: " + System.getProperty("os.name"));
+			}	
+		} else {
+			IOException e = new IOException("error");
+			showErrorMsg(errorMode, e);
 		}
 	}
 	
@@ -495,7 +502,6 @@ public class MainWindowController {
 	}
 	
 	//Initialize the tables (treeTableViewfilm and tableViewStreamingdata)
-	@SuppressWarnings({ "unchecked"})	//TODO
 	void initTabel(){
 
 		//film Table 
@@ -519,10 +525,17 @@ public class MainWindowController {
         columnSeason.setCellValueFactory(cellData -> cellData.getValue().getValue().seasonProperty().asObject());
         columnEpisode.setCellValueFactory(cellData -> cellData.getValue().getValue().episodeProperty().asObject());
 
-        treeTableViewfilm.getColumns().addAll(columnTitel, columnRating, columnStreamUrl, columnResolution, columnYear, columnSeason, columnEpisode);
-	    treeTableViewfilm.getColumns().get(2).setVisible(false); //hide columnStreamUrl (column with file path important for the player)
+        //add columns to treeTableViewfilm
+        treeTableViewfilm.getColumns().add(columnTitel);
+        treeTableViewfilm.getColumns().add(columnRating);
+        treeTableViewfilm.getColumns().add(columnStreamUrl);
+        treeTableViewfilm.getColumns().add(columnResolution);
+        treeTableViewfilm.getColumns().add(columnYear);
+        treeTableViewfilm.getColumns().add(columnSeason);
+        treeTableViewfilm.getColumns().add(columnEpisode);
+        treeTableViewfilm.getColumns().get(2).setVisible(false); //hide columnStreamUrl (column with file URL, important for opening a file/stream)
 	
-	    //Change-listener for TreeTable
+	    //Change-listener for treeTableViewfilm
 	    treeTableViewfilm.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {	
 			@Override
 			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal){
@@ -552,14 +565,15 @@ public class MainWindowController {
 			}
 		});
 	    
-	    //context menu for treetableview  
+	    //context menu for treeTableViewfilm  
 	    treeTableViewfilm.setContextMenu(menu);
 
 	    //Streaming-Settings Table
 	    dataNameColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
 	    dataNameEndColumn.setCellValueFactory(cellData -> cellData.getValue().streamUrlProperty());
 		
-	    tableViewStreamingdata.getColumns().addAll(dataNameColumn, dataNameEndColumn);
+	    tableViewStreamingdata.getColumns().add(dataNameColumn);
+	    tableViewStreamingdata.getColumns().add(dataNameEndColumn);
 	    tableViewStreamingdata.setItems(streamingData); 
 	}
 	
@@ -660,7 +674,7 @@ public class MainWindowController {
 					Alert alert = new Alert(AlertType.ERROR);
 			    	alert.setTitle("Error");
 			    	alert.setHeaderText("");
-			    	alert.setContentText("There should be an error message in the future (like problem)\nIt seems as a cat has stolen the like-methode");
+			    	alert.setContentText("There should be an error message in future (like-problem).\nIt seems as a cat has stolen the \"like-methode\"!");
 					e.printStackTrace();
 				}
 				refreshTable();
@@ -682,7 +696,7 @@ public class MainWindowController {
 					Alert alert = new Alert(AlertType.ERROR);
 			    	alert.setTitle("Error");
 			    	alert.setHeaderText("");
-			    	alert.setContentText("There should be an error message in the future (dislike problem)");
+			    	alert.setContentText("There should be an error message in future (dislike problem)");
 					e.printStackTrace();
 				}
 				refreshTable();
@@ -700,7 +714,7 @@ public class MainWindowController {
             	ArrayList<Integer> fav_false = new ArrayList<Integer>();
             	ObservableList<tableData> helpData;
   	    		filterData.removeAll(filterData);
-//  	    		treeTableViewfilm.getSelectionModel().clearSelection(selected);
+//  	    	treeTableViewfilm.getSelectionModel().clearSelection(selected);
   	    		root.getChildren().remove(0,root.getChildren().size());
   	    		
   	    		if(mode.equals("local")){
