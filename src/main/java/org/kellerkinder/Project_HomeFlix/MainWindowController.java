@@ -40,6 +40,10 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXColorPicker;
 import com.jfoenix.controls.JFXHamburger;
@@ -191,7 +195,8 @@ public class MainWindowController {
 	private boolean streamingSettingsTrue = false;
 	private boolean autoUpdate = false;
 	static boolean firststart = false;
-	private int hashA = -2055934614;
+    private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
+	private int hashA = -647380320;
 	private String version = "0.5.2";
 	private String buildNumber = "129";
 	private String versionName = "solidify cow";
@@ -217,7 +222,6 @@ public class MainWindowController {
 	private String name;
 	private String datPath;
 	private String mode;
-	@SuppressWarnings("unused")
 	private String ratingSortType;
 	private String local;
 	String title;
@@ -246,9 +250,9 @@ public class MainWindowController {
 
 	private ObservableList<tableData> filterData = FXCollections.observableArrayList();
 	private ObservableList<String> locals = FXCollections.observableArrayList("English (en_US)", "Deutsch (de_DE)");
-	ObservableList<tableData> localFilms = FXCollections.observableArrayList();
-	ObservableList<tableData> streamingFilms = FXCollections.observableArrayList();
-	ObservableList<tableData> streamingData = FXCollections.observableArrayList();
+	private ObservableList<tableData> localFilms = FXCollections.observableArrayList();
+	private ObservableList<tableData> streamingFilms = FXCollections.observableArrayList();
+	private ObservableList<tableData> streamingData = FXCollections.observableArrayList();
 	private ImageView skip_previous_white = new ImageView(new Image("icons/ic_skip_previous_white_18dp_1x.png"));
 	private ImageView skip_previous_black = new ImageView(new Image("icons/ic_skip_previous_black_18dp_1x.png"));
 	private ImageView skip_next_white = new ImageView(new Image("icons/ic_skip_next_white_18dp_1x.png"));
@@ -279,11 +283,11 @@ public class MainWindowController {
 				    }
 				}).start();	
 			} else {
-				System.out.println("Desktop not supported");
+				LOGGER.info("Desktop not supported");
 			}
 		}else if (mode.equals("local")) {
 			if(System.getProperty("os.name").contains("Linux")){
-				System.out.println("This is "+System.getProperty("os.name"));
+				LOGGER.info("This is "+System.getProperty("os.name"));
 				String line;
 				String output = "";
 				Process p;
@@ -437,8 +441,7 @@ public class MainWindowController {
 				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
 				System.exit(0);	//finishes itself
 			} catch (IOException e) {
-				System.out.println("es ist ein Fehler aufgetreten");
-				e.printStackTrace();
+				LOGGER.error("error while restarting HomeFlix", e);
 			}
         }
 	}
@@ -475,7 +478,7 @@ public class MainWindowController {
 	private void streamingDirectoryBtnAction(){
 		selectedStreamingFolder = directoryChooser.showDialog(null);  
 		if(selectedStreamingFolder == null){
-				System.out.println("No Directory selected");
+				LOGGER.warn("No Directory selected");
 		}else{
 			setStreamingPath(selectedStreamingFolder.getAbsolutePath());
 			saveSettings();
@@ -484,8 +487,7 @@ public class MainWindowController {
 				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
 				System.exit(0);	//finishes itself
 			} catch (IOException e) {
-				System.out.println("es ist ein Fehler aufgetreten");
-				e.printStackTrace();
+				LOGGER.error("error while restarting HomeFlix", e);
 			}
 			}
 	}
@@ -548,7 +550,7 @@ public class MainWindowController {
 				
 				if(mode.equals("local")){
 					if(localFilms.get(selected).getCached()==true){
-						System.out.println("loading from cache: "+name);
+						LOGGER.info("loading from cache: "+name);
 						dbController.readCache(datPath);
 					}else{
 						ApiQuery.startQuery(name,datPath); // start api query
@@ -556,7 +558,7 @@ public class MainWindowController {
 				}else{
 					System.out.println(streamingFilms.size());
 					if(streamingFilms.get(selected).getCached()==true){
-						System.out.println("loading from cache: "+name);
+						LOGGER.info("loading from cache: "+name);
 						dbController.readCache(datPath);
 					}else{
 						ApiQuery.startQuery(name,datPath); // start api query
@@ -628,7 +630,7 @@ public class MainWindowController {
     	    	for(int i = 0; i < filterData.size(); i++){
     				root.getChildren().add(new TreeItem<tableData>(filterData.get(i)));	//add filtered data to root node after search
     			}
-    	    	if(tfsearch.getText().hashCode() == hashA){
+    	    	if(tfsearch.getText().hashCode()== hashA){
     	    		setColor("000000");
     	    		applyColor();
     	    	}
@@ -672,11 +674,7 @@ public class MainWindowController {
 				try {
 					dbController.refresh(name, selected);
 				} catch (SQLException e) {
-					Alert alert = new Alert(AlertType.ERROR);
-			    	alert.setTitle("Error");
-			    	alert.setHeaderText("");
-			    	alert.setContentText("There should be an error message in future (like-problem).\nIt seems as a cat has stolen the \"like-methode\"!");
-					e.printStackTrace();
+					LOGGER.error("(like-problem), it seems as a cat has stolen the \"like-methode\"!", e);
 				}
 				refreshTable();
 			}
@@ -710,7 +708,7 @@ public class MainWindowController {
         columnRating.sortTypeProperty().addListener(new ChangeListener<SortType>() {
             @Override
             public void changed(ObservableValue<? extends SortType> paramObservableValue, SortType paramT1, SortType paramT2) {
-            	System.out.println("NAME Clicked -- sortType = " + paramT1 + ", SortType=" + paramT2);
+            	LOGGER.info("NAME Clicked -- sortType = " + paramT1 + ", SortType=" + paramT2);
             	ArrayList<Integer> fav_true = new ArrayList<Integer>();
             	ArrayList<Integer> fav_false = new ArrayList<Integer>();
             	ObservableList<tableData> helpData;
@@ -733,7 +731,7 @@ public class MainWindowController {
   	    			}
   	    		}
   	    		if(paramT2.toString().equals("DESCENDING")){
-  	    			System.out.println("Absteigend");
+  	    			LOGGER.info("Absteigend");	//Debug, delete?
   	  	    		for(int i = 0;i<fav_true.size();i++){
   	  	    			filterData.add(helpData.get(fav_true.get(i)));
   	  	    		}
@@ -749,7 +747,7 @@ public class MainWindowController {
   	  	    		}
   	    		}
   	    		
-  	    		System.out.println(filterData.size());
+  	    		LOGGER.info(filterData.size());	//Debug, delete?
     	    	for(int i = 0; i < filterData.size(); i++){
 //    	    		System.out.println(filterData.get(i).getTitel()+"; "+filterData.get(i).getRating());
     				root.getChildren().add(new TreeItem<tableData>(filterData.get(i)));	//add filtered data to root node after search
@@ -760,7 +758,7 @@ public class MainWindowController {
 	
 	//initialize UI elements
 	void initUI(){
-		System.out.println("Mode: "+mode);	//TODO debugging
+		LOGGER.info("Mode: "+mode);	//TODO debugging
 		debugBtn.setDisable(true); 	//debugging button for tests
 		debugBtn.setVisible(false);
 		
@@ -1037,7 +1035,7 @@ public class MainWindowController {
 	
 	//saves the Settings
 	public void saveSettings(){
-		System.out.println("saving settings ...");
+		LOGGER.info("saving settings ...");
 		OutputStream outputStream;	//new output-stream
 		try {
 			props.setProperty("path", getPath());	//writes path into property
@@ -1065,7 +1063,7 @@ public class MainWindowController {
 	
 	//loads the Settings
 	public void loadSettings(){
-		System.out.println("loading settings ...");
+		LOGGER.info("loading settings ...");
 		InputStream inputStream;
 		try {
 			if(System.getProperty("os.name").equals("Linux")){
@@ -1074,31 +1072,79 @@ public class MainWindowController {
 				inputStream = new FileInputStream(fileWin);
 			}
 			props.loadFromXML(inputStream);	//new input-stream from .xml
-			path = props.getProperty("path");	//read path from property
-			streamingPath = props.getProperty("streamingPath");
-			color = props.getProperty("color");
-			size = Double.parseDouble(props.getProperty("size"));
-			autoUpdate = Boolean.parseBoolean(props.getProperty("autoUpdate"));
-			local = props.getProperty("local");
-			ratingSortType = props.getProperty("ratingSortType");
 			
-			switch (props.getProperty("mode")) {
-			case "local":
-				mode = "local";
-				break;
-			case "streaming":
-				mode = "streaming";
-				break;
-			default:
-				mode = "local";
-				break;
+			try {
+				setPath(props.getProperty("path"));	//read path from property
+			} catch (Exception e) {
+				LOGGER.error("cloud not load path", e);
+				setPath("");
 			}
+			
+			try {
+				setStreamingPath(props.getProperty("streamingPath"));
+			} catch (Exception e) {
+				LOGGER.error("cloud not load streamingPath", e);
+				setStreamingPath("");
+			}
+			
+			try {
+				setColor(props.getProperty("color"));
+			} catch (Exception e) {
+				LOGGER.error("cloud not load color", e);
+				setColor("");
+			}
+			
+			try {
+				setSize( Double.parseDouble(props.getProperty("size")));
+			} catch (Exception e) {
+				LOGGER.error("cloud not load fontsize", e);
+				setSize(17.0);
+			}
+			
+			try {
+				setAutoUpdate(Boolean.parseBoolean(props.getProperty("autoUpdate")));
+			} catch (Exception e) {
+				LOGGER.error("cloud not load autoUpdate", e);
+				setAutoUpdate(false);
+			}
+
+			try {
+				setLocal(props.getProperty("local"));
+			} catch (Exception e) {
+				LOGGER.error("cloud not load local", e);
+				setLocal(System.getProperty("user.language")+"_"+System.getProperty("user.country"));
+			}
+			
+			try {
+				setRatingSortType(props.getProperty("ratingSortType"));
+			} catch (Exception e) {
+				LOGGER.error("cloud not load autoUpdate", e);
+				setRatingSortType("");
+			}
+			
+			try {
+				switch (props.getProperty("mode")) {
+				case "local":
+					setMode("local");
+					break;
+				case "streaming":
+					setMode("streaming");
+					break;
+				default:
+					setMode("local");
+					break;
+				}
+			} catch (Exception e) {
+				setMode("local");
+				LOGGER.error("cloud not load mode", e);
+			}
+			
 			
 			inputStream.close();
 		} catch (IOException e) {
 			if(firststart == false){
+				LOGGER.error("faild to load settings", e);
 				showErrorMsg(errorSave, e);
-				e.printStackTrace();
 			}
 //			showErrorMsg(errorLoad, e); //TODO This should not be visible at first startup
 		}
@@ -1175,5 +1221,37 @@ public class MainWindowController {
 
 	public void setCurrentWorkingDirectory(String currentWorkingDirectory) {
 		this.currentWorkingDirectory = currentWorkingDirectory;
+	}
+
+	public ObservableList<tableData> getLocalFilms() {
+		return localFilms;
+	}
+
+	public void setLocalFilms(ObservableList<tableData> localFilms) {
+		this.localFilms = localFilms;
+	}
+
+	public ObservableList<tableData> getStreamingFilms() {
+		return streamingFilms;
+	}
+
+	public void setStreamingFilms(ObservableList<tableData> streamingFilms) {
+		this.streamingFilms = streamingFilms;
+	}
+
+	public ObservableList<tableData> getStreamingData() {
+		return streamingData;
+	}
+
+	public void setStreamingData(ObservableList<tableData> streamingData) {
+		this.streamingData = streamingData;
+	}
+
+	public String getRatingSortType() {
+		return ratingSortType;
+	}
+
+	public void setRatingSortType(String ratingSortType) {
+		this.ratingSortType = ratingSortType;
 	}
 }

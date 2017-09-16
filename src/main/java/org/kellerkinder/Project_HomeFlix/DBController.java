@@ -129,8 +129,8 @@ public class DBController {
 			}
 			
 			//getting all entries from the streaming lists
-			for(int v=0; v< mainWindowController.streamingData.size(); v++){
-				String fileName = mainWindowController.getStreamingPath()+"/"+mainWindowController.streamingData.get(v).getStreamUrl();
+			for(int v=0; v< mainWindowController.getStreamingData().size(); v++){
+				String fileName = mainWindowController.getStreamingPath()+"/"+mainWindowController.getStreamingData().get(v).getStreamUrl();
 				try {
 					JsonObject object = Json.parse(new FileReader(fileName)).asObject();
 					JsonArray items = object.get("entries").asArray();
@@ -181,8 +181,8 @@ public class DBController {
 						if(mainWindowController.getStreamingPath().equals("")||mainWindowController.getStreamingPath().equals(null)){
 							System.out.println("Kein Pfad angegeben");	//if path == null or ""
 						}else{						
-							for(int i=0; i< mainWindowController.streamingData.size(); i++){
-							String fileNamea = mainWindowController.getStreamingPath()+"/"+mainWindowController.streamingData.get(i).getStreamUrl();
+							for(int i=0; i< mainWindowController.getStreamingData().size(); i++){
+							String fileNamea = mainWindowController.getStreamingPath()+"/"+mainWindowController.getStreamingData().get(i).getStreamUrl();
 							try {
 								JsonObject object = Json.parse(new FileReader(fileNamea)).asObject();
 								JsonArray items = object.get("entries").asArray();
@@ -246,9 +246,9 @@ public class DBController {
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local ORDER BY titel"); 
 			while (rs.next()) {
 				if(rs.getString(4).equals("favorite_black")){
-					mainWindowController.localFilms.add( new tableData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_black),rs.getBoolean(5)));
+					mainWindowController.getLocalFilms().add( new tableData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_black),rs.getBoolean(5)));
 				}else{
-					mainWindowController.localFilms.add( new tableData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_border_black),rs.getBoolean(5)));
+					mainWindowController.getLocalFilms().add( new tableData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_border_black),rs.getBoolean(5)));
 				}
 			}
 			stmt.close();
@@ -258,9 +258,9 @@ public class DBController {
 			rs = stmt.executeQuery("SELECT * FROM film_streaming ORDER BY titel;"); 
 			while (rs.next()) {
 				if(rs.getString(8).equals("favorite_black")){
-					mainWindowController.streamingFilms.add(new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7),  new ImageView(favorite_black),rs.getBoolean(9)));
+					mainWindowController.getStreamingFilms().add(new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7),  new ImageView(favorite_black),rs.getBoolean(9)));
 				}else{
-					mainWindowController.streamingFilms.add(new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), new ImageView(favorite_border_black),rs.getBoolean(9)));
+					mainWindowController.getStreamingFilms().add(new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), new ImageView(favorite_border_black),rs.getBoolean(9)));
 				}
 			}
 			stmt.close();
@@ -282,9 +282,9 @@ public class DBController {
 			stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local WHERE titel = \""+name+"\";" );
 			if(rs.getString(4).equals("favorite_black")){
-				mainWindowController.localFilms.set(i, new tableData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3),  new ImageView(favorite_black),rs.getBoolean(5)));
+				mainWindowController.getLocalFilms().set(i, new tableData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3),  new ImageView(favorite_black),rs.getBoolean(5)));
 			}else{
-				mainWindowController.localFilms.set(i, new tableData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_border_black),rs.getBoolean(5)));
+				mainWindowController.getLocalFilms().set(i, new tableData(1, 1, 1, rs.getDouble(1), "1", rs.getString(2), rs.getString(3), new ImageView(favorite_border_black),rs.getBoolean(5)));
 			}
 			stmt.close();
 			rs.close();
@@ -293,9 +293,9 @@ public class DBController {
 				stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery("SELECT * FROM film_streaming WHERE titel = \""+name+"\";" );
 				if(rs.getString(8).equals("favorite_black")){
-					mainWindowController.streamingFilms.set(i,new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7),  new ImageView(favorite_black),rs.getBoolean(9)));
+					mainWindowController.getStreamingFilms().set(i,new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7),  new ImageView(favorite_black),rs.getBoolean(9)));
 				}else{
-					mainWindowController.streamingFilms.set(i,new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), new ImageView(favorite_border_black),rs.getBoolean(9)));
+					mainWindowController.getStreamingFilms().set(i,new tableData(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7), new ImageView(favorite_border_black),rs.getBoolean(9)));
 				}
 				stmt.close();
 				rs.close();

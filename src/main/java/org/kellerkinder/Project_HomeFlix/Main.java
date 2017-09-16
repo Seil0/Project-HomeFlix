@@ -27,6 +27,10 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.ResourceBundle;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -56,6 +60,7 @@ public class Main extends Application {
 	private File posterCache;
 	private String dirWin = System.getProperty("user.home") + "/Documents/HomeFlix";	//Windows: C:/Users/"User"/Documents/HomeFlix
 	private String dirLinux = System.getProperty("user.home") + "/HomeFlix";	//Linux: /home/"User"/HomeFlix
+	private static Logger LOGGER;
 	
 	@Override
 	public void start(Stage primaryStage) throws IOException {
@@ -67,73 +72,77 @@ public class Main extends Application {
 	private void mainWindow(){
 
 		try {
-		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(ClassLoader.getSystemResource("fxml/MainWindow.fxml"));
-		AnchorPane pane = (AnchorPane) loader.load();
-		primaryStage.setMinHeight(600.00);
-		primaryStage.setMinWidth(900.00);
-		primaryStage.setResizable(false);
-		primaryStage.setTitle("Project HomeFlix");
-		primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/icons/Homeflix_Icon_64x64.png"))); //adds application icon
-
-		mainWindowController = loader.getController();	//Link of FXMLController and controller class
-		mainWindowController.setAutoUpdate(AUTO_UPDATE);	//set auto-update
-		mainWindowController.setCurrentWorkingDirectory(currentWorkingDirectory);
-		mainWindowController.setMain(this);	//call setMain
-		
-		/**Linux else Windows, check if directory & config exist
-		 * Windows: config file: 	C:/Users/"User"/Documents/HomeFlix/config.xml
-		 * 			directory:		C:/Users/"User"/Documents/HomeFlix
-		 * Linux: 	config file: 	/home/"User"/HomeFlix/config.xml
-		 * 			directory: 		/home/"User"/HomeFlix
-		 */
-		if(System.getProperty("os.name").equals("Linux")) {
-			directory = new File(dirLinux);
-			settingsFile = new File(dirLinux + "/config.xml");
-		} else {
-			directory = new File(dirWin);
-			settingsFile = new File(dirWin + "/config.xml");
-		}
-		
-		posterCache = new File(directory+"/posterCache");
-		
-		if(!settingsFile.exists()){
-			directory.mkdir();
-			mainWindowController.setPath(firstStart());
-			mainWindowController.setStreamingPath(directory.getAbsolutePath());
-			mainWindowController.setColor(COLOR);
-			mainWindowController.setSize(FONT_SIZE);
-			mainWindowController.setAutoUpdate(AUTO_UPDATE);
-			mainWindowController.setLocal(local);
-			mainWindowController.setMode(mode);
-			mainWindowController.saveSettings();
-			Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
-			System.exit(0);	//finishes it self
-		}
-		
-		if(!posterCache.exists()) {
-			posterCache.mkdir();
-		}
-		
-		mainWindowController.loadSettings();
-		mainWindowController.loadStreamingSettings();
-		mainWindowController.initUI();
-		mainWindowController.initActions();
-		mainWindowController.initTabel();
-		mainWindowController.setLocalUI();
-		mainWindowController.applyColor();	//set theme color
-		
-		mainWindowController.dbController.main(); //initialize database controller
-		mainWindowController.dbController.createDatabase(); //creating the database
-		mainWindowController.dbController.loadData(); 	//loading data from database to mainWindowController 
-		mainWindowController.addDataUI();
-		
-		Scene scene = new Scene(pane);	//create new scene, append pane to scene
-		scene.getStylesheets().add(getClass().getResource("/css/MainWindow.css").toExternalForm());
-		primaryStage.setScene(scene);	//append scene to stage
-		primaryStage.show();	//show stage
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(ClassLoader.getSystemResource("fxml/MainWindow.fxml"));
+			AnchorPane pane = (AnchorPane) loader.load();
+			primaryStage.setMinHeight(600.00);
+			primaryStage.setMinWidth(900.00);
+			primaryStage.setResizable(false);
+			primaryStage.setTitle("Project HomeFlix");
+			primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/icons/Homeflix_Icon_64x64.png"))); //adds application icon
+	
+			mainWindowController = loader.getController();	//Link of FXMLController and controller class
+			mainWindowController.setAutoUpdate(AUTO_UPDATE);	//set auto-update
+			mainWindowController.setCurrentWorkingDirectory(currentWorkingDirectory);
+			mainWindowController.setMain(this);	//call setMain
+			
+			/**Linux else Windows, check if directory & config exist
+			 * Windows: config file: 	C:/Users/"User"/Documents/HomeFlix/config.xml
+			 * 			directory:		C:/Users/"User"/Documents/HomeFlix
+			 * Linux: 	config file: 	/home/"User"/HomeFlix/config.xml
+			 * 			directory: 		/home/"User"/HomeFlix
+			 */
+			if(System.getProperty("os.name").equals("Linux")) {
+				directory = new File(dirLinux);
+				settingsFile = new File(dirLinux + "/config.xml");
+			} else {
+				directory = new File(dirWin);
+				settingsFile = new File(dirWin + "/config.xml");
+			}
+			
+			posterCache = new File(directory+"/posterCache");
+			
+			if(!settingsFile.exists()){
+				directory.mkdir();
+				mainWindowController.setPath(firstStart());
+				mainWindowController.setStreamingPath(directory.getAbsolutePath());
+				mainWindowController.setColor(COLOR);
+				mainWindowController.setSize(FONT_SIZE);
+				mainWindowController.setAutoUpdate(AUTO_UPDATE);
+				mainWindowController.setLocal(local);
+				mainWindowController.setMode(mode);
+				mainWindowController.saveSettings();
+				try {
+					Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
+					System.exit(0);	//finishes it self
+				} catch (Exception e) {
+					LOGGER.error("error while restarting HomeFlix", e);
+				}
+			}
+			
+			if(!posterCache.exists()) {
+				posterCache.mkdir();
+			}
+			
+			mainWindowController.loadSettings();
+			mainWindowController.loadStreamingSettings();
+			mainWindowController.initUI();
+			mainWindowController.initActions();
+			mainWindowController.initTabel();
+			mainWindowController.setLocalUI();
+			mainWindowController.applyColor();	//set theme color
+			
+			mainWindowController.dbController.main(); //initialize database controller
+			mainWindowController.dbController.createDatabase(); //creating the database
+			mainWindowController.dbController.loadData(); 	//loading data from database to mainWindowController 
+			mainWindowController.addDataUI();
+			
+			Scene scene = new Scene(pane);	//create new scene, append pane to scene
+			scene.getStylesheets().add(getClass().getResource("/css/MainWindow.css").toExternalForm());
+			primaryStage.setScene(scene);	//append scene to stage
+			primaryStage.show();	//show stage
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.error("", e);
 		}
 	}
 	
@@ -168,6 +177,16 @@ public class Main extends Application {
 	}
 
 	public static void main(String[] args) {
+		if(System.getProperty("os.name").equals("Linux")){
+			System.setProperty("logFilename", System.getProperty("user.home") + "/HomeFlix/app.log");
+			File logFile = new File(System.getProperty("user.home") + "/HomeFlix/app.log");
+			logFile.delete();
+		}else{
+			System.setProperty("logFilename", System.getProperty("user.home") + "/Documents/HomeFlix/app.log");
+			File logFile = new File(System.getProperty("user.home") + "/Documents/HomeFlix/app.log");
+			logFile.delete();
+		}
+		LOGGER = LogManager.getLogger(Main.class.getName());
 		launch(args);
 	}
 
