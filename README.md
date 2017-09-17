@@ -1,3 +1,7 @@
+![Total Downloads](https://img.shields.io/github/downloads/Seil0/Project-HomeFlix/total.svg?style=flat-square)
+[![Latest](https://img.shields.io/github/release/Seil0/Project-HomeFlix/all.svg?style=flat-square)](https://github.com/Seil0/Project-HomeFlix/releases)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
+
 # Project-HomeFlix
 Project-HomeFlix is a Kellerkinder Project, that alowes you to sort all your local saved movies in clean UI. Project-HomeFlix is free and open-source software and uses other open-source projects to provied a nice user experience.
 
