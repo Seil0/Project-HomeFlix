@@ -19,7 +19,6 @@ import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
-
 import javafx.application.Platform;
 
 public class updater implements Runnable{
@@ -95,6 +94,7 @@ public class updater implements Runnable{
 				org.apache.commons.io.FileUtils.deleteQuietly(new File("ProjectHomeFlix_update.jar"));	//delete update
 				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
 				System.exit(0);	//finishes itself
+				
 			} catch (IOException e) {
 				Platform.runLater(() -> {
 					mainWindowController.showErrorMsg(mainWindowController.errorUpdateD, e);

@@ -24,15 +24,15 @@ public class tableData {
 	
 	/**
 	 * tableData is the data-type of tree-table-view
-	 * @param year: the release year of the film
-	 * @param season: season if it's a series
-	 * @param episode: episode if it's a series
-	 * @param rating: indicator for favourites, used for sorting the items
-	 * @param resolution: resolution of the film
-	 * @param titel: title of the film
-	 * @param streamUrl: the concrete path to the file or the URL
-	 * @param image: the favourite icon
-	 * @param cached: indicator for caching status
+	 * @param year the release year of the film
+	 * @param season season if it's a series
+	 * @param episode episode if it's a series
+	 * @param rating indicator for favourites, used for sorting the items
+	 * @param resolution resolution of the film
+	 * @param titel title of the film
+	 * @param streamUrl the concrete path to the file or the URL
+	 * @param image the favourite icon
+	 * @param cached indicator for caching status
 	 */
 	public tableData (final int year, final int season, final int episode, final double rating, final String resolution, final String title, final String streamUrl, final ImageView image, final boolean cached) {
 		this.year.set(year);
