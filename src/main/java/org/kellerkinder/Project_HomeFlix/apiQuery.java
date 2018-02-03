@@ -39,7 +39,7 @@ public class apiQuery{
 	private String[] responseString = new String[20];
 	private String posterCache;
 	private String apiURL = "https://www.omdbapi.com/?apikey=";
-	private String apiKey = "b9f9fd23";
+	private String apiKey = "";
 	ArrayList<Text> responseText = new ArrayList<Text>();
 	ArrayList<Text> nameText = new ArrayList<Text>();
 	

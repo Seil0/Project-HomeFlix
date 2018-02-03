@@ -76,7 +76,7 @@ public class Main extends Application {
 			loader.setLocation(ClassLoader.getSystemResource("fxml/MainWindow.fxml"));
 			AnchorPane pane = (AnchorPane) loader.load();
 			primaryStage.setMinHeight(600.00);
-			primaryStage.setMinWidth(900.00);
+			primaryStage.setMinWidth(950.00);
 			primaryStage.setResizable(false);
 			primaryStage.setTitle("Project HomeFlix");
 			primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/icons/Homeflix_Icon_64x64.png"))); //adds application icon

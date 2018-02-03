@@ -1,4 +1,13 @@
-.jfx-hamburgerW StackPane { -fx-background-color: white; 
-							-fx-background-radius: 5px; }
-.jfx-hamburgerB StackPane { -fx-background-color: black; 
-							-fx-background-radius: 5px; }
+/*
+ * HAMBURGER CSS
+ */
+ 
+.jfx-hamburgerW StackPane {
+	-fx-background-color: white; 
+	-fx-background-radius: 5px;
+}
+
+.jfx-hamburgerB StackPane {
+	-fx-background-color: black; 
+	-fx-background-radius: 5px;
+	}
