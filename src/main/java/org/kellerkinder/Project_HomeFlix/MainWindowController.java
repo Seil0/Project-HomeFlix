@@ -287,7 +287,6 @@ public class MainWindowController {
 			}
 		}else if (mode.equals("local")) {
 			if(System.getProperty("os.name").contains("Linux")){
-				LOGGER.info("This is "+System.getProperty("os.name"));
 				String line;
 				String output = "";
 				Process p;
@@ -297,7 +296,7 @@ public class MainWindowController {
 					while ((line = input.readLine()) != null) {
 						output = line;
 					}
-					System.out.println(output);
+					LOGGER.info(output);
 					input.close();
 				} catch (IOException e1) {
 					e1.printStackTrace();
@@ -316,15 +315,13 @@ public class MainWindowController {
 					}
 				}
 			}else if(System.getProperty("os.name").contains("Windows") || System.getProperty("os.name").contains("Mac OS X")){
-				System.out.println("This is "+System.getProperty("os.name"));
 					try {
 						Desktop.getDesktop().open(new File(getPath()+"\\"+ datPath));
 					} catch (IOException e) {
 						showErrorMsg(errorPlay,e);
 					}
 			} else {
-				System.out.println("It seems like your operating system is not supported, please contact a developer!");
-				System.out.println("Error code is: nsos; OS is: " + System.getProperty("os.name"));
+				LOGGER.error(System.getProperty("os.name") + ", OS is not supported, please contact a developer! ");
 			}	
 		} else {
 			IOException e = new IOException("error");
@@ -432,7 +429,7 @@ public class MainWindowController {
 	private void directoryBtnAction(){
 		selectedFolder = directoryChooser.showDialog(null);  
         if(selectedFolder == null){
-            System.out.println("No Directory selected");
+        	LOGGER.warn("No Directory selected");
         }else{
         	setPath(selectedFolder.getAbsolutePath());
         	saveSettings();
@@ -556,7 +553,7 @@ public class MainWindowController {
 						ApiQuery.startQuery(name,datPath); // start api query
 					}
 				}else{
-					System.out.println(streamingFilms.size());
+					LOGGER.info(streamingFilms.size());
 					if(streamingFilms.get(selected).getCached()==true){
 						LOGGER.info("loading from cache: "+name);
 						dbController.readCache(datPath);
@@ -820,45 +817,48 @@ public class MainWindowController {
 		}
 	}
 	
-	void loadStreamingSettings(){
-		if(getStreamingPath().equals("")||getStreamingPath().equals(null)){
-			System.out.println("Kein Pfad angegeben");	//if path equals "" or null
-		}else{
-		String[] entries = new File(getStreamingPath()).list();
-			for(int i = 0; i < entries.length; i++){
-				if(entries[i].endsWith(".json")){
+	void loadStreamingSettings() {
+		if (getStreamingPath().equals("") || getStreamingPath().equals(null)) {
+			LOGGER.warn("Kein Pfad angegeben");
+		} else {
+			String[] entries = new File(getStreamingPath()).list();
+			for (int i = 0; i < entries.length; i++) {
+				if (entries[i].endsWith(".json")) {
 					String titel = ohneEndung(entries[i]);
 					String data = entries[i];
-					streamingData.add(new tableData(1,1,1,5.0,"1",titel ,data, imv1, false));
+					streamingData.add(new tableData(1, 1, 1, 5.0, "1", titel, data, imv1, false));
 				}
 			}
-			for(int i = 0; i < streamingData.size(); i++){
-				streamingRoot.getChildren().add( new TreeItem<tableData>(streamingData.get(i)));	//adds data to root-node
+			for (int i = 0; i < streamingData.size(); i++) {
+				streamingRoot.getChildren().add(new TreeItem<tableData>(streamingData.get(i))); // adds data to root-node
 			}
-		}	
+		}
 	}
-	//removes the ending
-	private String ohneEndung (String str) {
-		if (str == null) return null;
+	
+	// removes the ending
+	private String ohneEndung(String str) {
+		if (str == null)
+			return null;
 		int pos = str.lastIndexOf(".");
-		if (pos == -1) return str;
+		if (pos == -1)
+			return str;
 		return str.substring(0, pos);
 	}
 	
 	//set color of UI-Elements
-	void applyColor(){
-		String style = "-fx-background-color: #"+getColor()+";";
-		String btnStyleBlack = "-fx-button-type: RAISED; -fx-background-color: #"+getColor()+"; -fx-text-fill: BLACK;";
-		String btnStyleWhite = "-fx-button-type: RAISED; -fx-background-color: #"+getColor()+"; -fx-text-fill: WHITE;";
-		BigInteger icolor = new BigInteger(getColor(),16);
-		BigInteger ccolor = new BigInteger("78909cff",16);
-		
+	void applyColor() {
+		String style = "-fx-background-color: #" + getColor() + ";";
+		String btnStyleBlack = "-fx-button-type: RAISED; -fx-background-color: #" + getColor() + "; -fx-text-fill: BLACK;";
+		String btnStyleWhite = "-fx-button-type: RAISED; -fx-background-color: #" + getColor() + "; -fx-text-fill: WHITE;";
+		BigInteger icolor = new BigInteger(getColor(), 16);
+		BigInteger ccolor = new BigInteger("78909cff", 16);
+
 		sideMenuVBox.setStyle(style);
 		topHBox.setStyle(style);
 		tfsearch.setFocusColor(Color.valueOf(getColor()));
 		tfPath.setFocusColor(Color.valueOf(getColor()));
-		
-		if(icolor.compareTo(ccolor) == -1){
+
+		if (icolor.compareTo(ccolor) == -1) {
 			settingsBtn.setStyle("-fx-text-fill: WHITE;");
 			streamingSettingsBtn.setStyle("-fx-text-fill: WHITE;");
 			switchBtn.setStyle("-fx-text-fill: WHITE;");
@@ -875,7 +875,7 @@ public class MainWindowController {
 			returnBtn.setGraphic(skip_previous_white);
 			forwardBtn.setGraphic(skip_next_white);
 			menuHam.getStyleClass().add("jfx-hamburgerW");
-		}else{
+		} else {
 			settingsBtn.setStyle("-fx-text-fill: BLACK;");
 			streamingSettingsBtn.setStyle("-fx-text-fill: BLACK;");
 			switchBtn.setStyle("-fx-text-fill: BLACK;");
@@ -893,61 +893,61 @@ public class MainWindowController {
 			forwardBtn.setGraphic(skip_next_black);
 			menuHam.getStyleClass().add("jfx-hamburgerB");
 		}
-		
-		if(mode.equals("local")){
+
+		if (mode.equals("local")) {
 			switchBtn.setText("streaming");
-		}else if(mode.equals("streaming")){
+		} else if (mode.equals("streaming")) {
 			switchBtn.setText("local");
 		}
 	}
 	
-	private void sideMenuSlideIn(){
+	private void sideMenuSlideIn() {
 		sideMenuVBox.setVisible(true);
-		//fade in from 40% to 100% opacity in 400ms
+		// fade in from 40% to 100% opacity in 400ms
 		FadeTransition fadeTransition = new FadeTransition(Duration.millis(400), sideMenuVBox);
 		fadeTransition.setFromValue(0.4);
 		fadeTransition.setToValue(1.0);
-		//slide in in 400ms
+		// slide in in 400ms
 		TranslateTransition translateTransition = new TranslateTransition(Duration.millis(400), sideMenuVBox);
 		translateTransition.setFromX(-150);
 		translateTransition.setToX(0);
-		//in case both animations are used (add (fadeTransition, translateTransition) in the second line under this command)    
+		// in case both animations are used (add (fadeTransition, translateTransition) in the second line under this command)
 		ParallelTransition parallelTransition = new ParallelTransition();
-		parallelTransition.getChildren().addAll(translateTransition);//(fadeTransition, translateTransition);
+		parallelTransition.getChildren().addAll(translateTransition);// (fadeTransition, translateTransition);
 		parallelTransition.play();
 	}
 	
-	private void sideMenuSlideOut(){
-//		sideMenuVBox.setVisible(false);
-		//fade out from 100% to 40% opacity in 400ms
+	private void sideMenuSlideOut() {
+		// sideMenuVBox.setVisible(false);
+		// fade out from 100% to 40% opacity in 400ms
 		FadeTransition fadeTransition = new FadeTransition(Duration.millis(400), sideMenuVBox);
 		fadeTransition.setFromValue(1.0);
 		fadeTransition.setToValue(0.4);
-		//slide out in 400ms
+		// slide out in 400ms
 		TranslateTransition translateTransition = new TranslateTransition(Duration.millis(400), sideMenuVBox);
 		translateTransition.setFromX(0);
 		translateTransition.setToX(-150);
-		//in case both animations are used (add (fadeTransition, translateTransition) in the second line under this command)	    
+		// in case both animations are used (add (fadeTransition, translateTransition) in the second line under this command)
 		ParallelTransition parallelTransition = new ParallelTransition();
-		parallelTransition.getChildren().addAll(translateTransition);//(fadeTransition, translateTransition);
+		parallelTransition.getChildren().addAll(translateTransition);// (fadeTransition, translateTransition);
 		parallelTransition.play();
 	}
 	
-	void setLocalUI(){
-		switch(getLocal()){
-		case "en_US":	
-			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US);	//us_English
+	void setLocalUI() {
+		switch (getLocal()) {
+		case "en_US":
+			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US); // us_English
 			cbLocal.getSelectionModel().select(0);
 			break;
-     	case "de_DE":	
-     		bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.GERMAN);	//German
+		case "de_DE":
+			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.GERMAN); // German
 			cbLocal.getSelectionModel().select(1);
 			break;
-     	default:		
-     		bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US);	//default local
+		default:
+			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US); // default local
 			cbLocal.getSelectionModel().select(0);
 			break;
-		 }
+		}
 		infoBtn.setText(bundle.getString("info"));
 		settingsBtn.setText(bundle.getString("settings"));
 		streamingSettingsBtn.setText(bundle.getString("streamingSettings"));
@@ -963,7 +963,7 @@ public class MainWindowController {
 		fontsizeLabel.setText(bundle.getString("fontsizeLabel"));
 		localLabel.setText(bundle.getString("localLabel"));
 		autoUpdateLabel.setText(bundle.getString("autoUpdateLabel"));
-		versionLabel.setText(bundle.getString("version")+" "+version+" (Build: "+buildNumber+")");
+		versionLabel.setText(bundle.getString("version") + " " + version + " (Build: " + buildNumber + ")");
 		columnTitel.setText(bundle.getString("columnName"));
 		columnRating.setText(bundle.getString("columnRating"));
 		columnStreamUrl.setText(bundle.getString("columnStreamUrl"));
@@ -978,9 +978,9 @@ public class MainWindowController {
 		errorLoad = bundle.getString("errorLoad");
 		errorSave = bundle.getString("errorSave");
 		noFilmFound = bundle.getString("noFilmFound");
-		infoText = bundle.getString("version")+" "+version+" (Build: "+buildNumber+") "+versionName+bundle.getString("infoText");
+		infoText = bundle.getString("version") + " " + version + " (Build: " + buildNumber + ") " + versionName + bundle.getString("infoText");
 		vlcNotInstalled = bundle.getString("vlcNotInstalled");
-		
+
 		title = bundle.getString("title");
 		year = bundle.getString("year");
 		rating = bundle.getString("rating");
@@ -999,46 +999,44 @@ public class MainWindowController {
 		type = bundle.getString("type");
 	}
 	
-	void showErrorMsg(String msg, IOException exception){
+	void showErrorMsg(String msg, IOException exception) {
 		Alert alert = new Alert(AlertType.ERROR);
-    	alert.setTitle("Error");
-    	alert.setHeaderText("");
-    	alert.setContentText(msg);
-    	alert.initOwner(main.primaryStage);
-    	
-    	// Create expandable Exception.
-    	StringWriter sw = new StringWriter();
-    	PrintWriter pw = new PrintWriter(sw);
-    	exception.printStackTrace(pw);
-    	String exceptionText = sw.toString();
+		alert.setTitle("Error");
+		alert.setHeaderText("");
+		alert.setContentText(msg);
+		alert.initOwner(main.primaryStage);
 
-    	TextArea textArea = new TextArea(exceptionText);
-    	textArea.setEditable(false);
-    	textArea.setWrapText(true);
+		// Create expandable Exception.
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		exception.printStackTrace(pw);
+		String exceptionText = sw.toString();
 
-    	textArea.setMaxWidth(Double.MAX_VALUE);
-    	textArea.setMaxHeight(Double.MAX_VALUE);
-    	GridPane.setVgrow(textArea, Priority.ALWAYS);
-    	GridPane.setHgrow(textArea, Priority.ALWAYS);
+		TextArea textArea = new TextArea(exceptionText);
+		textArea.setEditable(false);
+		textArea.setWrapText(true);
 
-    	GridPane expContent = new GridPane();
-    	expContent.setMaxWidth(Double.MAX_VALUE);
-    	expContent.add(textArea, 0, 1);
+		textArea.setMaxWidth(Double.MAX_VALUE);
+		textArea.setMaxHeight(Double.MAX_VALUE);
+		GridPane.setVgrow(textArea, Priority.ALWAYS);
+		GridPane.setHgrow(textArea, Priority.ALWAYS);
 
-    	// Set expandable Exception into the dialog pane.
-    	alert.getDialogPane().setExpandableContent(expContent);
-    	alert.showAndWait();
-    	
-    	exception.printStackTrace();
-		
+		GridPane expContent = new GridPane();
+		expContent.setMaxWidth(Double.MAX_VALUE);
+		expContent.add(textArea, 0, 1);
+
+		// Set expandable Exception into the dialog pane.
+		alert.getDialogPane().setExpandableContent(expContent);
+		alert.showAndWait();
+		LOGGER.error("An error occurred", exception);
 	}
 	
-	//saves the Settings
-	public void saveSettings(){
+	// saves the Settings
+	public void saveSettings() {
 		LOGGER.info("saving settings ...");
-		OutputStream outputStream;	//new output-stream
+		OutputStream outputStream; // new output-stream
 		try {
-			props.setProperty("path", getPath());	//writes path into property
+			props.setProperty("path", getPath()); // writes path into property
 			props.setProperty("color", getColor());
 			props.setProperty("autoUpdate", String.valueOf(isAutoUpdate()));
 			props.setProperty("size", getSize().toString());
@@ -1046,61 +1044,61 @@ public class MainWindowController {
 			props.setProperty("streamingPath", getStreamingPath());
 			props.setProperty("mode", getMode());
 			props.setProperty("ratingSortType", columnRating.getSortType().toString());
-			if(System.getProperty("os.name").equals("Linux")){
+			if (System.getProperty("os.name").equals("Linux")) {
 				outputStream = new FileOutputStream(fileLinux);
-			}else{
+			} else {
 				outputStream = new FileOutputStream(fileWin);
 			}
-			props.storeToXML(outputStream, "Project HomeFlix settings");	//writes new .xml
+			props.storeToXML(outputStream, "Project HomeFlix settings"); // writes new .xml
 			outputStream.close();
 		} catch (IOException e) {
-			if(firststart == false){
+			if (firststart == false) {
 				showErrorMsg(errorLoad, e);
 				e.printStackTrace();
 			}
 		}
 	}
 	
-	//loads the Settings
-	public void loadSettings(){
+	// loads the Settings
+	public void loadSettings() {
 		LOGGER.info("loading settings ...");
 		InputStream inputStream;
 		try {
-			if(System.getProperty("os.name").equals("Linux")){
+			if (System.getProperty("os.name").equals("Linux")) {
 				inputStream = new FileInputStream(fileLinux);
-			}else{
+			} else {
 				inputStream = new FileInputStream(fileWin);
 			}
-			props.loadFromXML(inputStream);	//new input-stream from .xml
-			
+			props.loadFromXML(inputStream); // new input-stream from .xml
+
 			try {
-				setPath(props.getProperty("path"));	//read path from property
+				setPath(props.getProperty("path")); // read path from property
 			} catch (Exception e) {
 				LOGGER.error("cloud not load path", e);
 				setPath("");
 			}
-			
+
 			try {
 				setStreamingPath(props.getProperty("streamingPath"));
 			} catch (Exception e) {
 				LOGGER.error("cloud not load streamingPath", e);
 				setStreamingPath("");
 			}
-			
+
 			try {
 				setColor(props.getProperty("color"));
 			} catch (Exception e) {
 				LOGGER.error("cloud not load color", e);
 				setColor("");
 			}
-			
+
 			try {
-				setSize( Double.parseDouble(props.getProperty("size")));
+				setSize(Double.parseDouble(props.getProperty("size")));
 			} catch (Exception e) {
 				LOGGER.error("cloud not load fontsize", e);
 				setSize(17.0);
 			}
-			
+
 			try {
 				setAutoUpdate(Boolean.parseBoolean(props.getProperty("autoUpdate")));
 			} catch (Exception e) {
@@ -1112,16 +1110,16 @@ public class MainWindowController {
 				setLocal(props.getProperty("local"));
 			} catch (Exception e) {
 				LOGGER.error("cloud not load local", e);
-				setLocal(System.getProperty("user.language")+"_"+System.getProperty("user.country"));
+				setLocal(System.getProperty("user.language") + "_" + System.getProperty("user.country"));
 			}
-			
+
 			try {
 				setRatingSortType(props.getProperty("ratingSortType"));
 			} catch (Exception e) {
 				LOGGER.error("cloud not load autoUpdate", e);
 				setRatingSortType("");
 			}
-			
+
 			try {
 				switch (props.getProperty("mode")) {
 				case "local":
@@ -1138,80 +1136,79 @@ public class MainWindowController {
 				setMode("local");
 				LOGGER.error("cloud not load mode", e);
 			}
-			
-			
+
 			inputStream.close();
 		} catch (IOException e) {
-			if(firststart == false){
+			if (firststart == false) {
 				LOGGER.error("faild to load settings", e);
 				showErrorMsg(errorSave, e);
 			}
-//			showErrorMsg(errorLoad, e); //TODO This should not be visible at first startup
+			// showErrorMsg(errorLoad, e); //TODO This should not be visible at first startup
 		}
 	}
 	
-	//cuts 0x of the Color-pickers return value
-	private void editColor(String input){
+	// cuts 0x of the Color-pickers return value
+	private void editColor(String input) {
 		StringBuilder sb = new StringBuilder(input);
 		sb.delete(0, 2);
 		this.color = sb.toString();
 		saveSettings();
 	}
-	
-	//getter and setter
-	public void setColor(String input){
+
+	// getter and setter
+	public void setColor(String input) {
 		this.color = input;
 	}
-	
-	public String getColor(){
+
+	public String getColor() {
 		return color;
 	}
 
-	public void setPath(String input){
+	public void setPath(String input) {
 		this.path = input;
 	}
-	
-	public String getPath(){
+
+	public String getPath() {
 		return path;
 	}
-	
-	public void setStreamingPath(String input){
+
+	public void setStreamingPath(String input) {
 		this.streamingPath = input;
 	}
-	
-	public String getStreamingPath(){
+
+	public String getStreamingPath() {
 		return streamingPath;
 	}
-	
-	public void setSize(Double input){
+
+	public void setSize(Double input) {
 		this.size = input;
 	}
-	
-	public Double getSize(){
+
+	public Double getSize() {
 		return size;
 	}
-	
-	public void setAutoUpdate(boolean input){
+
+	public void setAutoUpdate(boolean input) {
 		this.autoUpdate = input;
 	}
-	
-	public boolean isAutoUpdate(){
+
+	public boolean isAutoUpdate() {
 		return autoUpdate;
 	}
-	
-	public void setLocal(String input){
+
+	public void setLocal(String input) {
 		this.local = input;
 	}
-	
-	public String getLocal(){
+
+	public String getLocal() {
 		return local;
 	}
-	
-	public void setMode(String input){
+
+	public void setMode(String input) {
 		this.mode = input;
 	}
-	
-	public String getMode(){
+
+	public String getMode() {
 		return mode;
 	}
 
