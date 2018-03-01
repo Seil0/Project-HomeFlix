@@ -96,76 +96,121 @@ import kellerkinder.HomeFlix.controller.apiQuery;
 import kellerkinder.HomeFlix.datatypes.tableData;
 
 public class MainWindowController {	
+	
 	@FXML
-	private AnchorPane anpane;
-	@FXML
-	private AnchorPane settingsAnchor;
+	private AnchorPane mainAnchorPane;
+	
 	@FXML 
-	private AnchorPane streamingSettingsAnchor;
+	private AnchorPane streamingSettingsAnchorPane;
+	
+	@FXML
+	private ScrollPane settingsScrollPane;
+	
+	@FXML
+	private ScrollPane textScrollPane;
+	
 	@FXML
 	private HBox topHBox;
+	
 	@FXML
 	private VBox sideMenuVBox;
+	
 	@FXML
 	private TreeTableView<tableData> treeTableViewfilm;
+	
 	@FXML
 	private TableView<tableData> tableViewStreamingdata;
+	
 	@FXML
 	private TextFlow textFlow;
-	@FXML
-	ScrollPane scrollPane;
+
 	@FXML
 	private JFXButton playbtn;
+	
 	@FXML
 	private JFXButton openfolderbtn;
+	
 	@FXML
 	private JFXButton returnBtn;
+	
 	@FXML
 	private JFXButton forwardBtn;
+	
     @FXML
     private JFXButton infoBtn;
+    
     @FXML
     private JFXButton settingsBtn;
+    
     @FXML
     private JFXButton streamingSettingsBtn;
+    
     @FXML
     private JFXButton switchBtn;
+    
     @FXML
     private JFXButton debugBtn;
+    
     @FXML
     public JFXButton updateBtn;
+    
     @FXML
     private JFXButton directoryBtn;
+    
     @FXML
     private JFXButton streamingDirectoryBtn;
+    
     @FXML
     private JFXHamburger menuHam;
+    
     @FXML
     private JFXToggleButton autoUpdateToggleBtn;
+    
     @FXML
-    public JFXTextField tfPath;
+    public JFXTextField filmDirTextField;
+    
     @FXML
-    public JFXTextField tfStreamingPath;
+    public JFXTextField streamingPathTextField;
+    
     @FXML
-    private JFXTextField tfsearch;
+    private JFXTextField searchTextField;
+    
     @FXML
-    public JFXColorPicker mainColor;
+    public JFXColorPicker colorPicker;
+    
+	@FXML
+	public ChoiceBox<String> languageChoisBox = new ChoiceBox<>();
+
+	@FXML
+	public ChoiceBox<String> branchChoisBox = new ChoiceBox<>();
+
+	@FXML
+	public JFXSlider fontsizeSlider;
+	
     @FXML
-    public	ChoiceBox<String> cbLocal = new ChoiceBox<>();
+    private Label homeflixSettingsLbl;
+	
     @FXML
-    public JFXSlider sliderFontSize;
+    private Label filmDirectoryLbl;
+	
     @FXML
-    private Label versionLabel;
+    private Label mainColorLbl;
+	
+	@FXML
+	private Label fontsizeLbl;
+	
     @FXML
-    private Label fontsizeLabel;
-    @FXML
-    private Label autoUpdateLabel;
-    @FXML
-    private Label settingsHead1Label;
-    @FXML
-    private Label mainColorLabel;
-    @FXML
-    private Label localLabel;
+    private Label languageLbl;
+	
+	@FXML
+	private Label updateLbl;
+	
+	@FXML
+	private Label branchLbl;
+
+	@FXML
+	private Label versionLbl;
+
     @FXML
 	private ImageView image1;
     
@@ -232,7 +277,8 @@ public class MainWindowController {
 	private ResourceBundle bundle;
 
 	private ObservableList<tableData> filterData = FXCollections.observableArrayList();
-	private ObservableList<String> locals = FXCollections.observableArrayList("English (en_US)", "Deutsch (de_DE)");
+	private ObservableList<String> languages = FXCollections.observableArrayList("English (en_US)", "Deutsch (de_DE)");
+	private ObservableList<String> branches = FXCollections.observableArrayList("stable", "beta");
 	private ObservableList<tableData> localFilms = FXCollections.observableArrayList();
 	private ObservableList<tableData> streamingFilms = FXCollections.observableArrayList();
 	private ObservableList<tableData> streamingData = FXCollections.observableArrayList();
@@ -364,19 +410,19 @@ public class MainWindowController {
 				menuTrue = false;
 			}
 			if(settingsTrue == true){
-				settingsAnchor.setVisible(false);
-				setPath(tfPath.getText());
+				settingsScrollPane.setVisible(false);
+				setPath(filmDirTextField.getText());
 				saveSettings();
 				settingsTrue = false;
 			}
 			if(streamingSettingsTrue == true){
-				streamingSettingsAnchor.setVisible(false);
+				streamingSettingsAnchorPane.setVisible(false);
 				streamingSettingsTrue = false;
 			}
 			
 		});
 		
-        tfsearch.textProperty().addListener(new ChangeListener<String>() {
+		searchTextField.textProperty().addListener(new ChangeListener<String>() {
     	    @Override
     	    public void changed(ObservableValue<? extends String> observable,String oldValue, String newValue) {
             	ObservableList<tableData> helpData;
@@ -390,7 +436,7 @@ public class MainWindowController {
   	    		}
     	    	
     	    	for(int i = 0; i < helpData.size(); i++){
-    	    		if(helpData.get(i).getTitle().toLowerCase().contains(tfsearch.getText().toLowerCase())){
+    	    		if(helpData.get(i).getTitle().toLowerCase().contains(searchTextField.getText().toLowerCase())){
     	    			filterData.add(helpData.get(i));	//add data from newDaten to filteredData where title contains search input
     	    		}
     	    	}
@@ -398,17 +444,17 @@ public class MainWindowController {
     	    	for(int i = 0; i < filterData.size(); i++){
     				root.getChildren().add(new TreeItem<tableData>(filterData.get(i)));	//add filtered data to root node after search
     			}
-    	    	if(tfsearch.getText().hashCode()== hashA){
+    	    	if(searchTextField.getText().hashCode()== hashA){
     	    		setColor("000000");
     	    		applyColor();
     	    	}
     	    }
     	});
         
-        cbLocal.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+        languageChoisBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
           @Override
 		public void changed(ObservableValue<? extends Number> ov, Number value, Number new_value) {
-        	  String local = cbLocal.getItems().get((int) new_value).toString();
+        	  String local = languageChoisBox.getItems().get((int) new_value).toString();
         	  local = local.substring(local.length()-6,local.length()-1);	//reading only en_US from English (en_US)
         	  setLocal(local);
         	  setLocalUI();
@@ -416,10 +462,22 @@ public class MainWindowController {
           }
         });
         
-        sliderFontSize.valueProperty().addListener(new ChangeListener<Number>() {
+        branchChoisBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+			@Override
+			public void changed(ObservableValue<? extends Number> ov, Number value, Number new_value) {
+				if (branchChoisBox.getItems().get((int) new_value).toString() == "beta") {
+					setUseBeta(true);
+				} else {
+					setUseBeta(false);
+				}
+				saveSettings();
+			}
+		});
+        
+        fontsizeSlider.valueProperty().addListener(new ChangeListener<Number>() {
 			 @Override
 			public void changed(ObservableValue<? extends Number> ov,Number old_val, Number new_val) {
-				setSize(sliderFontSize.getValue()); 
+				setSize(fontsizeSlider.getValue()); 
 				
 				if(name != null){
 					dbController.readCache(datPath);
@@ -530,13 +588,20 @@ public class MainWindowController {
 		debugBtn.setDisable(true); // debugging button for tests
 		debugBtn.setVisible(false);
 
-		tfPath.setText(getPath());
-		sliderFontSize.setValue(getSize());
-		mainColor.setValue(Color.valueOf(getColor()));
+		filmDirTextField.setText(getPath());
+		fontsizeSlider.setValue(getSize());
+		colorPicker.setValue(Color.valueOf(getColor()));
 
 		updateBtn.setFont(Font.font("System", 12));
 		autoUpdateToggleBtn.setSelected(isAutoUpdate());
-		cbLocal.setItems(locals);
+		languageChoisBox.setItems(languages);
+		branchChoisBox.setItems(branches);
+		
+		if (isUseBeta()) {
+			branchChoisBox.getSelectionModel().select(1);
+		} else {
+			branchChoisBox.getSelectionModel().select(0);
+		}
 		
 		setLocalUI();
 		applyColor();
@@ -634,14 +699,14 @@ public class MainWindowController {
 	private void settingsBtnclicked(){
 		if(settingsTrue == false){
 			if(streamingSettingsTrue == true){
-				streamingSettingsAnchor.setVisible(false);
+				streamingSettingsAnchorPane.setVisible(false);
 				streamingSettingsTrue = false;
 			}
-			settingsAnchor.setVisible(true);	
+			settingsScrollPane.setVisible(true);	
 			settingsTrue = true;
 		}else{
-			settingsAnchor.setVisible(false);
-			setPath(tfPath.getText());
+			settingsScrollPane.setVisible(false);
+			setPath(filmDirTextField.getText());
 			saveSettings();
 			settingsTrue = false;
 		}
@@ -654,13 +719,13 @@ public class MainWindowController {
 	private void streamingSettingsBtnclicked(){
 		if(streamingSettingsTrue == false){
 			if(settingsTrue == true){
-				settingsAnchor.setVisible(false);
+				settingsScrollPane.setVisible(false);
 				settingsTrue = false;
 			}
-			streamingSettingsAnchor.setVisible(true);			
+			streamingSettingsAnchorPane.setVisible(true);			
 			streamingSettingsTrue = true;	
 			}else{
-				streamingSettingsAnchor.setVisible(false);
+				streamingSettingsAnchorPane.setVisible(false);
 				streamingSettingsTrue = false;
 			}					
 	}
@@ -677,8 +742,8 @@ public class MainWindowController {
 		saveSettings();
 		root.getChildren().remove(0,root.getChildren().size());
 		addDataUI();
-		settingsAnchor.setVisible(false);
-		streamingSettingsAnchor.setVisible(false);
+		settingsScrollPane.setVisible(false);
+		streamingSettingsAnchorPane.setVisible(false);
 		sideMenuSlideOut();		//disables side-menu
 		menuTrue = false;
 		settingsTrue = false;
@@ -692,8 +757,8 @@ public class MainWindowController {
 
 	
 	@FXML
-	private void tfPathAction(){
-		setPath(tfPath.getText());
+	private void filmDirTextFieldAction(){
+		setPath(filmDirTextField.getText());
 		saveSettings();
 	}
 	
@@ -705,7 +770,7 @@ public class MainWindowController {
         }else{
         	setPath(selectedFolder.getAbsolutePath());
         	saveSettings();
-        	tfPath.setText(getPath());
+        	filmDirTextField.setText(getPath());
 			try {
 				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
 				System.exit(0);	//finishes itself
@@ -716,8 +781,8 @@ public class MainWindowController {
 	}
 	
 	@FXML
-	private void mainColorAction(){
-		editColor(mainColor.getValue().toString());
+	private void colorPickerAction(){
+		editColor(colorPicker.getValue().toString());
 		applyColor();
 	}
 	
@@ -740,7 +805,7 @@ public class MainWindowController {
 	}
 	
 	@FXML
-	private void tfStreamingPathAction(){
+	private void streamingPathTextFieldAction(){
 		//
 	}
 	
@@ -752,7 +817,7 @@ public class MainWindowController {
 		}else{
 			setStreamingPath(selectedStreamingFolder.getAbsolutePath());
 			saveSettings();
-			tfStreamingPath.setText(getStreamingPath());
+			streamingPathTextField.setText(getStreamingPath());
 			try {
 				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
 				System.exit(0);	//finishes itself
@@ -836,8 +901,8 @@ public class MainWindowController {
 
 		sideMenuVBox.setStyle(style);
 		topHBox.setStyle(style);
-		tfsearch.setFocusColor(Color.valueOf(getColor()));
-		tfPath.setFocusColor(Color.valueOf(getColor()));
+		searchTextField.setFocusColor(Color.valueOf(getColor()));
+		filmDirTextField.setFocusColor(Color.valueOf(getColor()));
 
 		if (icolor.compareTo(ccolor) == -1) {
 			settingsBtn.setStyle("-fx-text-fill: WHITE;");
@@ -918,33 +983,34 @@ public class MainWindowController {
 		switch (getLocal()) {
 		case "en_US":
 			setBundle(ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US)); // us_English
-			cbLocal.getSelectionModel().select(0);
+			languageChoisBox.getSelectionModel().select(0);
 			break;
 		case "de_DE":
 			setBundle(ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.GERMAN)); // German
-			cbLocal.getSelectionModel().select(1);
+			languageChoisBox.getSelectionModel().select(1);
 			break;
 		default:
 			setBundle(ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US)); // default local
-			cbLocal.getSelectionModel().select(0);
+			languageChoisBox.getSelectionModel().select(0);
 			break;
 		}
 		infoBtn.setText(getBundle().getString("info"));
 		settingsBtn.setText(getBundle().getString("settings"));
 		streamingSettingsBtn.setText(getBundle().getString("streamingSettings"));
-		tfPath.setPromptText(getBundle().getString("tfPath"));
-		tfStreamingPath.setPromptText(getBundle().getString("tfPath"));
-		tfsearch.setPromptText(getBundle().getString("tfSearch"));
+		filmDirTextField.setPromptText(getBundle().getString("filmDirTextField"));
+		streamingPathTextField.setPromptText(getBundle().getString("filmDirTextField"));
+		searchTextField.setPromptText(getBundle().getString("tfSearch"));
 		openfolderbtn.setText(getBundle().getString("openFolder"));
 		updateBtn.setText(getBundle().getString("checkUpdates"));
 		directoryBtn.setText(getBundle().getString("chooseFolder"));
 		streamingDirectoryBtn.setText(getBundle().getString("chooseFolder"));
-		settingsHead1Label.setText(getBundle().getString("settingsHead1Label"));
-		mainColorLabel.setText(getBundle().getString("mainColorLabel"));
-		fontsizeLabel.setText(getBundle().getString("fontsizeLabel"));
-		localLabel.setText(getBundle().getString("localLabel"));
-		autoUpdateLabel.setText(getBundle().getString("autoUpdateLabel"));
-		versionLabel.setText(getBundle().getString("version") + " " + version + " (Build: " + buildNumber + ")");
+		homeflixSettingsLbl.setText(getBundle().getString("homeflixSettingsLbl"));
+		mainColorLbl.setText(getBundle().getString("mainColorLbl"));
+		fontsizeLbl.setText(getBundle().getString("fontsizeLbl"));
+		languageLbl.setText(getBundle().getString("languageLbl"));
+		autoUpdateToggleBtn.setText(getBundle().getString("autoUpdate"));
+		branchLbl.setText(getBundle().getString("branchLbl"));
+		versionLbl.setText(getBundle().getString("version") + " " + version + " (Build: " + buildNumber + ")");
 		columnTitel.setText(getBundle().getString("columnName"));
 		columnRating.setText(getBundle().getString("columnRating"));
 		columnStreamUrl.setText(getBundle().getString("columnStreamUrl"));
@@ -999,6 +1065,7 @@ public class MainWindowController {
 			props.setProperty("path", getPath()); // writes path into property
 			props.setProperty("color", getColor());
 			props.setProperty("autoUpdate", String.valueOf(isAutoUpdate()));
+			props.setProperty("useBeta", String.valueOf(isUseBeta()));
 			props.setProperty("size", getSize().toString());
 			props.setProperty("local", getLocal());
 			props.setProperty("streamingPath", getStreamingPath());
@@ -1054,6 +1121,13 @@ public class MainWindowController {
 			} catch (Exception e) {
 				LOGGER.error("cloud not load autoUpdate", e);
 				setAutoUpdate(false);
+			}
+			
+			try {
+				setUseBeta(Boolean.parseBoolean(props.getProperty("useBeta")));
+			} catch (Exception e) {
+				LOGGER.error("cloud not load autoUpdate", e);
+				setUseBeta(false);
 			}
 
 			try {
@@ -1157,6 +1231,14 @@ public class MainWindowController {
 
 	public boolean isAutoUpdate() {
 		return autoUpdate;
+	}
+
+	public boolean isUseBeta() {
+		return useBeta;
+	}
+
+	public void setUseBeta(boolean useBeta) {
+		this.useBeta = useBeta;
 	}
 
 	public void setLocal(String input) {
