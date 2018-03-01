@@ -158,7 +158,7 @@ public class apiQuery{
 
 				// if response == false then show mainWindowController.noFilmFound else create new Texts and add them to flowText
 				if (retdata.contains("\"Response\":\"False\"")) { // TODO + FIXME
-					mainWindowController.getTextFlow().getChildren().add(new Text(mainWindowController.noFilmFound));
+					mainWindowController.getTextFlow().getChildren().add(new Text(mainWindowController.getBundle().getString("noFilmFound")));
 					im = new Image("resources/icons/close_black_2048x2048.png");
 					mainWindowController.getImage1().setImage(im);
 				} else {

@@ -171,22 +171,22 @@ public class MainWindowController {
     
     private ImageView imv1;
     
-    @FXML
-    TreeItem<tableData> root = new TreeItem<>(new tableData(1, 1, 1, 5.0,"1", "filme","1", imv1, false));
-    @FXML
-    TreeTableColumn<tableData, ImageView> columnRating = new TreeTableColumn<>("Rating");
-    @FXML
-    TreeTableColumn<tableData, String> columnTitel = new TreeTableColumn<>("Titel");
-    @FXML
-    TreeTableColumn<tableData, String> columnStreamUrl = new TreeTableColumn<>("File Name");
-    @FXML
-    TreeTableColumn<tableData, String> columnResolution = new TreeTableColumn<>("Resolution");
-    @FXML
-    TreeTableColumn<tableData, Integer> columnYear = new TreeTableColumn<>("Year");
-    @FXML
-    TreeTableColumn<tableData, Integer> columnSeason = new TreeTableColumn<>("Season");
-    @FXML
-    TreeTableColumn<tableData, Integer> columnEpisode = new TreeTableColumn<>("Episode");
+	@FXML
+	TreeItem<tableData> root = new TreeItem<>(new tableData(1, 1, 1, 5.0, "1", "filme", "1", imv1, false));
+	@FXML
+	TreeTableColumn<tableData, ImageView> columnRating = new TreeTableColumn<>("Rating");
+	@FXML
+	TreeTableColumn<tableData, String> columnTitel = new TreeTableColumn<>("Titel");
+	@FXML
+	TreeTableColumn<tableData, String> columnStreamUrl = new TreeTableColumn<>("File Name");
+	@FXML
+	TreeTableColumn<tableData, String> columnResolution = new TreeTableColumn<>("Resolution");
+	@FXML
+	TreeTableColumn<tableData, Integer> columnYear = new TreeTableColumn<>("Year");
+	@FXML
+	TreeTableColumn<tableData, Integer> columnSeason = new TreeTableColumn<>("Season");
+	@FXML
+	TreeTableColumn<tableData, Integer> columnEpisode = new TreeTableColumn<>("Episode");
     
     @FXML
     private TreeItem<tableData> streamingRoot =new TreeItem<>(new tableData(1 ,1 ,1 ,1.0 ,"1" ,"filme" ,"1", imv1, false));
@@ -195,25 +195,17 @@ public class MainWindowController {
     @FXML
     private TableColumn<tableData, String> dataNameEndColumn = new TableColumn<>("Datei Name mit Endung");
 	
-	private boolean menuTrue = false;	//saves the position of menuBtn (opened or closed)
+	private boolean menuTrue = false;
 	private boolean settingsTrue = false;
 	private boolean streamingSettingsTrue = false;
 	private boolean autoUpdate = false;
 	private boolean useBeta = false;
-	static boolean firststart = false;
     private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	private int hashA = -647380320;
+	
 	private String version = "0.5.2";
 	private String buildNumber = "131";
 	private String versionName = "solidify cow";
-	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");
-	private File dirLinux = new File(System.getProperty("user.home") + "/HomeFlix");
-	private File fileWin = new File(dirWin + "/config.xml");
-	private File fileLinux = new File(dirLinux + "/config.xml");	
-	
-	public String errorUpdateD;
-	public String errorUpdateV;
-	public String noFilmFound;
 	
 	private String errorPlay;
 	private String errorOpenStream;
@@ -258,9 +250,297 @@ public class MainWindowController {
 	
 	private Main main;
 	private UpdateController updateController;
-//	private updater Updater;
 	private apiQuery ApiQuery;
 	DBController dbController;
+	
+	/**"Main" Method called in Main.java main() when starting
+	 * Initialize other objects: Updater, dbController and ApiQuery
+	 */
+	void setMain(Main main) {
+		this.main = main;
+		dbController = new DBController(this.main, this);	
+		ApiQuery = new apiQuery(this, dbController, this.main);
+	}
+	
+	void init() {
+		loadSettings();
+		loadStreamingSettings();
+		checkAutoUpdate();
+		initTabel();
+		initActions();
+		initUI();	
+	}
+	
+	//Initialize the tables (treeTableViewfilm and tableViewStreamingdata)
+	private void initTabel() {
+
+		//film Table 
+	    columnRating.setMaxWidth(80);
+	    columnTitel.setMaxWidth(260);
+	    columnStreamUrl.setMaxWidth(0);
+	    dataNameColumn.setPrefWidth(150);
+	    dataNameEndColumn.setPrefWidth(220);
+	    columnRating.setStyle("-fx-alignment: CENTER;");
+		
+        treeTableViewfilm.setRoot(root);
+        treeTableViewfilm.setColumnResizePolicy( TreeTableView.CONSTRAINED_RESIZE_POLICY );
+        treeTableViewfilm.setShowRoot(false);
+        
+        //write content into cell
+        columnTitel.setCellValueFactory(cellData -> cellData.getValue().getValue().titleProperty());
+        columnRating.setCellValueFactory(cellData -> cellData.getValue().getValue().imageProperty());
+        columnStreamUrl.setCellValueFactory(cellData -> cellData.getValue().getValue().streamUrlProperty());
+        columnResolution.setCellValueFactory(cellData -> cellData.getValue().getValue().resolutionProperty());
+        columnYear.setCellValueFactory(cellData -> cellData.getValue().getValue().yearProperty().asObject());
+        columnSeason.setCellValueFactory(cellData -> cellData.getValue().getValue().seasonProperty().asObject());
+        columnEpisode.setCellValueFactory(cellData -> cellData.getValue().getValue().episodeProperty().asObject());
+
+        //add columns to treeTableViewfilm
+        treeTableViewfilm.getColumns().add(columnTitel);
+        treeTableViewfilm.getColumns().add(columnRating);
+        treeTableViewfilm.getColumns().add(columnStreamUrl);
+        treeTableViewfilm.getColumns().add(columnResolution);
+        treeTableViewfilm.getColumns().add(columnYear);
+        treeTableViewfilm.getColumns().add(columnSeason);
+        treeTableViewfilm.getColumns().add(columnEpisode);
+        treeTableViewfilm.getColumns().get(2).setVisible(false); //hide columnStreamUrl (column with file URL, important for opening a file/stream)
+	
+	    //Change-listener for treeTableViewfilm
+	    treeTableViewfilm.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {	
+			@Override
+			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal){
+				// last = selected; //for auto-play
+				selected = treeTableViewfilm.getSelectionModel().getSelectedIndex(); //get selected item
+				last = selected - 1;
+				next = selected + 1;
+				name = columnTitel.getCellData(selected); //get name of selected item
+				datPath = columnStreamUrl.getCellData(selected); //get file path of selected item
+				
+				if(mode.equals("local")){
+					if(localFilms.get(selected).getCached()==true){
+						LOGGER.info("loading from cache: "+name);
+						dbController.readCache(datPath);
+					}else{
+						ApiQuery.startQuery(name,datPath); // start api query
+					}
+				}else{
+					LOGGER.info(streamingFilms.size());
+					if(streamingFilms.get(selected).getCached()==true){
+						LOGGER.info("loading from cache: "+name);
+						dbController.readCache(datPath);
+					}else{
+						ApiQuery.startQuery(name,datPath); // start api query
+					}
+				}
+			}
+		});
+	    
+	    //context menu for treeTableViewfilm  
+	    treeTableViewfilm.setContextMenu(menu);
+
+	    //Streaming-Settings Table
+	    dataNameColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
+	    dataNameEndColumn.setCellValueFactory(cellData -> cellData.getValue().streamUrlProperty());
+		
+	    tableViewStreamingdata.getColumns().add(dataNameColumn);
+	    tableViewStreamingdata.getColumns().add(dataNameEndColumn);
+	    tableViewStreamingdata.setItems(streamingData); 
+	}
+	
+	//Initializing the actions
+	private void initActions(){
+		
+		HamburgerBackArrowBasicTransition burgerTask = new HamburgerBackArrowBasicTransition(menuHam);
+		menuHam.addEventHandler(MouseEvent.MOUSE_PRESSED, (e)->{
+	    	if(menuTrue == false){
+				sideMenuSlideIn();
+				burgerTask.setRate(1.0);
+				burgerTask.play();
+				menuTrue = true;
+			}else{
+				sideMenuSlideOut();
+				burgerTask.setRate(-1.0);
+				burgerTask.play();
+				menuTrue = false;
+			}
+			if(settingsTrue == true){
+				settingsAnchor.setVisible(false);
+				setPath(tfPath.getText());
+				saveSettings();
+				settingsTrue = false;
+			}
+			if(streamingSettingsTrue == true){
+				streamingSettingsAnchor.setVisible(false);
+				streamingSettingsTrue = false;
+			}
+			
+		});
+		
+        tfsearch.textProperty().addListener(new ChangeListener<String>() {
+    	    @Override
+    	    public void changed(ObservableValue<? extends String> observable,String oldValue, String newValue) {
+            	ObservableList<tableData> helpData;
+    	    	filterData.removeAll(filterData);
+    	    	root.getChildren().remove(0,root.getChildren().size());
+    	    	
+  	    		if(mode.equals("local")){
+  	            	helpData = localFilms;
+  	    		}else{
+  	    			helpData = streamingFilms;
+  	    		}
+    	    	
+    	    	for(int i = 0; i < helpData.size(); i++){
+    	    		if(helpData.get(i).getTitle().toLowerCase().contains(tfsearch.getText().toLowerCase())){
+    	    			filterData.add(helpData.get(i));	//add data from newDaten to filteredData where title contains search input
+    	    		}
+    	    	}
+    	    	
+    	    	for(int i = 0; i < filterData.size(); i++){
+    				root.getChildren().add(new TreeItem<tableData>(filterData.get(i)));	//add filtered data to root node after search
+    			}
+    	    	if(tfsearch.getText().hashCode()== hashA){
+    	    		setColor("000000");
+    	    		applyColor();
+    	    	}
+    	    }
+    	});
+        
+        cbLocal.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+          @Override
+		public void changed(ObservableValue<? extends Number> ov, Number value, Number new_value) {
+        	  String local = cbLocal.getItems().get((int) new_value).toString();
+        	  local = local.substring(local.length()-6,local.length()-1);	//reading only en_US from English (en_US)
+        	  setLocal(local);
+        	  setLocalUI();
+        	  saveSettings();
+          }
+        });
+        
+        sliderFontSize.valueProperty().addListener(new ChangeListener<Number>() {
+			 @Override
+			public void changed(ObservableValue<? extends Number> ov,Number old_val, Number new_val) {
+				setSize(sliderFontSize.getValue()); 
+				
+				if(name != null){
+					dbController.readCache(datPath);
+				}
+
+//				ta1.setFont(Font.font("System", size));
+				saveSettings();
+			 }
+        });
+        
+        like.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+            	if(mode.equals("streaming")){
+            		dbController.like(name,streamingFilms.get(selected).getStreamUrl());
+            	}else{
+				dbController.like(name,localFilms.get(selected).getStreamUrl());
+            	}
+				dbController.getFavStatus(name);
+				try {
+					dbController.refresh(name, selected);
+				} catch (SQLException e) {
+					LOGGER.error("(like-problem), it seems as a cat has stolen the \"like-methode\"!", e);
+				}
+				refreshTable();
+			}
+	    	});
+        
+        dislike.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+            	if(mode.equals("streaming")){
+            		dbController.dislike(name,streamingFilms.get(selected).getStreamUrl());
+            	}else{
+				dbController.dislike(name,localFilms.get(selected).getStreamUrl());
+            	}
+				dbController.getFavStatus(name);
+				try {
+					dbController.refresh(name, selected);
+				} catch (SQLException e) {
+					Alert alert = new Alert(AlertType.ERROR);
+			    	alert.setTitle("Error");
+			    	alert.setHeaderText("");
+			    	alert.setContentText("There should be an error message in future (dislike problem)");
+					e.printStackTrace();
+				}
+				refreshTable();
+			}
+	    	});
+        
+        /**
+         * FIXME fix bug when sort by ASCENDING, wrong order
+         */
+        columnRating.sortTypeProperty().addListener(new ChangeListener<SortType>() {
+            @Override
+            public void changed(ObservableValue<? extends SortType> paramObservableValue, SortType paramT1, SortType paramT2) {
+            	LOGGER.info("NAME Clicked -- sortType = " + paramT1 + ", SortType=" + paramT2);
+            	ArrayList<Integer> fav_true = new ArrayList<Integer>();
+            	ArrayList<Integer> fav_false = new ArrayList<Integer>();
+            	ObservableList<tableData> helpData;
+  	    		filterData.removeAll(filterData);
+//  	    	treeTableViewfilm.getSelectionModel().clearSelection(selected);
+  	    		root.getChildren().remove(0,root.getChildren().size());
+  	    		
+  	    		if(mode.equals("local")){
+  	            	helpData = localFilms;
+  	    		}else{
+  	    			helpData = streamingFilms;
+  	    		}
+              
+  	    		
+  	    		for(int i = 0;i<helpData.size();i++){
+  	    			if(helpData.get(i).getRating()==1.0){
+  	    				fav_true.add(i);
+  	    			}else{
+  	    				fav_false.add(i);
+  	    			}
+  	    		}
+  	    		if(paramT2.toString().equals("DESCENDING")){
+  	    			LOGGER.info("Absteigend");	//Debug, delete?
+  	  	    		for(int i = 0;i<fav_true.size();i++){
+  	  	    			filterData.add(helpData.get(fav_true.get(i)));
+  	  	    		}
+  	  	    		for(int i = 0;i<fav_false.size();i++){
+  	  	    			filterData.add(helpData.get(fav_false.get(i)));
+  	  	    		}
+  	    		}else{
+  	  	    		for(int i = 0;i<fav_false.size();i++){
+  	  	    			filterData.add(helpData.get(fav_false.get(i)));
+  	  	    		}
+  	  	    		for(int i = 0;i<fav_true.size();i++){
+  	  	    			filterData.add(helpData.get(fav_true.get(i)));
+  	  	    		}
+  	    		}
+  	    		
+  	    		LOGGER.info(filterData.size());	//Debug, delete?
+    	    	for(int i = 0; i < filterData.size(); i++){
+//    	    		System.out.println(filterData.get(i).getTitel()+"; "+filterData.get(i).getRating());
+    				root.getChildren().add(new TreeItem<tableData>(filterData.get(i)));	//add filtered data to root node after search
+    			}
+            }
+      });
+	}
+	
+	// initialize UI elements
+	private void initUI() {
+		LOGGER.info("Mode: " + mode); // TODO debugging
+		debugBtn.setDisable(true); // debugging button for tests
+		debugBtn.setVisible(false);
+
+		tfPath.setText(getPath());
+		sliderFontSize.setValue(getSize());
+		mainColor.setValue(Color.valueOf(getColor()));
+
+		updateBtn.setFont(Font.font("System", 12));
+		autoUpdateToggleBtn.setSelected(isAutoUpdate());
+		cbLocal.setItems(locals);
+		
+		setLocalUI();
+		applyColor();
+	}
 	
 	@FXML
 	private void playbtnclicked(){	
@@ -482,296 +762,6 @@ public class MainWindowController {
 			}
 	}
 	
-	
-	/**"Main" Method called in Main.java main() when starting
-	 * Initialize other objects: Updater, dbController and ApiQuery
-	 */
-	void setMain(Main main) {
-		this.main = main;
-		dbController = new DBController(this.main, this);	
-		ApiQuery = new apiQuery(this, dbController, this.main);
-	}
-	
-	void init() {
-		loadSettings();
-		loadStreamingSettings();
-		checkAutoUpdate();
-		initTabel();
-		initActions();
-		initUI();	
-	}
-	
-	//Initialize the tables (treeTableViewfilm and tableViewStreamingdata)
-	void initTabel() {
-
-		//film Table 
-	    columnRating.setMaxWidth(80);
-	    columnTitel.setMaxWidth(260);
-	    columnStreamUrl.setMaxWidth(0);
-	    dataNameColumn.setPrefWidth(150);
-	    dataNameEndColumn.setPrefWidth(220);
-	    columnRating.setStyle("-fx-alignment: CENTER;");
-		
-        treeTableViewfilm.setRoot(root);
-        treeTableViewfilm.setColumnResizePolicy( TreeTableView.CONSTRAINED_RESIZE_POLICY );
-        treeTableViewfilm.setShowRoot(false);
-        
-        //write content into cell
-        columnTitel.setCellValueFactory(cellData -> cellData.getValue().getValue().titleProperty());
-        columnRating.setCellValueFactory(cellData -> cellData.getValue().getValue().imageProperty());
-        columnStreamUrl.setCellValueFactory(cellData -> cellData.getValue().getValue().streamUrlProperty());
-        columnResolution.setCellValueFactory(cellData -> cellData.getValue().getValue().resolutionProperty());
-        columnYear.setCellValueFactory(cellData -> cellData.getValue().getValue().yearProperty().asObject());
-        columnSeason.setCellValueFactory(cellData -> cellData.getValue().getValue().seasonProperty().asObject());
-        columnEpisode.setCellValueFactory(cellData -> cellData.getValue().getValue().episodeProperty().asObject());
-
-        //add columns to treeTableViewfilm
-        treeTableViewfilm.getColumns().add(columnTitel);
-        treeTableViewfilm.getColumns().add(columnRating);
-        treeTableViewfilm.getColumns().add(columnStreamUrl);
-        treeTableViewfilm.getColumns().add(columnResolution);
-        treeTableViewfilm.getColumns().add(columnYear);
-        treeTableViewfilm.getColumns().add(columnSeason);
-        treeTableViewfilm.getColumns().add(columnEpisode);
-        treeTableViewfilm.getColumns().get(2).setVisible(false); //hide columnStreamUrl (column with file URL, important for opening a file/stream)
-	
-	    //Change-listener for treeTableViewfilm
-	    treeTableViewfilm.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {	
-			@Override
-			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal){
-				// last = selected; //for auto-play
-				selected = treeTableViewfilm.getSelectionModel().getSelectedIndex(); //get selected item
-				last = selected - 1;
-				next = selected + 1;
-				name = columnTitel.getCellData(selected); //get name of selected item
-				datPath = columnStreamUrl.getCellData(selected); //get file path of selected item
-				
-				if(mode.equals("local")){
-					if(localFilms.get(selected).getCached()==true){
-						LOGGER.info("loading from cache: "+name);
-						dbController.readCache(datPath);
-					}else{
-						ApiQuery.startQuery(name,datPath); // start api query
-					}
-				}else{
-					LOGGER.info(streamingFilms.size());
-					if(streamingFilms.get(selected).getCached()==true){
-						LOGGER.info("loading from cache: "+name);
-						dbController.readCache(datPath);
-					}else{
-						ApiQuery.startQuery(name,datPath); // start api query
-					}
-				}
-			}
-		});
-	    
-	    //context menu for treeTableViewfilm  
-	    treeTableViewfilm.setContextMenu(menu);
-
-	    //Streaming-Settings Table
-	    dataNameColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
-	    dataNameEndColumn.setCellValueFactory(cellData -> cellData.getValue().streamUrlProperty());
-		
-	    tableViewStreamingdata.getColumns().add(dataNameColumn);
-	    tableViewStreamingdata.getColumns().add(dataNameEndColumn);
-	    tableViewStreamingdata.setItems(streamingData); 
-	}
-	
-	//Initializing the actions
-	void initActions(){
-		
-		HamburgerBackArrowBasicTransition burgerTask = new HamburgerBackArrowBasicTransition(menuHam);
-		menuHam.addEventHandler(MouseEvent.MOUSE_PRESSED, (e)->{
-	    	if(menuTrue == false){
-				sideMenuSlideIn();
-				burgerTask.setRate(1.0);
-				burgerTask.play();
-				menuTrue = true;
-			}else{
-				sideMenuSlideOut();
-				burgerTask.setRate(-1.0);
-				burgerTask.play();
-				menuTrue = false;
-			}
-			if(settingsTrue == true){
-				settingsAnchor.setVisible(false);
-				setPath(tfPath.getText());
-				saveSettings();
-				settingsTrue = false;
-			}
-			if(streamingSettingsTrue == true){
-				streamingSettingsAnchor.setVisible(false);
-				streamingSettingsTrue = false;
-			}
-			
-		});
-		
-        tfsearch.textProperty().addListener(new ChangeListener<String>() {
-    	    @Override
-    	    public void changed(ObservableValue<? extends String> observable,String oldValue, String newValue) {
-            	ObservableList<tableData> helpData;
-    	    	filterData.removeAll(filterData);
-    	    	root.getChildren().remove(0,root.getChildren().size());
-    	    	
-  	    		if(mode.equals("local")){
-  	            	helpData = localFilms;
-  	    		}else{
-  	    			helpData = streamingFilms;
-  	    		}
-    	    	
-    	    	for(int i = 0; i < helpData.size(); i++){
-    	    		if(helpData.get(i).getTitle().toLowerCase().contains(tfsearch.getText().toLowerCase())){
-    	    			filterData.add(helpData.get(i));	//add data from newDaten to filteredData where title contains search input
-    	    		}
-    	    	}
-    	    	
-    	    	for(int i = 0; i < filterData.size(); i++){
-    				root.getChildren().add(new TreeItem<tableData>(filterData.get(i)));	//add filtered data to root node after search
-    			}
-    	    	if(tfsearch.getText().hashCode()== hashA){
-    	    		setColor("000000");
-    	    		applyColor();
-    	    	}
-    	    }
-    	});
-        
-        cbLocal.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-          @Override
-		public void changed(ObservableValue<? extends Number> ov, Number value, Number new_value) {
-        	  String local = cbLocal.getItems().get((int) new_value).toString();
-        	  local = local.substring(local.length()-6,local.length()-1);	//reading only en_US from English (en_US)
-        	  setLocal(local);
-        	  setLocalUI();
-        	  saveSettings();
-          }
-        });
-        
-        sliderFontSize.valueProperty().addListener(new ChangeListener<Number>() {
-			 @Override
-			public void changed(ObservableValue<? extends Number> ov,Number old_val, Number new_val) {
-				setSize(sliderFontSize.getValue()); 
-				
-				if(name != null){
-					dbController.readCache(datPath);
-				}
-
-//				ta1.setFont(Font.font("System", size));
-				saveSettings();
-			 }
-        });
-        
-        like.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-            	if(mode.equals("streaming")){
-            		dbController.like(name,streamingFilms.get(selected).getStreamUrl());
-            	}else{
-				dbController.like(name,localFilms.get(selected).getStreamUrl());
-            	}
-				dbController.getFavStatus(name);
-				try {
-					dbController.refresh(name, selected);
-				} catch (SQLException e) {
-					LOGGER.error("(like-problem), it seems as a cat has stolen the \"like-methode\"!", e);
-				}
-				refreshTable();
-			}
-	    	});
-        
-        dislike.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-            	if(mode.equals("streaming")){
-            		dbController.dislike(name,streamingFilms.get(selected).getStreamUrl());
-            	}else{
-				dbController.dislike(name,localFilms.get(selected).getStreamUrl());
-            	}
-				dbController.getFavStatus(name);
-				try {
-					dbController.refresh(name, selected);
-				} catch (SQLException e) {
-					Alert alert = new Alert(AlertType.ERROR);
-			    	alert.setTitle("Error");
-			    	alert.setHeaderText("");
-			    	alert.setContentText("There should be an error message in future (dislike problem)");
-					e.printStackTrace();
-				}
-				refreshTable();
-			}
-	    	});
-        
-        /**
-         * FIXME fix bug when sort by ASCENDING, wrong order
-         */
-        columnRating.sortTypeProperty().addListener(new ChangeListener<SortType>() {
-            @Override
-            public void changed(ObservableValue<? extends SortType> paramObservableValue, SortType paramT1, SortType paramT2) {
-            	LOGGER.info("NAME Clicked -- sortType = " + paramT1 + ", SortType=" + paramT2);
-            	ArrayList<Integer> fav_true = new ArrayList<Integer>();
-            	ArrayList<Integer> fav_false = new ArrayList<Integer>();
-            	ObservableList<tableData> helpData;
-  	    		filterData.removeAll(filterData);
-//  	    	treeTableViewfilm.getSelectionModel().clearSelection(selected);
-  	    		root.getChildren().remove(0,root.getChildren().size());
-  	    		
-  	    		if(mode.equals("local")){
-  	            	helpData = localFilms;
-  	    		}else{
-  	    			helpData = streamingFilms;
-  	    		}
-              
-  	    		
-  	    		for(int i = 0;i<helpData.size();i++){
-  	    			if(helpData.get(i).getRating()==1.0){
-  	    				fav_true.add(i);
-  	    			}else{
-  	    				fav_false.add(i);
-  	    			}
-  	    		}
-  	    		if(paramT2.toString().equals("DESCENDING")){
-  	    			LOGGER.info("Absteigend");	//Debug, delete?
-  	  	    		for(int i = 0;i<fav_true.size();i++){
-  	  	    			filterData.add(helpData.get(fav_true.get(i)));
-  	  	    		}
-  	  	    		for(int i = 0;i<fav_false.size();i++){
-  	  	    			filterData.add(helpData.get(fav_false.get(i)));
-  	  	    		}
-  	    		}else{
-  	  	    		for(int i = 0;i<fav_false.size();i++){
-  	  	    			filterData.add(helpData.get(fav_false.get(i)));
-  	  	    		}
-  	  	    		for(int i = 0;i<fav_true.size();i++){
-  	  	    			filterData.add(helpData.get(fav_true.get(i)));
-  	  	    		}
-  	    		}
-  	    		
-  	    		LOGGER.info(filterData.size());	//Debug, delete?
-    	    	for(int i = 0; i < filterData.size(); i++){
-//    	    		System.out.println(filterData.get(i).getTitel()+"; "+filterData.get(i).getRating());
-    				root.getChildren().add(new TreeItem<tableData>(filterData.get(i)));	//add filtered data to root node after search
-    			}
-            }
-      });
-	}
-	
-	// initialize UI elements
-	void initUI() {
-		LOGGER.info("Mode: " + mode); // TODO debugging
-		debugBtn.setDisable(true); // debugging button for tests
-		debugBtn.setVisible(false);
-
-		tfPath.setText(getPath());
-		sliderFontSize.setValue(getSize());
-		mainColor.setValue(Color.valueOf(getColor()));
-
-		updateBtn.setFont(Font.font("System", 12));
-		autoUpdateToggleBtn.setSelected(isAutoUpdate());
-		cbLocal.setItems(locals);
-		
-		setLocalUI();
-		applyColor();
-	}
-	
 	private void refreshTable(){
 		if(mode.equals("local")){
 		root.getChildren().set(selected, new TreeItem<tableData>(localFilms.get(selected)));
@@ -837,7 +827,7 @@ public class MainWindowController {
 	}
 	
 	//set color of UI-Elements
-	void applyColor() {
+	private void applyColor() {
 		String style = "-fx-background-color: #" + getColor() + ";";
 		String btnStyleBlack = "-fx-button-type: RAISED; -fx-background-color: #" + getColor() + "; -fx-text-fill: BLACK;";
 		String btnStyleWhite = "-fx-button-type: RAISED; -fx-background-color: #" + getColor() + "; -fx-text-fill: WHITE;";
@@ -961,14 +951,11 @@ public class MainWindowController {
 		columnResolution.setText(getBundle().getString("columnResolution"));
 		columnSeason.setText(getBundle().getString("columnSeason"));
 		columnYear.setText(getBundle().getString("columnYear"));
-		errorUpdateD = getBundle().getString("errorUpdateD");
-		errorUpdateV = getBundle().getString("errorUpdateV");
 		errorPlay = getBundle().getString("errorPlay");
 		errorOpenStream = getBundle().getString("errorOpenStream");
 		errorMode = getBundle().getString("errorMode");
 		errorLoad = getBundle().getString("errorLoad");
 		errorSave = getBundle().getString("errorSave");
-		noFilmFound = getBundle().getString("noFilmFound");
 		infoText = getBundle().getString("version") + " " + version + " (Build: " + buildNumber + ") " + versionName + getBundle().getString("infoText");
 		vlcNotInstalled = getBundle().getString("vlcNotInstalled");
 	}
@@ -1005,10 +992,9 @@ public class MainWindowController {
 		LOGGER.error("An error occurred", exception);
 	}
 	
-	// saves the Settings
+	// save settings
 	public void saveSettings() {
 		LOGGER.info("saving settings ...");
-		OutputStream outputStream; // new output-stream
 		try {
 			props.setProperty("path", getPath()); // writes path into property
 			props.setProperty("color", getColor());
@@ -1018,31 +1004,21 @@ public class MainWindowController {
 			props.setProperty("streamingPath", getStreamingPath());
 			props.setProperty("mode", getMode());
 			props.setProperty("ratingSortType", columnRating.getSortType().toString());
-			if (System.getProperty("os.name").equals("Linux")) {
-				outputStream = new FileOutputStream(fileLinux);
-			} else {
-				outputStream = new FileOutputStream(fileWin);
-			}
+
+			OutputStream outputStream = new FileOutputStream(main.getConfigFile()); // new output-stream
 			props.storeToXML(outputStream, "Project HomeFlix settings"); // writes new .xml
 			outputStream.close();
 		} catch (IOException e) {
-			if (firststart == false) {
-				showErrorMsg(errorLoad, e);
-				e.printStackTrace();
-			}
+			LOGGER.error(errorLoad, e);
 		}
 	}
 	
-	// loads the Settings
+	// load settings
 	public void loadSettings() {
 		LOGGER.info("loading settings ...");
-		InputStream inputStream;
+		
 		try {
-			if (System.getProperty("os.name").equals("Linux")) {
-				inputStream = new FileInputStream(fileLinux);
-			} else {
-				inputStream = new FileInputStream(fileWin);
-			}
+			InputStream inputStream = new FileInputStream(main.getConfigFile());
 			props.loadFromXML(inputStream); // new input-stream from .xml
 
 			try {
@@ -1113,11 +1089,7 @@ public class MainWindowController {
 
 			inputStream.close();
 		} catch (IOException e) {
-			if (firststart == false) {
-				LOGGER.error("faild to load settings", e);
-				showErrorMsg(errorSave, e);
-			}
-			// showErrorMsg(errorLoad, e); //TODO This should not be visible at first startup
+			LOGGER.error(errorSave, e);
 		}
 	}
 	

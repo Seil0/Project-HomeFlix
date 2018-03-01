@@ -55,8 +55,8 @@ public class Main extends Application {
 	private static String osVers = System.getProperty("os.version");
 	private static String javaVers = System.getProperty("java.version");
 	private static String javaVend= System.getProperty("java.vendor");
-	private String dirWin = System.getProperty("user.home") + "/Documents/HomeFlix";	//Windows: C:/Users/"User"/Documents/HomeFlix
-	private String dirLinux = System.getProperty("user.home") + "/HomeFlix";	//Linux: /home/"User"/HomeFlix
+	private String dirWin = userHome + "/Documents/HomeFlix";	//Windows: C:/Users/"User"/Documents/HomeFlix
+	private String dirLinux = userHome + "/HomeFlix";	//Linux: /home/"User"/HomeFlix
 	private File directory;
 	private File configFile;
 	private File posterCache;
@@ -94,14 +94,14 @@ public class Main extends Application {
 
 			
 			// get OS and the specific paths
-			if (osName.equals("Linux")) {
-				directory = new File(dirLinux);
-				configFile = new File(dirLinux + "/config.xml");
-				posterCache = new File(dirLinux + "/posterCache");
-			} else {
+			if (osName.equals("Windows")) {
 				directory = new File(dirWin);
 				configFile = new File(dirWin + "/config.xml");
 				posterCache = new File(dirWin + "/posterCache");
+			} else {
+				directory = new File(dirLinux);
+				configFile = new File(dirLinux + "/config.xml");
+				posterCache = new File(dirLinux + "/posterCache");
 			}
 			
 			// startup checks
@@ -143,7 +143,6 @@ public class Main extends Application {
 	
 	// Method for first Start
 	private String firstStart(){
-		MainWindowController.firststart = true;
 		switch(System.getProperty("user.language")+"_"+System.getProperty("user.country")){
 		case "en_US":	bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US);	//us_english
 				break;
@@ -172,13 +171,13 @@ public class Main extends Application {
 	}
 
 	public static void main(String[] args) {
-		if(System.getProperty("os.name").equals("Linux")){
-			System.setProperty("logFilename", System.getProperty("user.home") + "/HomeFlix/app.log");
-			File logFile = new File(System.getProperty("user.home") + "/HomeFlix/app.log");
+		if(System.getProperty("os.name").equals("Windows")){
+			System.setProperty("logFilename", userHome + "/Documents/HomeFlix/app.log");
+			File logFile = new File(userHome + "/Documents/HomeFlix/app.log");
 			logFile.delete();
 		}else{
-			System.setProperty("logFilename", System.getProperty("user.home") + "/Documents/HomeFlix/app.log");
-			File logFile = new File(System.getProperty("user.home") + "/Documents/HomeFlix/app.log");
+			System.setProperty("logFilename", userHome + "/HomeFlix/app.log");
+			File logFile = new File(userHome + "/HomeFlix/app.log");
 			logFile.delete();
 		}
 		LOGGER = LogManager.getLogger(Main.class.getName());
@@ -200,12 +199,16 @@ public class Main extends Application {
 	public void setFONT_FAMILY(String FONT_FAMILY) {
 		this.FONT_FAMILY = FONT_FAMILY;
 	}
+	
+	public File getDirectory() {
+		return directory;
+	}
+
+	public File getConfigFile() {
+		return configFile;
+	}
 
 	public File getPosterCache() {
 		return posterCache;
-	}
-
-	public void setPosterCache(File posterCache) {
-		this.posterCache = posterCache;
 	}
 }
