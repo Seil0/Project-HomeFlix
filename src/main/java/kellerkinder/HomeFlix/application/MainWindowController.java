@@ -1,7 +1,7 @@
 /**
- * Project HomeFlix
+ * Project-HomeFlix
  * 
- * Copyright 2016-2017  <admin@kellerkinder>
+ * Copyright 2018  <@Seil0>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,8 @@
  * MA 02110-1301, USA.
  * 
  */
-package org.kellerkinder.Project_HomeFlix;
+
+package kellerkinder.HomeFlix.application;
 
 import java.awt.Desktop;
 import java.io.BufferedReader;
@@ -89,6 +90,10 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
 import javafx.util.Duration;
+import kellerkinder.HomeFlix.controller.DBController;
+import kellerkinder.HomeFlix.controller.UpdateController;
+import kellerkinder.HomeFlix.controller.apiQuery;
+import kellerkinder.HomeFlix.datatypes.tableData;
 
 public class MainWindowController {	
 	@FXML
@@ -106,7 +111,7 @@ public class MainWindowController {
 	@FXML
 	private TableView<tableData> tableViewStreamingdata;
 	@FXML
-	TextFlow textFlow;
+	private TextFlow textFlow;
 	@FXML
 	ScrollPane scrollPane;
 	@FXML
@@ -136,7 +141,7 @@ public class MainWindowController {
     @FXML
     private JFXHamburger menuHam;
     @FXML
-    private JFXToggleButton autoupdateBtn;
+    private JFXToggleButton autoUpdateToggleBtn;
     @FXML
     public JFXTextField tfPath;
     @FXML
@@ -161,8 +166,8 @@ public class MainWindowController {
     private Label mainColorLabel;
     @FXML
     private Label localLabel;
-    @FXML 
-    ImageView image1;
+    @FXML
+	private ImageView image1;
     
     private ImageView imv1;
     
@@ -194,20 +199,22 @@ public class MainWindowController {
 	private boolean settingsTrue = false;
 	private boolean streamingSettingsTrue = false;
 	private boolean autoUpdate = false;
+	private boolean useBeta = false;
 	static boolean firststart = false;
     private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	private int hashA = -647380320;
 	private String version = "0.5.2";
-	private String buildNumber = "129";
+	private String buildNumber = "131";
 	private String versionName = "solidify cow";
 	private File dirWin = new File(System.getProperty("user.home") + "/Documents/HomeFlix");
 	private File dirLinux = new File(System.getProperty("user.home") + "/HomeFlix");
 	private File fileWin = new File(dirWin + "/config.xml");
 	private File fileLinux = new File(dirLinux + "/config.xml");	
 	
-	String errorUpdateD;
-	String errorUpdateV;
-	String noFilmFound;
+	public String errorUpdateD;
+	public String errorUpdateV;
+	public String noFilmFound;
+	
 	private String errorPlay;
 	private String errorOpenStream;
 	private String errorMode;
@@ -215,7 +222,6 @@ public class MainWindowController {
 	private String errorSave;
 	private String infoText;
 	private String vlcNotInstalled;
-	private String currentWorkingDirectory;
 	private String path;
 	private String streamingPath;
 	private String color;
@@ -224,29 +230,14 @@ public class MainWindowController {
 	private String mode;
 	private String ratingSortType;
 	private String local;
-	String title;
-	String year;
-	String rating;
-	String publishedOn;
-	String duration;
-	String genre;
-	String director;
-	String writer;
-	String actors;
-	String plot;
-	String language;
-	String country;
-	String awards;
-	String metascore;
-	String imdbRating;
-	String type;	
-	double size;
+	
+	public double size;
 	private int last;
 	private int selected;
 	private int next;
 	private File selectedFolder;
 	private File selectedStreamingFolder;
-	ResourceBundle bundle;
+	private ResourceBundle bundle;
 
 	private ObservableList<tableData> filterData = FXCollections.observableArrayList();
 	private ObservableList<String> locals = FXCollections.observableArrayList("English (en_US)", "Deutsch (de_DE)");
@@ -266,7 +257,8 @@ public class MainWindowController {
 	Properties props = new Properties();
 	
 	private Main main;
-	private updater Updater;
+	private UpdateController updateController;
+//	private updater Updater;
 	private apiQuery ApiQuery;
 	DBController dbController;
 	
@@ -354,7 +346,7 @@ public class MainWindowController {
     	alert.setTitle("Info");
     	alert.setHeaderText("Project HomeFlix");
     	alert.setContentText(infoText);
-    	alert.initOwner(main.primaryStage);
+    	alert.initOwner(main.getPrimaryStage());
     	alert.showAndWait();
 	}
 	
@@ -451,18 +443,19 @@ public class MainWindowController {
 	
 	@FXML
 	private void updateBtnAction(){
-		Thread updateThread = new Thread(Updater);
+		updateController = new UpdateController(this, buildNumber, useBeta);
+		Thread updateThread = new Thread(updateController);
 		updateThread.setName("Updater");
 		updateThread.start();	
 	}
 	
 	@FXML
-	private void autoupdateBtnAction(){
-		if(autoUpdate){
-    		setAutoUpdate(false);
-    	}else{
-    		setAutoUpdate(true);
-    	}
+	private void autoUpdateToggleBtnAction(){
+		if (autoUpdate) {
+			setAutoUpdate(false);
+		} else {
+			setAutoUpdate(true);
+		}
 		saveSettings();
 	}
 	
@@ -495,13 +488,21 @@ public class MainWindowController {
 	 */
 	void setMain(Main main) {
 		this.main = main;
-		Updater = new updater(this, buildNumber);
-		dbController = new DBController(this, this.main);	
+		dbController = new DBController(this.main, this);	
 		ApiQuery = new apiQuery(this, dbController, this.main);
 	}
 	
+	void init() {
+		loadSettings();
+		loadStreamingSettings();
+		checkAutoUpdate();
+		initTabel();
+		initActions();
+		initUI();	
+	}
+	
 	//Initialize the tables (treeTableViewfilm and tableViewStreamingdata)
-	void initTabel(){
+	void initTabel() {
 
 		//film Table 
 	    columnRating.setMaxWidth(80);
@@ -753,32 +754,22 @@ public class MainWindowController {
       });
 	}
 	
-	//initialize UI elements
-	void initUI(){
-		LOGGER.info("Mode: "+mode);	//TODO debugging
-		debugBtn.setDisable(true); 	//debugging button for tests
+	// initialize UI elements
+	void initUI() {
+		LOGGER.info("Mode: " + mode); // TODO debugging
+		debugBtn.setDisable(true); // debugging button for tests
 		debugBtn.setVisible(false);
-		
-        tfPath.setText(getPath());
-        sliderFontSize.setValue(getSize());
+
+		tfPath.setText(getPath());
+		sliderFontSize.setValue(getSize());
 		mainColor.setValue(Color.valueOf(getColor()));
+
+		updateBtn.setFont(Font.font("System", 12));
+		autoUpdateToggleBtn.setSelected(isAutoUpdate());
+		cbLocal.setItems(locals);
 		
-        updateBtn.setFont(Font.font("System", 12));
-        cbLocal.setItems(locals);
-        
-        if(autoUpdate){
-    		autoupdateBtn.setSelected(true);
-    		try {
-    			Thread updateThread = new Thread(Updater);
-    			updateThread.setName("Updater");
-    			updateThread.start();
-    			updateThread.join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-    	}else{
-    		autoupdateBtn.setSelected(false);
-    	}
+		setLocalUI();
+		applyColor();
 	}
 	
 	private void refreshTable(){
@@ -789,7 +780,7 @@ public class MainWindowController {
 		}
 	}
 	
-	void addDataUI(){
+	public void addDataUI(){
 		if(mode.equals("local")){
 			for(int i = 0; i < localFilms.size(); i++){
 				root.getChildren().add(new TreeItem<tableData>(localFilms.get(i)));	//add data to root-node
@@ -936,75 +927,58 @@ public class MainWindowController {
 	void setLocalUI() {
 		switch (getLocal()) {
 		case "en_US":
-			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US); // us_English
+			setBundle(ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US)); // us_English
 			cbLocal.getSelectionModel().select(0);
 			break;
 		case "de_DE":
-			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.GERMAN); // German
+			setBundle(ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.GERMAN)); // German
 			cbLocal.getSelectionModel().select(1);
 			break;
 		default:
-			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US); // default local
+			setBundle(ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US)); // default local
 			cbLocal.getSelectionModel().select(0);
 			break;
 		}
-		infoBtn.setText(bundle.getString("info"));
-		settingsBtn.setText(bundle.getString("settings"));
-		streamingSettingsBtn.setText(bundle.getString("streamingSettings"));
-		tfPath.setPromptText(bundle.getString("tfPath"));
-		tfStreamingPath.setPromptText(bundle.getString("tfPath"));
-		tfsearch.setPromptText(bundle.getString("tfSearch"));
-		openfolderbtn.setText(bundle.getString("openFolder"));
-		updateBtn.setText(bundle.getString("checkUpdates"));
-		directoryBtn.setText(bundle.getString("chooseFolder"));
-		streamingDirectoryBtn.setText(bundle.getString("chooseFolder"));
-		settingsHead1Label.setText(bundle.getString("settingsHead1Label"));
-		mainColorLabel.setText(bundle.getString("mainColorLabel"));
-		fontsizeLabel.setText(bundle.getString("fontsizeLabel"));
-		localLabel.setText(bundle.getString("localLabel"));
-		autoUpdateLabel.setText(bundle.getString("autoUpdateLabel"));
-		versionLabel.setText(bundle.getString("version") + " " + version + " (Build: " + buildNumber + ")");
-		columnTitel.setText(bundle.getString("columnName"));
-		columnRating.setText(bundle.getString("columnRating"));
-		columnStreamUrl.setText(bundle.getString("columnStreamUrl"));
-		columnResolution.setText(bundle.getString("columnResolution"));
-		columnSeason.setText(bundle.getString("columnSeason"));
-		columnYear.setText(bundle.getString("columnYear"));
-		errorUpdateD = bundle.getString("errorUpdateD");
-		errorUpdateV = bundle.getString("errorUpdateV");
-		errorPlay = bundle.getString("errorPlay");
-		errorOpenStream = bundle.getString("errorOpenStream");
-		errorMode = bundle.getString("errorMode");
-		errorLoad = bundle.getString("errorLoad");
-		errorSave = bundle.getString("errorSave");
-		noFilmFound = bundle.getString("noFilmFound");
-		infoText = bundle.getString("version") + " " + version + " (Build: " + buildNumber + ") " + versionName + bundle.getString("infoText");
-		vlcNotInstalled = bundle.getString("vlcNotInstalled");
-
-		title = bundle.getString("title");
-		year = bundle.getString("year");
-		rating = bundle.getString("rating");
-		publishedOn = bundle.getString("publishedOn");
-		duration = bundle.getString("duration");
-		genre = bundle.getString("genre");
-		director = bundle.getString("director");
-		writer = bundle.getString("writer");
-		actors = bundle.getString("actors");
-		plot = bundle.getString("plot");
-		language = bundle.getString("language");
-		country = bundle.getString("country");
-		awards = bundle.getString("awards");
-		metascore = bundle.getString("metascore");
-		imdbRating = bundle.getString("imdbRating");
-		type = bundle.getString("type");
+		infoBtn.setText(getBundle().getString("info"));
+		settingsBtn.setText(getBundle().getString("settings"));
+		streamingSettingsBtn.setText(getBundle().getString("streamingSettings"));
+		tfPath.setPromptText(getBundle().getString("tfPath"));
+		tfStreamingPath.setPromptText(getBundle().getString("tfPath"));
+		tfsearch.setPromptText(getBundle().getString("tfSearch"));
+		openfolderbtn.setText(getBundle().getString("openFolder"));
+		updateBtn.setText(getBundle().getString("checkUpdates"));
+		directoryBtn.setText(getBundle().getString("chooseFolder"));
+		streamingDirectoryBtn.setText(getBundle().getString("chooseFolder"));
+		settingsHead1Label.setText(getBundle().getString("settingsHead1Label"));
+		mainColorLabel.setText(getBundle().getString("mainColorLabel"));
+		fontsizeLabel.setText(getBundle().getString("fontsizeLabel"));
+		localLabel.setText(getBundle().getString("localLabel"));
+		autoUpdateLabel.setText(getBundle().getString("autoUpdateLabel"));
+		versionLabel.setText(getBundle().getString("version") + " " + version + " (Build: " + buildNumber + ")");
+		columnTitel.setText(getBundle().getString("columnName"));
+		columnRating.setText(getBundle().getString("columnRating"));
+		columnStreamUrl.setText(getBundle().getString("columnStreamUrl"));
+		columnResolution.setText(getBundle().getString("columnResolution"));
+		columnSeason.setText(getBundle().getString("columnSeason"));
+		columnYear.setText(getBundle().getString("columnYear"));
+		errorUpdateD = getBundle().getString("errorUpdateD");
+		errorUpdateV = getBundle().getString("errorUpdateV");
+		errorPlay = getBundle().getString("errorPlay");
+		errorOpenStream = getBundle().getString("errorOpenStream");
+		errorMode = getBundle().getString("errorMode");
+		errorLoad = getBundle().getString("errorLoad");
+		errorSave = getBundle().getString("errorSave");
+		noFilmFound = getBundle().getString("noFilmFound");
+		infoText = getBundle().getString("version") + " " + version + " (Build: " + buildNumber + ") " + versionName + getBundle().getString("infoText");
+		vlcNotInstalled = getBundle().getString("vlcNotInstalled");
 	}
 	
-	void showErrorMsg(String msg, IOException exception) {
+	public void showErrorMsg(String msg, IOException exception) {
 		Alert alert = new Alert(AlertType.ERROR);
 		alert.setTitle("Error");
 		alert.setHeaderText("");
 		alert.setContentText(msg);
-		alert.initOwner(main.primaryStage);
+		alert.initOwner(main.getPrimaryStage());
 
 		// Create expandable Exception.
 		StringWriter sw = new StringWriter();
@@ -1147,6 +1121,23 @@ public class MainWindowController {
 		}
 	}
 	
+	// if AutoUpdate, then check for updates
+	private void checkAutoUpdate() {
+
+		if (isAutoUpdate()) {
+			try {
+				LOGGER.info("AutoUpdate: looking for updates on startup ...");
+				updateController = new UpdateController(this, buildNumber, useBeta);
+				Thread updateThread = new Thread(updateController);
+				updateThread.setName("Updater");
+				updateThread.start();
+				updateThread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	// cuts 0x of the Color-pickers return value
 	private void editColor(String input) {
 		StringBuilder sb = new StringBuilder(input);
@@ -1212,14 +1203,6 @@ public class MainWindowController {
 		return mode;
 	}
 
-	public String getCurrentWorkingDirectory() {
-		return currentWorkingDirectory;
-	}
-
-	public void setCurrentWorkingDirectory(String currentWorkingDirectory) {
-		this.currentWorkingDirectory = currentWorkingDirectory;
-	}
-
 	public ObservableList<tableData> getLocalFilms() {
 		return localFilms;
 	}
@@ -1250,5 +1233,37 @@ public class MainWindowController {
 
 	public void setRatingSortType(String ratingSortType) {
 		this.ratingSortType = ratingSortType;
+	}
+
+	public ResourceBundle getBundle() {
+		return bundle;
+	}
+
+	public void setBundle(ResourceBundle bundle) {
+		this.bundle = bundle;
+	}
+
+	public TextFlow getTextFlow() {
+		return textFlow;
+	}
+
+	public void setTextFlow(TextFlow textFlow) {
+		this.textFlow = textFlow;
+	}
+
+	public ImageView getImage1() {
+		return image1;
+	}
+
+	public void setImage1(ImageView image1) {
+		this.image1 = image1;
+	}
+
+	public JFXButton getUpdateBtn() {
+		return updateBtn;
+	}
+
+	public void setUpdateBtn(JFXButton updateBtn) {
+		this.updateBtn = updateBtn;
 	}
 }

@@ -1,8 +1,26 @@
 /**
- * apiQuery for Project HomeFlix
- * sends a query to the omdb api
+ * Project-HomeFlix
+ * 
+ * Copyright 2016-2018  <@Seil0>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
+ * 
  */
-package org.kellerkinder.Project_HomeFlix;
+
+package kellerkinder.HomeFlix.controller;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -23,6 +41,8 @@ import javafx.scene.image.Image;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import kellerkinder.HomeFlix.application.Main;
+import kellerkinder.HomeFlix.application.MainWindowController;
 
 public class apiQuery{
 	
@@ -43,7 +63,10 @@ public class apiQuery{
 	ArrayList<Text> responseText = new ArrayList<Text>();
 	ArrayList<Text> nameText = new ArrayList<Text>();
 	
-	void startQuery(String titel, String streamUrl){
+	/**
+	 * apiQuery for Project HomeFlix, sends a query to the omdb api
+	 */
+	public void startQuery(String titel, String streamUrl){
 		URL queryURL = null;
 		Scanner sc = null;
 		String moviename = null;
@@ -106,12 +129,12 @@ public class apiQuery{
 				responseString[17] = object.getString("imdbID", "");
 				responseString[18] = object.getString("Poster", "");
 				responseString[19] = object.getString("Response", "");
-				
+
 				//adding poster to cache
 				BufferedImage originalImage = ImageIO.read(new URL(responseString[18]));//change path to where file is located
 			    int type = originalImage.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : originalImage.getType();
 			    BufferedImage resizeImagePNG = resizeImage(originalImage, type, 198, 297);
-			    if(System.getProperty("os.name").equals("Linux")) {
+				if (System.getProperty("os.name").equals("Linux")) {
 			    	posterPath = posterCache+"/"+titel+".png";
 			    	ImageIO.write(resizeImagePNG, "png", new File(posterCache+"/"+titel+".png")); //change path where you want it saved
 			    } else {
@@ -127,58 +150,59 @@ public class apiQuery{
 										responseString[19]);
 				dbController.setCached(streamUrl);
 				
-				for(int i=0; i<20; i++){
-					Text text = new Text(responseString[i]+"\n");
+				for (int i = 0; i < 20; i++) {
+					Text text = new Text(responseString[i] + "\n");
 					responseText.add(text);
 					responseText.get(i).setFont(Font.font(fontFamily, fontSize));
 				}
-				
-				//if response == false then show mainWindowController.noFilmFound else create new Texts and add them to flowText
-				if(retdata.contains("\"Response\":\"False\"")){	//TODO + FIXME
-					mainWindowController.textFlow.getChildren().add(new Text(mainWindowController.noFilmFound));
-					im = new Image("resources/icons/close_black_2048x2048.png");
-					mainWindowController.image1.setImage(im);
-				}else{
-					nameText.add(0, new Text(mainWindowController.title+": "));
-					nameText.add(1, new Text(mainWindowController.year+": "));
-					nameText.add(2, new Text(mainWindowController.rating+": "));
-					nameText.add(3, new Text(mainWindowController.publishedOn+": "));
-					nameText.add(4, new Text(mainWindowController.duration+": "));
-					nameText.add(5, new Text(mainWindowController.genre+": "));
-					nameText.add(6, new Text(mainWindowController.director+": "));
-					nameText.add(7, new Text(mainWindowController.writer+": "));
-					nameText.add(8, new Text(mainWindowController.actors+": "));
-					nameText.add(9, new Text(mainWindowController.plot+": "));
-					nameText.add(10, new Text(mainWindowController.language+": "));
-					nameText.add(11, new Text(mainWindowController.country+": "));
-					nameText.add(12, new Text(mainWindowController.awards+": "));
-					nameText.add(13, new Text(mainWindowController.metascore+": "));
-					nameText.add(14, new Text(mainWindowController.imdbRating+": "));
-					nameText.add(15, new Text(mainWindowController.type+": "));
 
-					for(int i=0; i<nameText.size(); i++){
-						nameText.get(i).setFont(Font.font (fontFamily, FontWeight.BOLD, fontSize));	
+				// if response == false then show mainWindowController.noFilmFound else create new Texts and add them to flowText
+				if (retdata.contains("\"Response\":\"False\"")) { // TODO + FIXME
+					mainWindowController.getTextFlow().getChildren().add(new Text(mainWindowController.noFilmFound));
+					im = new Image("resources/icons/close_black_2048x2048.png");
+					mainWindowController.getImage1().setImage(im);
+				} else {
+					nameText.add(0, new Text(mainWindowController.getBundle().getString("title") + ": "));
+					nameText.add(1, new Text(mainWindowController.getBundle().getString("year") + ": "));
+					nameText.add(2, new Text(mainWindowController.getBundle().getString("rating") + ": "));
+					nameText.add(3, new Text(mainWindowController.getBundle().getString("publishedOn") + ": "));
+					nameText.add(4, new Text(mainWindowController.getBundle().getString("duration") + ": "));
+					nameText.add(5, new Text(mainWindowController.getBundle().getString("genre") + ": "));
+					nameText.add(6, new Text(mainWindowController.getBundle().getString("director") + ": "));
+					nameText.add(7, new Text(mainWindowController.getBundle().getString("writer") + ": "));
+					nameText.add(8, new Text(mainWindowController.getBundle().getString("actors") + ": "));
+					nameText.add(9, new Text(mainWindowController.getBundle().getString("plot") + ": "));
+					nameText.add(10, new Text(mainWindowController.getBundle().getString("language") + ": "));
+					nameText.add(11, new Text(mainWindowController.getBundle().getString("country") + ": "));
+					nameText.add(12, new Text(mainWindowController.getBundle().getString("awards") + ": "));
+					nameText.add(13, new Text(mainWindowController.getBundle().getString("metascore") + ": "));
+					nameText.add(14, new Text(mainWindowController.getBundle().getString("imdbRating") + ": "));
+					nameText.add(15, new Text(mainWindowController.getBundle().getString("type") + ": "));
+
+					for (int i = 0; i < nameText.size(); i++) {
+						nameText.get(i).setFont(Font.font(fontFamily, FontWeight.BOLD, fontSize));
 					}
-					
-					mainWindowController.textFlow.getChildren().remove(0, mainWindowController.textFlow.getChildren().size());
-					
-					for(int i=0;i<nameText.size(); i++){
-						mainWindowController.textFlow.getChildren().addAll(nameText.get(i),responseText.get(i));
+
+					mainWindowController.getTextFlow().getChildren().remove(0,
+							mainWindowController.getTextFlow().getChildren().size());
+
+					for (int i = 0; i < nameText.size(); i++) {
+						mainWindowController.getTextFlow().getChildren().addAll(nameText.get(i), responseText.get(i));
 					}
-					
-					//if there is no poster
-					if(responseString[18].equals("N/A")){
+
+					// if there is no poster
+					if (responseString[18].equals("N/A")) {
 						im = new Image("resources/icons/close_black_2048x2048.png");
-					}else{
+					} else {
 						im = new Image(responseString[18]);
 					}
-					mainWindowController.image1.setImage(im);
+					mainWindowController.getImage1().setImage(im);
 				}
 			}
 
 		} catch (Exception e) {
-			mainWindowController.textFlow.getChildren().remove(0, mainWindowController.textFlow.getChildren().size());
-			mainWindowController.textFlow.getChildren().add(new Text(e.toString()));
+			mainWindowController.getTextFlow().getChildren().remove(0, mainWindowController.getTextFlow().getChildren().size());
+			mainWindowController.getTextFlow().getChildren().add(new Text(e.toString()));
 			System.out.println(e);
 		} finally {
 			//closes datainputStream, InputStream,Scanner if not already done

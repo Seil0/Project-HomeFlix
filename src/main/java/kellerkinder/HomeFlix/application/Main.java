@@ -1,7 +1,7 @@
 /**
- * Project HomeFlix
- * 
- * Copyright 2016-2017  <admin@kellerkinder>
+ * Project-HomeFlix
+ *
+ * Copyright 2016-2018  <@Seil0>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
  * 
  */
 
-package org.kellerkinder.Project_HomeFlix;
+package kellerkinder.HomeFlix.application;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,109 +44,104 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 	
-	Stage primaryStage;
+	private Stage primaryStage;
+	private Scene scene;
+	private AnchorPane pane;
+	private MainWindowController mainWindowController;
+	private static String userHome = System.getProperty("user.home");
+	private static String userName = System.getProperty("user.name");
+	private static String osName = System.getProperty("os.name");
+	private static String osArch = System.getProperty("os.arch");
+	private static String osVers = System.getProperty("os.version");
+	private static String javaVers = System.getProperty("java.version");
+	private static String javaVend= System.getProperty("java.vendor");
+	private String dirWin = System.getProperty("user.home") + "/Documents/HomeFlix";	//Windows: C:/Users/"User"/Documents/HomeFlix
+	private String dirLinux = System.getProperty("user.home") + "/HomeFlix";	//Linux: /home/"User"/HomeFlix
+	private File directory;
+	private File configFile;
+	private File posterCache;
+	
 	private String path;
-	String currentWorkingDirectory;
-	private String COLOR = "ee3523";
 	private String FONT_FAMILY = "System";
 	private String mode = "local";	//local or streaming TODO
 	private String local = System.getProperty("user.language")+"_"+System.getProperty("user.country");
-	private boolean AUTO_UPDATE = false;
 	private double FONT_SIZE = 17;
 	private ResourceBundle bundle;
-	private MainWindowController mainWindowController;
-	private File directory;
-	private File settingsFile;
-	private File posterCache;
-	private String dirWin = System.getProperty("user.home") + "/Documents/HomeFlix";	//Windows: C:/Users/"User"/Documents/HomeFlix
-	private String dirLinux = System.getProperty("user.home") + "/HomeFlix";	//Linux: /home/"User"/HomeFlix
 	private static Logger LOGGER;
 	
 	@Override
 	public void start(Stage primaryStage) throws IOException {
-		currentWorkingDirectory = new java.io.File( "." ).getCanonicalPath();
+		LOGGER.info("OS: " + osName + " " + osVers + " " + osArch);
+		LOGGER.info("Java: " + javaVend + " " + javaVers);
+		LOGGER.info("User: " + userName + " " + userHome);
+		
 		this.primaryStage = primaryStage;	
 		mainWindow();
 	}
 	
 	private void mainWindow(){
-
 		try {
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(ClassLoader.getSystemResource("fxml/MainWindow.fxml"));
-			AnchorPane pane = (AnchorPane) loader.load();
+			pane = (AnchorPane) loader.load();
 			primaryStage.setMinHeight(600.00);
 			primaryStage.setMinWidth(950.00);
 			primaryStage.setResizable(false);
 			primaryStage.setTitle("Project HomeFlix");
-			primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/icons/Homeflix_Icon_64x64.png"))); //adds application icon
-	
+			primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/icons/Homeflix_Icon_64x64.png"))); //adds application icon	
 			mainWindowController = loader.getController();	//Link of FXMLController and controller class
-			mainWindowController.setAutoUpdate(AUTO_UPDATE);	//set auto-update
-			mainWindowController.setCurrentWorkingDirectory(currentWorkingDirectory);
 			mainWindowController.setMain(this);	//call setMain
+
 			
-			/**Linux else Windows, check if directory & config exist
-			 * Windows: config file: 	C:/Users/"User"/Documents/HomeFlix/config.xml
-			 * 			directory:		C:/Users/"User"/Documents/HomeFlix
-			 * Linux: 	config file: 	/home/"User"/HomeFlix/config.xml
-			 * 			directory: 		/home/"User"/HomeFlix
-			 */
-			if(System.getProperty("os.name").equals("Linux")) {
+			// get OS and the specific paths
+			if (osName.equals("Linux")) {
 				directory = new File(dirLinux);
-				settingsFile = new File(dirLinux + "/config.xml");
+				configFile = new File(dirLinux + "/config.xml");
+				posterCache = new File(dirLinux + "/posterCache");
 			} else {
 				directory = new File(dirWin);
-				settingsFile = new File(dirWin + "/config.xml");
+				configFile = new File(dirWin + "/config.xml");
+				posterCache = new File(dirWin + "/posterCache");
 			}
 			
-			posterCache = new File(directory+"/posterCache");
-			
-			if(!settingsFile.exists()){
+			// startup checks
+			if (!configFile.exists()) {
 				directory.mkdir();
 				mainWindowController.setPath(firstStart());
 				mainWindowController.setStreamingPath(directory.getAbsolutePath());
-				mainWindowController.setColor(COLOR);
+				mainWindowController.setColor("ee3523");
 				mainWindowController.setSize(FONT_SIZE);
-				mainWindowController.setAutoUpdate(AUTO_UPDATE);
+				mainWindowController.setAutoUpdate(false);
 				mainWindowController.setLocal(local);
 				mainWindowController.setMode(mode);
 				mainWindowController.saveSettings();
 				try {
-					Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again (preventing Bugs)
-					System.exit(0);	//finishes it self
+					Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar"); // start again (preventing Bugs) TODO is this really needed
+					System.exit(0); // finishes it self
 				} catch (Exception e) {
 					LOGGER.error("error while restarting HomeFlix", e);
 				}
 			}
-			
-			if(!posterCache.exists()) {
+
+			if (!posterCache.exists()) {
 				posterCache.mkdir();
 			}
 			
-			mainWindowController.loadSettings();
-			mainWindowController.loadStreamingSettings();
-			mainWindowController.initUI();
-			mainWindowController.initActions();
-			mainWindowController.initTabel();
-			mainWindowController.setLocalUI();
-			mainWindowController.applyColor();	//set theme color
-			
-			mainWindowController.dbController.main(); //initialize database controller
-			mainWindowController.dbController.createDatabase(); //creating the database
-			mainWindowController.dbController.loadData(); 	//loading data from database to mainWindowController 
-			mainWindowController.addDataUI();
-			
-			Scene scene = new Scene(pane);	//create new scene, append pane to scene
+			// generate window
+			scene = new Scene(pane); // create new scene, append pane to scene
 			scene.getStylesheets().add(getClass().getResource("/css/MainWindow.css").toExternalForm());
-			primaryStage.setScene(scene);	//append scene to stage
-			primaryStage.show();	//show stage
+			primaryStage.setScene(scene); // append scene to stage
+			primaryStage.show(); // show stage
+			
+			// init here as it loads the games to the mwc and the gui, therefore the window must exist
+			mainWindowController.init();
+			mainWindowController.dbController.init();
 		} catch (IOException e) {
-			LOGGER.error("", e);
+			LOGGER.error(e);
 		}
 	}
 	
-	//Method for first Start
+	// Method for first Start
 	private String firstStart(){
 		MainWindowController.firststart = true;
 		switch(System.getProperty("user.language")+"_"+System.getProperty("user.country")){
@@ -188,6 +183,14 @@ public class Main extends Application {
 		}
 		LOGGER = LogManager.getLogger(Main.class.getName());
 		launch(args);
+	}
+
+	public Stage getPrimaryStage() {
+		return primaryStage;
+	}
+
+	public void setPrimaryStage(Stage primaryStage) {
+		this.primaryStage = primaryStage;
 	}
 
 	public String getFONT_FAMILY() {
