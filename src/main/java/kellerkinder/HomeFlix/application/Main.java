@@ -191,6 +191,10 @@ public class Main extends Application {
 	public void setPrimaryStage(Stage primaryStage) {
 		this.primaryStage = primaryStage;
 	}
+	
+	public AnchorPane getPane( ) {
+		return pane;
+	}
 
 	public String getFONT_FAMILY() {
 		return FONT_FAMILY;

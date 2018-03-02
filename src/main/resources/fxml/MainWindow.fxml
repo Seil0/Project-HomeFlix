@@ -58,7 +58,7 @@
       </HBox>
       <VBox fx:id="sideMenuVBox" layoutY="32.0" prefHeight="660.0" prefWidth="150.0" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="32.0">
          <children>
-            <JFXButton fx:id="infoBtn" onAction="#infoBtnclicked" prefHeight="32.0" prefWidth="150.0" textAlignment="CENTER">
+            <JFXButton fx:id="aboutBtn" onAction="#aboutBtnAction" prefHeight="32.0" prefWidth="150.0" textAlignment="CENTER">
                <font>
                   <Font name="System Bold" size="15.0" />
                </font>

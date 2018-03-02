@@ -400,12 +400,12 @@ public class DBController {
 				lastName = filmsStreamData.get(b);
 				JsonObject object = Json.parse(new FileReader(filmsStreamData.get(b))).asObject();
 				JsonArray items = object.get("entries").asArray();
-				System.out.println(items.size() + ", " + i + "; " + b);
+				LOGGER.info(items.size() + ", " + i + "; " + b);
 				String streamURL = items.get(i).asObject().getString("streamUrl", "");
 				String titel = items.get(i).asObject().getString("titel", "");
 
 				if (streamURL.equals(filmsStreamURL.get(b))) {
-					System.out.println("added \"" + titel + "\"");
+					LOGGER.info("added \"" + titel + "\"");
 
 					ps.setInt(1, items.get(i).asObject().getInt("year", 0));
 					ps.setInt(2, items.get(i).asObject().getInt("season", 0));
@@ -464,65 +464,63 @@ public class DBController {
 		}
 	}
 
-	// get favorite status TODO this should get the correct mode!
+	// get favorite status
 	public void getFavStatus(String name) {
 		try {
-			Statement stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT titel, rating, favIcon FROM film_local WHERE titel = \"" + name + "\";"); // SQL Befehl
-			LOGGER.info("local:" + rs.getString("rating") + ", " + rs.getString("titel") + ", " + rs.getString("favIcon"));
-			stmt.close();
-			rs.close();
-		} catch (SQLException e) {
-			try {
+			if (mainWindowController.getMode().equals("local")) {
+				Statement stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery("SELECT titel, rating, favIcon FROM film_local WHERE titel = \"" + name + "\";"); // SQL Befehl
+				LOGGER.info("local:" + rs.getString("rating") + ", " + rs.getString("titel") + ", " + rs.getString("favIcon"));
+				stmt.close();
+				rs.close();
+			} else {
 				Statement stmtS = connection.createStatement();
 				ResultSet rsS = stmtS.executeQuery("SELECT titel, rating, favIcon FROM film_streaming WHERE titel = \"" + name + "\";");
 				LOGGER.info("streaming:" + rsS.getString("rating") + ", " + rsS.getString("titel") + ", " + rsS.getString("favIcon"));
 				stmtS.close();
 				rsS.close();
-			} catch (SQLException e1) {
-				LOGGER.error("Ups! an error occured!", e1);
 			}
+			
+		} catch (SQLException e) {
+			LOGGER.error("Ups! an error occured!", e);
 		}
-
 	}
 	
-	// set rating=0 and favorite_border_black TODO this should get the correct mode!
+	// set rating=0 and favorite_border_black
 	public void dislike(String name, String streamUrl) {
 		LOGGER.info("defavorisieren ...");
 		try {
-			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("UPDATE film_local SET rating=0,favIcon='favorite_border_black' WHERE titel=\"" + name + "\";");
-			connection.commit();
-			stmt.close();
-		} catch (SQLException e) {
-			LOGGER.error("Ups! an error occured!", e);
-		}
-		try {
-			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("UPDATE film_streaming SET rating=0,favIcon='favorite_border_black' WHERE streamUrl=\"" + streamUrl + "\";");
-			connection.commit();
-			stmt.close();
+			if (mainWindowController.getMode().equals("local")) {
+				Statement stmt = connection.createStatement();
+				stmt.executeUpdate("UPDATE film_local SET rating=0,favIcon='favorite_border_black' WHERE titel=\"" + name + "\";");
+				connection.commit();
+				stmt.close();
+			} else {
+				Statement stmt = connection.createStatement();
+				stmt.executeUpdate("UPDATE film_streaming SET rating=0,favIcon='favorite_border_black' WHERE streamUrl=\"" + streamUrl + "\";");
+				connection.commit();
+				stmt.close();
+			}
 		} catch (SQLException e) {
 			LOGGER.error("Ups! an error occured!", e);
 		}
 	}
 	
-	// set rating=1 and favorite_black TODO this should get the correct mode!
+	// set rating=1 and favorite_black
 	public void like(String name, String streamUrl) {
-		System.out.println("favorisieren ...");
+		LOGGER.info("favorisieren ...");
 		try {
-			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("UPDATE film_local SET rating=1,favIcon='favorite_black' WHERE titel=\"" + name + "\";");
-			connection.commit();
-			stmt.close();
-		} catch (SQLException e) {
-			LOGGER.error("Ups! an error occured!", e);
-		}
-		try {
-			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("UPDATE film_streaming SET rating=1,favIcon='favorite_black' WHERE streamUrl=\"" + streamUrl + "\";");
-			connection.commit();
-			stmt.close();
+			if (mainWindowController.getMode().equals("local")) {
+				Statement stmt = connection.createStatement();
+				stmt.executeUpdate("UPDATE film_local SET rating=1,favIcon='favorite_black' WHERE titel=\"" + name + "\";");
+				connection.commit();
+				stmt.close();
+			} else {
+				Statement stmt = connection.createStatement();
+				stmt.executeUpdate("UPDATE film_streaming SET rating=1,favIcon='favorite_black' WHERE streamUrl=\"" + streamUrl + "\";");
+				connection.commit();
+				stmt.close();
+			}
 		} catch (SQLException e) {
 			LOGGER.error("Ups! an error occured!", e);
 		}

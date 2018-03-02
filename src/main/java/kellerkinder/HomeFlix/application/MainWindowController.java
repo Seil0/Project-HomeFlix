@@ -45,6 +45,7 @@ import java.util.ResourceBundle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.cemu_UI.uiElements.JFXInfoDialog;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXColorPicker;
 import com.jfoenix.controls.JFXHamburger;
@@ -137,7 +138,7 @@ public class MainWindowController {
 	private JFXButton forwardBtn;
 	
     @FXML
-    private JFXButton infoBtn;
+    private JFXButton aboutBtn;
     
     @FXML
     private JFXButton settingsBtn;
@@ -251,7 +252,9 @@ public class MainWindowController {
 	private String version = "0.5.2";
 	private String buildNumber = "131";
 	private String versionName = "solidify cow";
+	private String dialogBtnStyle;
 	
+	// text strings
 	private String errorPlay;
 	private String errorOpenStream;
 	private String errorMode;
@@ -518,11 +521,7 @@ public class MainWindowController {
 				try {
 					dbController.refresh(name, selected);
 				} catch (SQLException e) {
-					Alert alert = new Alert(AlertType.ERROR);
-			    	alert.setTitle("Error");
-			    	alert.setHeaderText("");
-			    	alert.setContentText("There should be an error message in future (dislike problem)");
-					e.printStackTrace();
+					LOGGER.error("There was a problem with the like/dislike function!",e);
 				}
 				refreshTable();
 			}
@@ -575,7 +574,7 @@ public class MainWindowController {
   	    		
   	    		LOGGER.info(filterData.size());	//Debug, delete?
     	    	for(int i = 0; i < filterData.size(); i++){
-//    	    		System.out.println(filterData.get(i).getTitel()+"; "+filterData.get(i).getRating());
+//    	    		LOGGER.info(filterData.get(i).getTitle()+"; "+filterData.get(i).getRating()); // Debugging
     				root.getChildren().add(new TreeItem<tableData>(filterData.get(i)));	//add filtered data to root node after search
     			}
             }
@@ -589,6 +588,7 @@ public class MainWindowController {
 		debugBtn.setVisible(false);
 
 		filmDirTextField.setText(getPath());
+		versionLbl.setText("Version: " + version + " (Build: " + buildNumber + ")");
 		fontsizeSlider.setValue(getSize());
 		colorPicker.setValue(Color.valueOf(getColor()));
 
@@ -639,11 +639,8 @@ public class MainWindowController {
 					e1.printStackTrace();
 				}
 				if(output.contains("which: no vlc")||output == ""){
-					Alert alert = new Alert(AlertType.INFORMATION);
-					alert.setHeaderText("");
-		        	alert.setTitle("Info");
-		        	alert.setContentText(vlcNotInstalled);
-		        	alert.showAndWait();
+					JFXInfoDialog vlcInfoDialog = new JFXInfoDialog("Info", vlcNotInstalled, dialogBtnStyle, 350, 200, main.getPane());
+					vlcInfoDialog.show();
 				}else{
 					try {
 						Runtime.getRuntime().exec(new String[] { "vlc", getPath()+"/"+ datPath});
@@ -686,13 +683,11 @@ public class MainWindowController {
 	}
 	
 	@FXML
-	private void infoBtnclicked(){
-		Alert alert = new Alert(AlertType.INFORMATION);
-    	alert.setTitle("Info");
-    	alert.setHeaderText("Project HomeFlix");
-    	alert.setContentText(infoText);
-    	alert.initOwner(main.getPrimaryStage());
-    	alert.showAndWait();
+	private void aboutBtnAction() {
+		String bodyText = "cemu_UI by @Seil0 \nVersion: " + version + " (Build: " + buildNumber + ")  \""
+				+ versionName + "\" \n" + infoText;
+		JFXInfoDialog aboutDialog = new JFXInfoDialog("Project HomeFlix", bodyText, dialogBtnStyle, 350, 200, main.getPane());
+		aboutDialog.show();
 	}
 	
 	@FXML
@@ -905,10 +900,11 @@ public class MainWindowController {
 		filmDirTextField.setFocusColor(Color.valueOf(getColor()));
 
 		if (icolor.compareTo(ccolor) == -1) {
+			dialogBtnStyle = btnStyleWhite;
 			settingsBtn.setStyle("-fx-text-fill: WHITE;");
 			streamingSettingsBtn.setStyle("-fx-text-fill: WHITE;");
 			switchBtn.setStyle("-fx-text-fill: WHITE;");
-			infoBtn.setStyle("-fx-text-fill: WHITE;");
+			aboutBtn.setStyle("-fx-text-fill: WHITE;");
 			debugBtn.setStyle("-fx-text-fill: WHITE;");
 			directoryBtn.setStyle(btnStyleWhite);
 			streamingDirectoryBtn.setStyle(btnStyleWhite);
@@ -922,10 +918,11 @@ public class MainWindowController {
 			forwardBtn.setGraphic(skip_next_white);
 			menuHam.getStyleClass().add("jfx-hamburgerW");
 		} else {
+			dialogBtnStyle = btnStyleBlack;
 			settingsBtn.setStyle("-fx-text-fill: BLACK;");
 			streamingSettingsBtn.setStyle("-fx-text-fill: BLACK;");
 			switchBtn.setStyle("-fx-text-fill: BLACK;");
-			infoBtn.setStyle("-fx-text-fill: BLACK;");
+			aboutBtn.setStyle("-fx-text-fill: BLACK;");
 			debugBtn.setStyle("-fx-text-fill: BLACK;");
 			directoryBtn.setStyle(btnStyleBlack);
 			streamingDirectoryBtn.setStyle(btnStyleBlack);
@@ -994,7 +991,7 @@ public class MainWindowController {
 			languageChoisBox.getSelectionModel().select(0);
 			break;
 		}
-		infoBtn.setText(getBundle().getString("info"));
+		aboutBtn.setText(getBundle().getString("info"));
 		settingsBtn.setText(getBundle().getString("settings"));
 		streamingSettingsBtn.setText(getBundle().getString("streamingSettings"));
 		filmDirTextField.setPromptText(getBundle().getString("filmDirTextField"));
@@ -1010,7 +1007,6 @@ public class MainWindowController {
 		languageLbl.setText(getBundle().getString("languageLbl"));
 		autoUpdateToggleBtn.setText(getBundle().getString("autoUpdate"));
 		branchLbl.setText(getBundle().getString("branchLbl"));
-		versionLbl.setText(getBundle().getString("version") + " " + version + " (Build: " + buildNumber + ")");
 		columnTitel.setText(getBundle().getString("columnName"));
 		columnRating.setText(getBundle().getString("columnRating"));
 		columnStreamUrl.setText(getBundle().getString("columnStreamUrl"));
@@ -1022,10 +1018,11 @@ public class MainWindowController {
 		errorMode = getBundle().getString("errorMode");
 		errorLoad = getBundle().getString("errorLoad");
 		errorSave = getBundle().getString("errorSave");
-		infoText = getBundle().getString("version") + " " + version + " (Build: " + buildNumber + ") " + versionName + getBundle().getString("infoText");
+		infoText = getBundle().getString("infoText");
 		vlcNotInstalled = getBundle().getString("vlcNotInstalled");
 	}
 	
+	// TODO rework to material design
 	public void showErrorMsg(String msg, IOException exception) {
 		Alert alert = new Alert(AlertType.ERROR);
 		alert.setTitle("Error");

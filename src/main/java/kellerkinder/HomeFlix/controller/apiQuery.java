@@ -34,6 +34,9 @@ import java.util.Scanner;
 
 import javax.imageio.ImageIO;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 
@@ -62,6 +65,7 @@ public class apiQuery{
 	private String apiKey = "";
 	ArrayList<Text> responseText = new ArrayList<Text>();
 	ArrayList<Text> nameText = new ArrayList<Text>();
+	private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	
 	/**
 	 * apiQuery for Project HomeFlix, sends a query to the omdb api
@@ -89,7 +93,7 @@ public class apiQuery{
 
 			// in case of no or "" Film title
 			if (moviename == null || moviename.equals("")) {
-				System.out.println("No movie found");
+				LOGGER.warn("No movie found");
 			}
 
 			//remove unwanted blank
@@ -106,7 +110,7 @@ public class apiQuery{
 			//read data from response Stream
 			while ((retdata = br.readLine()) != null) {
 				//cut the json response into separate strings
-				System.out.println(retdata);
+				LOGGER.info(retdata);
 				JsonObject object = Json.parse(retdata).asObject();
 				
 				responseString[0] = object.getString("Title", "");
@@ -141,7 +145,7 @@ public class apiQuery{
 			    	ImageIO.write(resizeImagePNG, "png", new File(posterCache+"\\"+titel+".png")); //change path where you want it saved
 			    	posterPath = posterCache+"\\"+titel+".png";
 			    }
-		    	System.out.println("adding poster to cache: "+posterPath);
+				LOGGER.info("adding poster to cache: "+posterPath);
 				
 				//adding strings to the cache
 				dbController.addCache(	streamUrl, responseString[0], responseString[1],responseString[2], responseString[3], responseString[4], responseString[5],
@@ -203,7 +207,7 @@ public class apiQuery{
 		} catch (Exception e) {
 			mainWindowController.getTextFlow().getChildren().remove(0, mainWindowController.getTextFlow().getChildren().size());
 			mainWindowController.getTextFlow().getChildren().add(new Text(e.toString()));
-			System.out.println(e);
+			LOGGER.error(e);
 		} finally {
 			//closes datainputStream, InputStream,Scanner if not already done
 			try {
