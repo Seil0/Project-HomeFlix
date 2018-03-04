@@ -64,27 +64,26 @@ public class DBController {
 	private Image favorite_black = new Image("icons/ic_favorite_black_18dp_1x.png");
 	private Image favorite_border_black = new Image("icons/ic_favorite_border_black_18dp_1x.png");
 	private List<String> filmsdbAll = new ArrayList<String>();
-	private List<String> filmsdbDir = new ArrayList<String>();
+	private List<String> filmsdbDir = new ArrayList<String>(); // needed
 	private List<String> filmsdbStream = new ArrayList<String>();
-	private List<String> filmsdbStreamURL = new ArrayList<String>();
+	private List<String> filmsdbStreamURL = new ArrayList<String>(); // needed
 	private List<String> filmsAll = new ArrayList<String>();
-	private List<String> filmsDir = new ArrayList<String>();
-	private List<String> filmsDirURL = new ArrayList<String>();
+//	private List<String> filmsDirURL = new ArrayList<String>();
 	private List<String> filmsStream = new ArrayList<String>();
-	private List<String> filmsStreamURL = new ArrayList<String>();	
+	private List<String> filmsStreamURL = new ArrayList<String>(); // needed
 	private List<String> filmsStreamData = new ArrayList<String>();
 	private Connection connection = null;
 	private static final Logger LOGGER = LogManager.getLogger(DBController.class.getName());
 	
 	public void init() {
 		LOGGER.info("<========== starting loading sql ==========>");
-		loadDatabase();
+		initDatabaseConnection();
 		createDatabase();
-		loadData();
+		refreshDataBase();
 		LOGGER.info("<========== finished loading sql ==========>");
 	}
 
-	public void loadDatabase() {
+	public void initDatabaseConnection() {
 		DB_PATH = main.getDirectory() + "/Homeflix.db";
 		try {
 			// create a database connection
@@ -97,11 +96,11 @@ public class DBController {
 		LOGGER.info("ROM database loaded successfull");
 	}
 	
-	public void createDatabase() {	
-		/**
-		 * if tables don't exist create them
-		 * cache table: streamUrl is primary key
-		 */
+	/**
+	 * if tables don't exist create them
+	 * cache table: streamUrl is primary key
+	 */
+	private void createDatabase() {	
 		try {
 			Statement stmt = connection.createStatement();
 			stmt.executeUpdate("create table if not exists film_local (rating, titel, streamUrl, favIcon, cached)");
@@ -114,7 +113,10 @@ public class DBController {
 			stmt.close();
 		} catch (SQLException e) {
 			LOGGER.error(e);
-		} 
+		}
+	}
+	
+	private void loadDatabase() {
 		
 		// get all entries from the tables
 		try {
@@ -137,123 +139,64 @@ public class DBController {
 			LOGGER.error("Ups! an error occured!", e);
 		}
 			
-		// getting all files from the selected directory
-		if (new File(mainWindowController.getPath()).exists()) {
-			for (String entry : new File(mainWindowController.getPath()).list()) {
-				filmsDir.add(cutOffEnd(entry));
-				filmsDirURL.add(entry);		
-//				System.out.println(cutOffEnd(entry));
-//				System.out.println(entry);
-			}
-		} else {
-			LOGGER.error(mainWindowController.getPath() + "dosen't exist!");
-		}
-
-		// getting all entries from the streaming lists
-		for (int i = 0; i < mainWindowController.getStreamingData().size(); i++) {
-			String fileName = mainWindowController.getStreamingPath() + "/"
-					+ mainWindowController.getStreamingData().get(i).getStreamUrl();
-			try {
-				JsonObject object = Json.parse(new FileReader(fileName)).asObject();
-				JsonArray items = object.get("entries").asArray();
-				for (JsonValue item : items) {
-					filmsStream.add(item.asObject().getString("titel", ""));
-					filmsStreamURL.add(item.asObject().getString("streamUrl", ""));
-					filmsStreamData.add(fileName);
-					
-//					System.out.println(item.asObject().getString("titel", ""));
-//					System.out.println(item.asObject().getString("streamUrl", ""));
-//					System.out.println(fileName);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-			
 		// add all entries to filmsAll and filmsdbAl, for later comparing
-		filmsAll.addAll(filmsDir);
 		filmsAll.addAll(filmsStream);
 		filmsdbAll.addAll(filmsdbDir);
 		filmsdbAll.addAll(filmsdbStream);
 		LOGGER.info("films in directory: " + filmsAll.size());
 		LOGGER.info("filme in db: " + filmsdbAll.size());
-		
-		/**
-		 * if filmsdbAll.size() == 0 the database is empty, we need to fill it with loadFilms()
-		 * else check if there is something to remove or to add
-		 */
-		if (filmsdbAll.size() == 0) {
-			loadFilms();
-		} else {
-			try {
-				checkAddEntry();
-				checkRemoveEntry();
-			} catch (IOException | SQLException e) {
-				e.printStackTrace();
-			}
-		}
 	}
 	
-	private void loadFilms() {
-		PreparedStatement ps;
-		PreparedStatement psS;	
-		LOGGER.info("Database is empty, filling tables ...");
+	// load the sources from sources.json
+	private void loadSources() {
+		// remove sources from table
+		mainWindowController.getSourcesList().removeAll(mainWindowController.getSourcesList());
+		mainWindowController.streamingRoot.getChildren().removeAll(mainWindowController.streamingRoot.getChildren());
 		
 		try {
-			ps = connection.prepareStatement("insert into film_local values (?, ?, ?, ?, ?)");
-			psS = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
-			if (new File(mainWindowController.getPath()).exists()) {
-				// go through all the files in the directory
-				for (int j = 0; j != filmsDir.size(); j++)
-				{
-					ps.setInt(1, 0); // rating as integer 1. column
-					ps.setString(2, filmsDir.get(j)); // name as String without ending 2. column
-					ps.setString(3, filmsDirURL.get(j)); // path as String 3. column
-					ps.setString(4, "favorite_border_black");
-					ps.setBoolean(5, false);
-					ps.addBatch(); // add command to prepared statement
-				}
-			}
-			
-			if (mainWindowController.getStreamingPath().equals("") || mainWindowController.getStreamingPath().equals(null)) {
-				LOGGER.warn("no path selected!");
-			} else {
-				for (int i = 0; i < mainWindowController.getStreamingData().size(); i++) {
-					String fileNamea = mainWindowController.getStreamingPath() + "/"
-							+ mainWindowController.getStreamingData().get(i).getStreamUrl();
+			JsonArray sources = Json.parse(new FileReader(main.getDirectory() + "/sources.json")).asArray();
+			for (JsonValue source : sources) {
+				String path = source.asObject().getString("path", "");
+				String mode = source.asObject().getString("mode", "");
+				mainWindowController.addSourceToTable(path, mode); // add source to source-table
+				if (mode.equals("local")) {
+					// getting all files from the selected directory
+					if (new File(path).exists()) {
+						for (String entry : new File(path).list()) {
+							filmsAll.add(cutOffEnd(entry));
+						}
+						LOGGER.info("added files from: " + path);
+					} else {
+						LOGGER.error(path + "dosen't exist!");
+					}
+				} else {
+					// getting all entries from the streaming lists
 					try {
-						JsonObject object = Json.parse(new FileReader(fileNamea)).asObject();
+						JsonObject object = Json.parse(new FileReader(path)).asObject();
 						JsonArray items = object.get("entries").asArray();
 						for (JsonValue item : items) {
-							psS.setInt(1, item.asObject().getInt("year", 0));
-							psS.setInt(2, item.asObject().getInt("season", 0));
-							psS.setInt(3, item.asObject().getInt("episode", 0));
-							psS.setInt(4, 0);
-							psS.setString(5, item.asObject().getString("resolution", ""));
-							psS.setString(6, item.asObject().getString("titel", ""));
-							psS.setString(7, item.asObject().getString("streamUrl", ""));
-							psS.setString(8, "favorite_border_black");
-							psS.setBoolean(9, false);
-							psS.addBatch(); // add command to prepared statement
+							filmsStream.add(item.asObject().getString("titel", ""));
+							filmsStreamURL.add(item.asObject().getString("streamUrl", ""));
+							filmsStreamData.add(path);
+							// TODO check if all this is needed, maybe only use one table!
+//							System.out.println(item.asObject().getString("titel", ""));
+//							System.out.println(item.asObject().getString("streamUrl", ""));
+//							System.out.println(fileName);
 						}
+						LOGGER.info("added films from: " + path);
 					} catch (IOException e) {
 						LOGGER.error(e);
+						e.printStackTrace();
 					}
 				}
 			}
-			ps.executeBatch(); // execute statement to write entries into table
-			psS.executeBatch();
-			connection.commit();
-			ps.close();
-			psS.close();
-		} catch (SQLException e) {
-			LOGGER.error(e);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	
 	// loading data from database to mainWindowController 
-	public void loadData() {
+	public void loadDataToMWC() {
 		LOGGER.info("loading data to mwc ...");
 		try {
 			//load local Data
@@ -333,39 +276,84 @@ public class DBController {
 			} 
 		} 
 	}
+	
+	/**
+	 * refresh database to contain all (new added) entries
+	 * refresh the MainWindowController content,
+	 * to contain all (new added) entries from the database
+	 */
+	public void refreshDataBase() {
+		LOGGER.info("refreshing the Database ...");
+		
+		// clean all ArraLists
+		filmsdbAll.removeAll(filmsdbAll);
+		filmsdbDir.removeAll(filmsdbDir);
+		filmsdbStream.removeAll(filmsdbStream);
+		filmsdbStreamURL.removeAll(filmsdbStreamURL);
+		filmsAll.removeAll(filmsAll);
+		filmsStream.removeAll(filmsStream);
+		filmsStreamURL.removeAll(filmsStreamURL);
+		filmsStreamData.removeAll(filmsStreamData);
+		
+		loadSources(); // reload all sources
+		loadDatabase(); // reload all films saved in the DB
+		
+		
+		try {
+			checkAddEntry();
+			checkRemoveEntry();
+		} catch (Exception e) {
+			LOGGER.error("Error while refreshing the database", e);
+		}
+		
+		// remove all films from the mwc lists
+		mainWindowController.getLocalFilms().removeAll(mainWindowController.getLocalFilms());
+		mainWindowController.getStreamingFilms().removeAll(mainWindowController.getStreamingFilms());
+		mainWindowController.root.getChildren().removeAll(mainWindowController.root.getChildren());
+		
+		loadDataToMWC(); // load the new data to the mwc
+	}
 
 	/**
 	 * check if there are any entries that have been removed from the film-directory
-	 * @throws SQLException
 	 */
-	private void checkRemoveEntry() throws SQLException {
+	private void checkRemoveEntry() {
 		LOGGER.info("checking for entrys to remove to DB ...");
-		Statement stmt = connection.createStatement();
-
-		for (int i = 0; i < filmsdbDir.size(); i++) {
-			if (!filmsDir.contains(filmsdbDir.get(i))) {
-				try {
-					stmt.executeUpdate("delete from film_local where titel = \"" + filmsdbDir.get(i) + "\"");
+		
+		try {
+			Statement stmt = connection.createStatement();
+			
+			for (String entry : filmsdbDir) {
+				if (!filmsAll.contains(cutOffEnd(entry))) {
+					stmt.executeUpdate("delete from film_local where titel = \"" + entry + "\"");
 					connection.commit();
 					stmt.close();
-					LOGGER.info("removed \"" + filmsdbDir.get(i) + "\" from database");
-				} catch (Exception e) {
-					e.printStackTrace();
+					LOGGER.info("removed \"" + entry + "\" from database");
 				}
 			}
-		}
-
-		for (int j = 0; j < filmsdbStreamURL.size(); j++) {
-			if (!filmsStreamURL.contains(filmsdbStreamURL.get(j))) {
-				try {
-					stmt.executeUpdate("delete from film_streaming where titel = \"" + filmsdbStream.get(j) + "\"");
+			
+			// TODO needs testing, then remove 1
+			for (String entry : filmsdbStreamURL) {
+				if (!filmsStreamURL.contains(entry)) {
+					stmt.executeUpdate("delete from film_streaming where titel = \"" + entry + "\"");
 					connection.commit();
 					stmt.close();
-					LOGGER.info("removed \"" + filmsdbStream.get(j) + "\" from database");
-				} catch (Exception e) {
-					e.printStackTrace();
+					LOGGER.info("removed \"" + entry + "\" from database");
 				}
 			}
+			
+			// this is 1
+//			for (int j = 0; j < filmsdbStreamURL.size(); j++) {
+//				if (!filmsStreamURL.contains(filmsdbStreamURL.get(j))) {
+//					stmt.executeUpdate("delete from film_streaming where titel = \"" + filmsdbStream.get(j) + "\"");
+//					connection.commit();
+//					stmt.close();
+//					LOGGER.info("removed \"" + filmsdbStream.get(j) + "\" from database");
+//				}
+//			}
+			
+		} catch (Exception e) {
+			LOGGER.error(e);
 		}
 	}
 	
@@ -378,50 +366,60 @@ public class DBController {
 	 */
 	private void checkAddEntry() throws SQLException, FileNotFoundException, IOException {
 		String lastName = "";
-		LOGGER.info("checking for entrys to add to DB ...");
-		String[] entries = new File(mainWindowController.getPath()).list();
 		Statement stmt = connection.createStatement();
 		PreparedStatement ps = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-		int i = 0;
-
-		for (int a = 0; a < filmsDir.size(); a++) {
-			if (!filmsdbDir.contains(filmsDir.get(a))) {
-				stmt.executeUpdate("insert into film_local values (0, \"" + cutOffEnd(entries[a]) + "\", \""
-						+ entries[a] + "\",\"favorite_border_black\",0)");
-				connection.commit();
-				stmt.close();
-				LOGGER.info("added \"" + filmsDir.get(a) + "\" to database");
+		LOGGER.info("checking for entrys to add to DB ...");
+		int a = 0;
+		
+		// source is a single source of the sources list
+		for (tableData source : mainWindowController.getSourcesList()) {
+			// if it's a local source check the folder for new film
+			if (source.getStreamUrl().equals("local")) {
+				for (String entry : new File(source.getTitle()).list()) {
+					if (!filmsdbAll.contains(cutOffEnd(entry))) {
+						stmt.executeUpdate("insert into film_local values (0, \"" + cutOffEnd(entry) + "\", \""
+								+ source.getTitle() + "/" + entry + "\",\"favorite_border_black\",0)");
+						connection.commit();
+						stmt.close();
+						LOGGER.info("added \"" + entry + "\" to database");
+						filmsAll.add(cutOffEnd(entry));
+					}
+				}
+			} else {
+				// if it's a streaming source check the file for new films
+				// TODO implement add check for streaming sources
 			}
 		}
 
+		// TODO comment and rework
 		for (int b = 0; b < filmsStreamURL.size(); b++) {
 			if (filmsdbStreamURL.contains(filmsStreamURL.get(b))) {
 			} else {
 				if (lastName != "" && lastName != filmsStreamData.get(b)) {
-					i = 0;
+					a = 0;
 				}
 				lastName = filmsStreamData.get(b);
 				JsonObject object = Json.parse(new FileReader(filmsStreamData.get(b))).asObject();
 				JsonArray items = object.get("entries").asArray();
-				LOGGER.info(items.size() + ", " + i + "; " + b);
-				String streamURL = items.get(i).asObject().getString("streamUrl", "");
-				String titel = items.get(i).asObject().getString("titel", "");
+				LOGGER.info(items.size() + ", " + a + "; " + b);
+				String streamURL = items.get(a).asObject().getString("streamUrl", "");
+				String titel = items.get(a).asObject().getString("titel", "");
 
 				if (streamURL.equals(filmsStreamURL.get(b))) {
 					LOGGER.info("added \"" + titel + "\"");
 
-					ps.setInt(1, items.get(i).asObject().getInt("year", 0));
-					ps.setInt(2, items.get(i).asObject().getInt("season", 0));
-					ps.setInt(3, items.get(i).asObject().getInt("episode", 0));
+					ps.setInt(1, items.get(a).asObject().getInt("year", 0));
+					ps.setInt(2, items.get(a).asObject().getInt("season", 0));
+					ps.setInt(3, items.get(a).asObject().getInt("episode", 0));
 					ps.setInt(4, 0);
-					ps.setString(5, items.get(i).asObject().getString("resolution", ""));
-					ps.setString(6, items.get(i).asObject().getString("titel", ""));
-					ps.setString(7, items.get(i).asObject().getString("streamUrl", ""));
+					ps.setString(5, items.get(a).asObject().getString("resolution", ""));
+					ps.setString(6, items.get(a).asObject().getString("titel", ""));
+					ps.setString(7, items.get(a).asObject().getString("streamUrl", ""));
 					ps.setString(8, "favorite_border_black");
 					ps.setBoolean(9, false);
 					ps.addBatch(); // adds the entry
 				}
-				i++;
+				a++;
 			}
 		}
 		ps.executeBatch();

@@ -107,8 +107,7 @@ public class Main extends Application {
 			// startup checks
 			if (!configFile.exists()) {
 				directory.mkdir();
-				mainWindowController.setPath(firstStart());
-				mainWindowController.setStreamingPath(directory.getAbsolutePath());
+				mainWindowController.addSource(firstStart(), "local");
 				mainWindowController.setColor("ee3523");
 				mainWindowController.setSize(FONT_SIZE);
 				mainWindowController.setAutoUpdate(false);
@@ -143,14 +142,17 @@ public class Main extends Application {
 	
 	// Method for first Start
 	private String firstStart(){
-		switch(System.getProperty("user.language")+"_"+System.getProperty("user.country")){
-		case "en_US":	bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US);	//us_english
-				break;
-     	case "de_DE":	bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.GERMAN);	//German
-     			break;
-     	default:		bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US);	//default local
-     			break;
-		 }
+		switch (System.getProperty("user.language") + "_" + System.getProperty("user.country")) {
+		case "en_US":
+			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US); // us_english
+			break;
+		case "de_DE":
+			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.GERMAN); // German
+			break;
+		default:
+			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US); // default local
+			break;
+		}
 		
 		Alert alert = new Alert(AlertType.CONFIRMATION);	//new alert with file-chooser
 		alert.setTitle("Project HomeFlix");

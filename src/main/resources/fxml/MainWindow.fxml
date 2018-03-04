@@ -11,6 +11,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TreeTableView?>
 <?import javafx.scene.image.Image?>
@@ -68,11 +69,6 @@
                   <Font name="System Bold" size="15.0" />
                </font>
             </JFXButton>
-            <JFXButton fx:id="streamingSettingsBtn" onAction="#streamingSettingsBtnclicked" prefHeight="32.0" prefWidth="150.0" textAlignment="CENTER">
-               <font>
-                  <Font name="System Bold" size="15.0" />
-               </font>
-            </JFXButton>
             <JFXButton fx:id="switchBtn" onAction="#switchBtnclicked" prefHeight="32.0" prefWidth="150.0" textAlignment="CENTER">
                <font>
                   <Font name="System Bold" size="15.0" />
@@ -85,7 +81,7 @@
             </JFXButton>
          </children>
       </VBox>
-      <ScrollPane fx:id="settingsScrollPane" style="-fx-background: white;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="32.0">
+      <ScrollPane fx:id="settingsScrollPane" prefHeight="568.0" prefWidth="800.0" style="-fx-background: white;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="32.0">
         <content>
           <AnchorPane fx:id="settingsAnchorPane" style="-fx-background-color: white;">
                <children>
@@ -94,7 +90,7 @@
                         <Insets bottom="14.0" top="14.0" />
                      </padding>
                      <children>
-                        <VBox prefHeight="193.0" prefWidth="797.0" spacing="25.0">
+                        <VBox spacing="25.0">
                            <padding>
                               <Insets left="24.0" />
                            </padding>
@@ -115,20 +111,6 @@
                                  <padding>
                                     <Insets left="-14.0" />
                                  </padding>
-                              </VBox>
-                              <VBox spacing="7.0">
-                                 <padding>
-                                    <Insets right="5.0" />
-                                 </padding>
-                                 <children>
-                                    <Label fx:id="filmDirectoryLbl" text="Film Directory" />
-                                    <HBox spacing="10.0">
-                                       <children>
-                                          <JFXTextField fx:id="filmDirTextField" maxWidth="305.0" minWidth="305.0" onAction="#filmDirTextFieldAction" prefHeight="32.0" prefWidth="305.0" promptText="Film Directory" />
-                                          <JFXButton fx:id="directoryBtn" onAction="#directoryBtnAction" prefHeight="32.0" text="choose directory" />
-                                       </children>
-                                    </HBox>
-                                 </children>
                               </VBox>
                               <HBox minHeight="25.0" spacing="10.0">
                                  <children>
@@ -166,6 +148,23 @@
                                  </children>
                               </VBox>
                               <Label fx:id="versionLbl" text="Version" />
+                              <VBox spacing="10.0">
+                                 <children>
+                                    <Label fx:id="sourcesLbl" text="Sources" />
+                                    <HBox spacing="10.0">
+                                       <children>
+                                          <JFXButton fx:id="addStreamSourceBtn" onAction="#addStreamSourceBtnAction" prefHeight="32.0" text="add stream source" />
+                                          <JFXButton fx:id="addDirectoryBtn" onAction="#addDirectoryBtnAction" prefHeight="32.0" text="add directory" />
+                                       </children>
+                                    </HBox>
+                                    <TableView fx:id="sourcesTable" maxWidth="430.0" minHeight="100.0" prefHeight="100.0" prefWidth="430.0">
+                                      <columns>
+                                        <TableColumn fx:id="sourceColumn" prefWidth="290.0" resizable="false" text="Sources" />
+                                        <TableColumn fx:id="modeColumn" minWidth="130.0" prefWidth="138.0" resizable="false" text="Mode" />
+                                      </columns>
+                                    </TableView>
+                                 </children>
+                              </VBox>
                            </children>
                         </VBox>
                         <VBox spacing="25.0">
@@ -179,11 +178,5 @@
             </AnchorPane>
         </content>
       </ScrollPane>
-      <AnchorPane fx:id="streamingSettingsAnchorPane" layoutX="138.0" layoutY="33.0" prefHeight="566.0" prefWidth="760.0" style="-fx-background-color: #FFFFFF;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="38.0">
-         <children>
-            <JFXTextField fx:id="streamingPathTextField" layoutX="14.0" layoutY="14.0" onAction="#streamingPathTextFieldAction" prefWidth="250.0" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="5.0" />
-            <JFXButton fx:id="streamingDirectoryBtn" layoutX="263.0" layoutY="2.0" onAction="#streamingDirectoryBtnAction" prefHeight="25.0" prefWidth="115.0" AnchorPane.leftAnchor="260.0" AnchorPane.topAnchor="5.0" />
-            <TableView fx:id="tableViewStreamingdata" layoutX="14.0" layoutY="44.0" prefHeight="517.0" prefWidth="370.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="40.0" />
-         </children></AnchorPane>
 	</children>
 </AnchorPane>

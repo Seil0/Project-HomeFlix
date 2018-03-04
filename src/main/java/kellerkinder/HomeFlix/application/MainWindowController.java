@@ -27,12 +27,15 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -46,6 +49,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.cemu_UI.uiElements.JFXInfoDialog;
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXColorPicker;
 import com.jfoenix.controls.JFXHamburger;
@@ -54,8 +60,6 @@ import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXToggleButton;
 import com.jfoenix.transitions.hamburger.HamburgerBackArrowBasicTransition;
 
-import javafx.animation.FadeTransition;
-import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -90,6 +94,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import kellerkinder.HomeFlix.controller.DBController;
 import kellerkinder.HomeFlix.controller.UpdateController;
@@ -100,9 +105,6 @@ public class MainWindowController {
 	
 	@FXML
 	private AnchorPane mainAnchorPane;
-	
-	@FXML 
-	private AnchorPane streamingSettingsAnchorPane;
 	
 	@FXML
 	private ScrollPane settingsScrollPane;
@@ -120,8 +122,8 @@ public class MainWindowController {
 	private TreeTableView<tableData> treeTableViewfilm;
 	
 	@FXML
-	private TableView<tableData> tableViewStreamingdata;
-	
+	private TableView<tableData> sourcesTable;
+
 	@FXML
 	private TextFlow textFlow;
 
@@ -144,9 +146,6 @@ public class MainWindowController {
     private JFXButton settingsBtn;
     
     @FXML
-    private JFXButton streamingSettingsBtn;
-    
-    @FXML
     private JFXButton switchBtn;
     
     @FXML
@@ -156,22 +155,16 @@ public class MainWindowController {
     public JFXButton updateBtn;
     
     @FXML
-    private JFXButton directoryBtn;
+    private JFXButton addDirectoryBtn;
     
     @FXML
-    private JFXButton streamingDirectoryBtn;
+    private JFXButton addStreamSourceBtn;
     
     @FXML
     private JFXHamburger menuHam;
     
     @FXML
     private JFXToggleButton autoUpdateToggleBtn;
-    
-    @FXML
-    public JFXTextField filmDirTextField;
-    
-    @FXML
-    public JFXTextField streamingPathTextField;
     
     @FXML
     private JFXTextField searchTextField;
@@ -192,9 +185,6 @@ public class MainWindowController {
     private Label homeflixSettingsLbl;
 	
     @FXML
-    private Label filmDirectoryLbl;
-	
-    @FXML
     private Label mainColorLbl;
 	
 	@FXML
@@ -208,6 +198,9 @@ public class MainWindowController {
 	
 	@FXML
 	private Label branchLbl;
+	
+	@FXML
+	private Label sourcesLbl;
 
 	@FXML
 	private Label versionLbl;
@@ -218,7 +211,7 @@ public class MainWindowController {
     private ImageView imv1;
     
 	@FXML
-	TreeItem<tableData> root = new TreeItem<>(new tableData(1, 1, 1, 5.0, "1", "filme", "1", imv1, false));
+	public TreeItem<tableData> root = new TreeItem<>(new tableData(1, 1, 1, 5.0, "1", "filme", "1", imv1, false));
 	@FXML
 	TreeTableColumn<tableData, ImageView> columnRating = new TreeTableColumn<>("Rating");
 	@FXML
@@ -235,15 +228,14 @@ public class MainWindowController {
 	TreeTableColumn<tableData, Integer> columnEpisode = new TreeTableColumn<>("Episode");
     
     @FXML
-    private TreeItem<tableData> streamingRoot =new TreeItem<>(new tableData(1 ,1 ,1 ,1.0 ,"1" ,"filme" ,"1", imv1, false));
+    public TreeItem<tableData> streamingRoot =new TreeItem<>(new tableData(1 ,1 ,1 ,1.0 ,"1" ,"filme" ,"1", imv1, false)); // TODO make private
     @FXML
-    private TableColumn<tableData, String> dataNameColumn = new TableColumn<>("Datei Name");
+    private TableColumn<tableData, String> sourceColumn;
     @FXML
-    private TableColumn<tableData, String> dataNameEndColumn = new TableColumn<>("Datei Name mit Endung");
+    private TableColumn<tableData, String> modeColumn;
 	
 	private boolean menuTrue = false;
 	private boolean settingsTrue = false;
-	private boolean streamingSettingsTrue = false;
 	private boolean autoUpdate = false;
 	private boolean useBeta = false;
     private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
@@ -262,7 +254,6 @@ public class MainWindowController {
 	private String errorSave;
 	private String infoText;
 	private String vlcNotInstalled;
-	private String path;
 	private String streamingPath;
 	private String color;
 	private String name;
@@ -275,8 +266,6 @@ public class MainWindowController {
 	private int last;
 	private int selected;
 	private int next;
-	private File selectedFolder;
-	private File selectedStreamingFolder;
 	private ResourceBundle bundle;
 
 	private ObservableList<tableData> filterData = FXCollections.observableArrayList();
@@ -284,7 +273,7 @@ public class MainWindowController {
 	private ObservableList<String> branches = FXCollections.observableArrayList("stable", "beta");
 	private ObservableList<tableData> localFilms = FXCollections.observableArrayList();
 	private ObservableList<tableData> streamingFilms = FXCollections.observableArrayList();
-	private ObservableList<tableData> streamingData = FXCollections.observableArrayList();
+	private ObservableList<tableData> sourcesList = FXCollections.observableArrayList();
 	private ImageView skip_previous_white = new ImageView(new Image("icons/ic_skip_previous_white_18dp_1x.png"));
 	private ImageView skip_previous_black = new ImageView(new Image("icons/ic_skip_previous_black_18dp_1x.png"));
 	private ImageView skip_next_white = new ImageView(new Image("icons/ic_skip_next_white_18dp_1x.png"));
@@ -313,11 +302,10 @@ public class MainWindowController {
 	
 	void init() {
 		loadSettings();
-		loadStreamingSettings();
 		checkAutoUpdate();
 		initTabel();
 		initActions();
-		initUI();	
+		initUI();
 	}
 	
 	//Initialize the tables (treeTableViewfilm and tableViewStreamingdata)
@@ -327,8 +315,6 @@ public class MainWindowController {
 	    columnRating.setMaxWidth(80);
 	    columnTitel.setMaxWidth(260);
 	    columnStreamUrl.setMaxWidth(0);
-	    dataNameColumn.setPrefWidth(150);
-	    dataNameEndColumn.setPrefWidth(220);
 	    columnRating.setStyle("-fx-alignment: CENTER;");
 		
         treeTableViewfilm.setRoot(root);
@@ -353,119 +339,80 @@ public class MainWindowController {
         treeTableViewfilm.getColumns().add(columnSeason);
         treeTableViewfilm.getColumns().add(columnEpisode);
         treeTableViewfilm.getColumns().get(2).setVisible(false); //hide columnStreamUrl (column with file URL, important for opening a file/stream)
-	
-	    //Change-listener for treeTableViewfilm
-	    treeTableViewfilm.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {	
-			@Override
-			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal){
-				// last = selected; //for auto-play
-				selected = treeTableViewfilm.getSelectionModel().getSelectedIndex(); //get selected item
-				last = selected - 1;
-				next = selected + 1;
-				name = columnTitel.getCellData(selected); //get name of selected item
-				datPath = columnStreamUrl.getCellData(selected); //get file path of selected item
-				
-				if(mode.equals("local")){
-					if(localFilms.get(selected).getCached()==true){
-						LOGGER.info("loading from cache: "+name);
-						dbController.readCache(datPath);
-					}else{
-						ApiQuery.startQuery(name,datPath); // start api query
-					}
-				}else{
-					LOGGER.info(streamingFilms.size());
-					if(streamingFilms.get(selected).getCached()==true){
-						LOGGER.info("loading from cache: "+name);
-						dbController.readCache(datPath);
-					}else{
-						ApiQuery.startQuery(name,datPath); // start api query
-					}
-				}
-			}
-		});
 	    
 	    //context menu for treeTableViewfilm  
 	    treeTableViewfilm.setContextMenu(menu);
-
-	    //Streaming-Settings Table
-	    dataNameColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
-	    dataNameEndColumn.setCellValueFactory(cellData -> cellData.getValue().streamUrlProperty());
-		
-	    tableViewStreamingdata.getColumns().add(dataNameColumn);
-	    tableViewStreamingdata.getColumns().add(dataNameEndColumn);
-	    tableViewStreamingdata.setItems(streamingData); 
+	    
+	    // sourcesTreeTable
+	    sourceColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
+	    modeColumn.setCellValueFactory(cellData -> cellData.getValue().streamUrlProperty());
+	    sourcesTable.setItems(sourcesList);
 	}
 	
 	//Initializing the actions
-	private void initActions(){
-		
+	private void initActions() {
+
 		HamburgerBackArrowBasicTransition burgerTask = new HamburgerBackArrowBasicTransition(menuHam);
-		menuHam.addEventHandler(MouseEvent.MOUSE_PRESSED, (e)->{
-	    	if(menuTrue == false){
+		menuHam.addEventHandler(MouseEvent.MOUSE_PRESSED, (e) -> {
+			if (menuTrue == false) {
 				sideMenuSlideIn();
 				burgerTask.setRate(1.0);
 				burgerTask.play();
 				menuTrue = true;
-			}else{
+			} else {
 				sideMenuSlideOut();
 				burgerTask.setRate(-1.0);
 				burgerTask.play();
 				menuTrue = false;
 			}
-			if(settingsTrue == true){
+			if (settingsTrue == true) {
 				settingsScrollPane.setVisible(false);
-				setPath(filmDirTextField.getText());
 				saveSettings();
 				settingsTrue = false;
 			}
-			if(streamingSettingsTrue == true){
-				streamingSettingsAnchorPane.setVisible(false);
-				streamingSettingsTrue = false;
-			}
-			
 		});
-		
+
 		searchTextField.textProperty().addListener(new ChangeListener<String>() {
-    	    @Override
-    	    public void changed(ObservableValue<? extends String> observable,String oldValue, String newValue) {
-            	ObservableList<tableData> helpData;
-    	    	filterData.removeAll(filterData);
-    	    	root.getChildren().remove(0,root.getChildren().size());
-    	    	
-  	    		if(mode.equals("local")){
-  	            	helpData = localFilms;
-  	    		}else{
-  	    			helpData = streamingFilms;
-  	    		}
-    	    	
-    	    	for(int i = 0; i < helpData.size(); i++){
-    	    		if(helpData.get(i).getTitle().toLowerCase().contains(searchTextField.getText().toLowerCase())){
-    	    			filterData.add(helpData.get(i));	//add data from newDaten to filteredData where title contains search input
-    	    		}
-    	    	}
-    	    	
-    	    	for(int i = 0; i < filterData.size(); i++){
-    				root.getChildren().add(new TreeItem<tableData>(filterData.get(i)));	//add filtered data to root node after search
-    			}
-    	    	if(searchTextField.getText().hashCode()== hashA){
-    	    		setColor("000000");
-    	    		applyColor();
-    	    	}
-    	    }
-    	});
+			@Override
+			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				ObservableList<tableData> helpData;
+				filterData.removeAll(filterData);
+				root.getChildren().remove(0, root.getChildren().size());
+
+				if (mode.equals("local")) {
+					helpData = localFilms;
+				} else {
+					helpData = streamingFilms;
+				}
+
+				for (int i = 0; i < helpData.size(); i++) {
+					if (helpData.get(i).getTitle().toLowerCase().contains(searchTextField.getText().toLowerCase())) {
+						filterData.add(helpData.get(i)); // add data from newDaten to filteredData where title contains search input
+					}
+				}
+
+				for (int i = 0; i < filterData.size(); i++) {
+					root.getChildren().add(new TreeItem<tableData>(filterData.get(i))); // add filtered data to root node after search
+				}
+				if (searchTextField.getText().hashCode() == hashA) {
+					setColor("000000");
+					applyColor();
+				}
+			}
+		});
         
-        languageChoisBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-          @Override
-		public void changed(ObservableValue<? extends Number> ov, Number value, Number new_value) {
-        	  String local = languageChoisBox.getItems().get((int) new_value).toString();
-        	  local = local.substring(local.length()-6,local.length()-1);	//reading only en_US from English (en_US)
-        	  setLocal(local);
-        	  setLocalUI();
-        	  saveSettings();
-          }
-        });
-        
-        branchChoisBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+		languageChoisBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+			@Override
+			public void changed(ObservableValue<? extends Number> ov, Number value, Number new_value) {
+				String local = languageChoisBox.getItems().get((int) new_value).toString();
+				local = local.substring(local.length() - 6, local.length() - 1); // reading only en_US from English (en_US)
+				setLocal(local);
+				setLocalUI();
+				saveSettings();
+			}
+		});
+
+		branchChoisBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(ObservableValue<? extends Number> ov, Number value, Number new_value) {
 				if (branchChoisBox.getItems().get((int) new_value).toString() == "beta") {
@@ -477,28 +424,26 @@ public class MainWindowController {
 			}
 		});
         
-        fontsizeSlider.valueProperty().addListener(new ChangeListener<Number>() {
-			 @Override
-			public void changed(ObservableValue<? extends Number> ov,Number old_val, Number new_val) {
-				setSize(fontsizeSlider.getValue()); 
-				
-				if(name != null){
+		fontsizeSlider.valueProperty().addListener(new ChangeListener<Number>() {
+			@Override
+			public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
+				setSize(fontsizeSlider.getValue());
+				if (name != null) {
 					dbController.readCache(datPath);
 				}
-
-//				ta1.setFont(Font.font("System", size));
+				// ta1.setFont(Font.font("System", size));
 				saveSettings();
-			 }
-        });
+			}
+		});
         
-        like.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-            	if(mode.equals("streaming")){
-            		dbController.like(name,streamingFilms.get(selected).getStreamUrl());
-            	}else{
-				dbController.like(name,localFilms.get(selected).getStreamUrl());
-            	}
+		like.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				if (mode.equals("streaming")) {
+					dbController.like(name, streamingFilms.get(selected).getStreamUrl());
+				} else {
+					dbController.like(name, localFilms.get(selected).getStreamUrl());
+				}
 				dbController.getFavStatus(name);
 				try {
 					dbController.refresh(name, selected);
@@ -507,78 +452,108 @@ public class MainWindowController {
 				}
 				refreshTable();
 			}
-	    	});
+		});
         
-        dislike.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-            	if(mode.equals("streaming")){
-            		dbController.dislike(name,streamingFilms.get(selected).getStreamUrl());
-            	}else{
-				dbController.dislike(name,localFilms.get(selected).getStreamUrl());
-            	}
+		dislike.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				if (mode.equals("streaming")) {
+					dbController.dislike(name, streamingFilms.get(selected).getStreamUrl());
+				} else {
+					dbController.dislike(name, localFilms.get(selected).getStreamUrl());
+				}
 				dbController.getFavStatus(name);
 				try {
 					dbController.refresh(name, selected);
 				} catch (SQLException e) {
-					LOGGER.error("There was a problem with the like/dislike function!",e);
+					LOGGER.error("There was a problem with the like/dislike function!", e);
 				}
 				refreshTable();
 			}
-	    	});
+		});
         
-        /**
-         * FIXME fix bug when sort by ASCENDING, wrong order
-         */
-        columnRating.sortTypeProperty().addListener(new ChangeListener<SortType>() {
-            @Override
-            public void changed(ObservableValue<? extends SortType> paramObservableValue, SortType paramT1, SortType paramT2) {
-            	LOGGER.info("NAME Clicked -- sortType = " + paramT1 + ", SortType=" + paramT2);
-            	ArrayList<Integer> fav_true = new ArrayList<Integer>();
-            	ArrayList<Integer> fav_false = new ArrayList<Integer>();
-            	ObservableList<tableData> helpData;
-  	    		filterData.removeAll(filterData);
-//  	    	treeTableViewfilm.getSelectionModel().clearSelection(selected);
-  	    		root.getChildren().remove(0,root.getChildren().size());
-  	    		
-  	    		if(mode.equals("local")){
-  	            	helpData = localFilms;
-  	    		}else{
-  	    			helpData = streamingFilms;
-  	    		}
-              
-  	    		
-  	    		for(int i = 0;i<helpData.size();i++){
-  	    			if(helpData.get(i).getRating()==1.0){
-  	    				fav_true.add(i);
-  	    			}else{
-  	    				fav_false.add(i);
-  	    			}
-  	    		}
-  	    		if(paramT2.toString().equals("DESCENDING")){
-  	    			LOGGER.info("Absteigend");	//Debug, delete?
-  	  	    		for(int i = 0;i<fav_true.size();i++){
-  	  	    			filterData.add(helpData.get(fav_true.get(i)));
-  	  	    		}
-  	  	    		for(int i = 0;i<fav_false.size();i++){
-  	  	    			filterData.add(helpData.get(fav_false.get(i)));
-  	  	    		}
-  	    		}else{
-  	  	    		for(int i = 0;i<fav_false.size();i++){
-  	  	    			filterData.add(helpData.get(fav_false.get(i)));
-  	  	    		}
-  	  	    		for(int i = 0;i<fav_true.size();i++){
-  	  	    			filterData.add(helpData.get(fav_true.get(i)));
-  	  	    		}
-  	    		}
-  	    		
-  	    		LOGGER.info(filterData.size());	//Debug, delete?
-    	    	for(int i = 0; i < filterData.size(); i++){
-//    	    		LOGGER.info(filterData.get(i).getTitle()+"; "+filterData.get(i).getRating()); // Debugging
-    				root.getChildren().add(new TreeItem<tableData>(filterData.get(i)));	//add filtered data to root node after search
-    			}
-            }
-      });
+		/**
+		 * FIXME fix bug when sort by ASCENDING, wrong order
+		 */
+		columnRating.sortTypeProperty().addListener(new ChangeListener<SortType>() {
+			@Override
+			public void changed(ObservableValue<? extends SortType> paramObservableValue, SortType paramT1,
+					SortType paramT2) {
+				LOGGER.info("NAME Clicked -- sortType = " + paramT1 + ", SortType=" + paramT2);
+				ArrayList<Integer> fav_true = new ArrayList<Integer>();
+				ArrayList<Integer> fav_false = new ArrayList<Integer>();
+				ObservableList<tableData> helpData;
+				filterData.removeAll(filterData);
+//				treeTableViewfilm.getSelectionModel().clearSelection(selected);
+				root.getChildren().remove(0, root.getChildren().size());
+
+				if (mode.equals("local")) {
+					helpData = localFilms;
+				} else {
+					helpData = streamingFilms;
+				}
+
+				for (int i = 0; i < helpData.size(); i++) {
+					if (helpData.get(i).getRating() == 1.0) {
+						fav_true.add(i);
+					} else {
+						fav_false.add(i);
+					}
+				}
+				if (paramT2.toString().equals("DESCENDING")) {
+					LOGGER.info("Absteigend"); // Debug, delete?
+					for (int i = 0; i < fav_true.size(); i++) {
+						filterData.add(helpData.get(fav_true.get(i)));
+					}
+					for (int i = 0; i < fav_false.size(); i++) {
+						filterData.add(helpData.get(fav_false.get(i)));
+					}
+				} else {
+					for (int i = 0; i < fav_false.size(); i++) {
+						filterData.add(helpData.get(fav_false.get(i)));
+					}
+					for (int i = 0; i < fav_true.size(); i++) {
+						filterData.add(helpData.get(fav_true.get(i)));
+					}
+				}
+
+				LOGGER.info(filterData.size()); // Debug, delete?
+				for (int i = 0; i < filterData.size(); i++) {
+//					LOGGER.info(filterData.get(i).getTitle()+"; "+filterData.get(i).getRating()); // Debugging
+					root.getChildren().add(new TreeItem<tableData>(filterData.get(i))); // add filtered data to root node after search
+				}
+			}
+		});
+        
+		// Change-listener for treeTableViewfilm
+		treeTableViewfilm.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {
+			@Override
+			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal) {
+				// last = selected; //for auto-play
+				selected = treeTableViewfilm.getSelectionModel().getSelectedIndex(); // get selected item
+				last = selected - 1;
+				next = selected + 1;
+				name = columnTitel.getCellData(selected); // get name of selected item
+				datPath = columnStreamUrl.getCellData(selected); // get file path of selected item
+
+				if (mode.equals("local")) {
+					if (localFilms.get(selected).getCached() == true) {
+						LOGGER.info("loading from cache: " + name);
+						dbController.readCache(datPath);
+					} else {
+						ApiQuery.startQuery(name, datPath); // start api query
+					}
+				} else {
+					LOGGER.info(streamingFilms.size());
+					if (streamingFilms.get(selected).getCached() == true) {
+						LOGGER.info("loading from cache: " + name);
+						dbController.readCache(datPath);
+					} else {
+						ApiQuery.startQuery(name, datPath); // start api query
+					}
+				}
+			}
+		});
 	}
 	
 	// initialize UI elements
@@ -587,7 +562,6 @@ public class MainWindowController {
 		debugBtn.setDisable(true); // debugging button for tests
 		debugBtn.setVisible(false);
 
-		filmDirTextField.setText(getPath());
 		versionLbl.setText("Version: " + version + " (Build: " + buildNumber + ")");
 		fontsizeSlider.setValue(getSize());
 		colorPicker.setValue(Color.valueOf(getColor()));
@@ -643,14 +617,14 @@ public class MainWindowController {
 					vlcInfoDialog.show();
 				}else{
 					try {
-						Runtime.getRuntime().exec(new String[] { "vlc", getPath()+"/"+ datPath});
+						Runtime.getRuntime().exec(new String[] { "vlc", datPath}); // TODO switch to ProcessBuilder
 					} catch (IOException e) {
 						showErrorMsg(errorPlay,e);
 					}
 				}
 			}else if(System.getProperty("os.name").contains("Windows") || System.getProperty("os.name").contains("Mac OS X")){
 					try {
-						Desktop.getDesktop().open(new File(getPath()+"\\"+ datPath));
+						Desktop.getDesktop().open(new File(datPath));
 					} catch (IOException e) {
 						showErrorMsg(errorPlay,e);
 					}
@@ -665,11 +639,12 @@ public class MainWindowController {
 	
 	@FXML
 	private void openfolderbtnclicked(){
-		try {
-			Desktop.getDesktop().open(new File(getPath()));	//open path when button is clicked
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		//TODO rework
+//		try {
+//			Desktop.getDesktop().open(new File(getPath()));	//open path when button is clicked
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 	}
 	
 	@FXML
@@ -693,36 +668,13 @@ public class MainWindowController {
 	@FXML
 	private void settingsBtnclicked(){
 		if(settingsTrue == false){
-			if(streamingSettingsTrue == true){
-				streamingSettingsAnchorPane.setVisible(false);
-				streamingSettingsTrue = false;
-			}
 			settingsScrollPane.setVisible(true);	
 			settingsTrue = true;
 		}else{
 			settingsScrollPane.setVisible(false);
-			setPath(filmDirTextField.getText());
 			saveSettings();
 			settingsTrue = false;
 		}
-	}
-	
-	/**
-	 * TODO additional info about the "streaming.json"
-	 */
-	@FXML
-	private void streamingSettingsBtnclicked(){
-		if(streamingSettingsTrue == false){
-			if(settingsTrue == true){
-				settingsScrollPane.setVisible(false);
-				settingsTrue = false;
-			}
-			streamingSettingsAnchorPane.setVisible(true);			
-			streamingSettingsTrue = true;	
-			}else{
-				streamingSettingsAnchorPane.setVisible(false);
-				streamingSettingsTrue = false;
-			}					
 	}
 	
 	@FXML
@@ -738,41 +690,38 @@ public class MainWindowController {
 		root.getChildren().remove(0,root.getChildren().size());
 		addDataUI();
 		settingsScrollPane.setVisible(false);
-		streamingSettingsAnchorPane.setVisible(false);
 		sideMenuSlideOut();		//disables side-menu
 		menuTrue = false;
 		settingsTrue = false;
-		streamingSettingsTrue = false;
 	}
 	
 	@FXML
 	private void debugBtnclicked(){
 		//for testing
 	}
-
 	
 	@FXML
-	private void filmDirTextFieldAction(){
-		setPath(filmDirTextField.getText());
-		saveSettings();
+	private void addDirectoryBtnAction(){
+		File selectedFolder = directoryChooser.showDialog(null);
+		if (selectedFolder != null && selectedFolder.exists()) {
+			addSource(selectedFolder.getPath(), "local");
+			dbController.refreshDataBase();
+		} else {
+			LOGGER.error("The selected folder dosen't exist!");
+		}
 	}
 	
 	@FXML
-	private void directoryBtnAction(){
-		selectedFolder = directoryChooser.showDialog(null);  
-        if(selectedFolder == null){
-        	LOGGER.warn("No Directory selected");
-        }else{
-        	setPath(selectedFolder.getAbsolutePath());
-        	saveSettings();
-        	filmDirTextField.setText(getPath());
-			try {
-				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
-				System.exit(0);	//finishes itself
-			} catch (IOException e) {
-				LOGGER.error("error while restarting HomeFlix", e);
-			}
-        }
+	private void addStreamSourceBtnAction(){
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Open Resource File");
+		File selectedFile = fileChooser.showOpenDialog(main.getPrimaryStage());
+		if (selectedFile != null && selectedFile.exists()) {
+			addSource(selectedFile.getPath(), "local");
+			dbController.refreshDataBase();
+		} else {
+			LOGGER.error("The selected file dosen't exist!");
+		}
 	}
 	
 	@FXML
@@ -797,29 +746,6 @@ public class MainWindowController {
 			setAutoUpdate(true);
 		}
 		saveSettings();
-	}
-	
-	@FXML
-	private void streamingPathTextFieldAction(){
-		//
-	}
-	
-	@FXML
-	private void streamingDirectoryBtnAction(){
-		selectedStreamingFolder = directoryChooser.showDialog(null);  
-		if(selectedStreamingFolder == null){
-				LOGGER.warn("No Directory selected");
-		}else{
-			setStreamingPath(selectedStreamingFolder.getAbsolutePath());
-			saveSettings();
-			streamingPathTextField.setText(getStreamingPath());
-			try {
-				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar");	//start again
-				System.exit(0);	//finishes itself
-			} catch (IOException e) {
-				LOGGER.error("error while restarting HomeFlix", e);
-			}
-			}
 	}
 	
 	private void refreshTable(){
@@ -858,32 +784,28 @@ public class MainWindowController {
 		}
 	}
 	
-	void loadStreamingSettings() {
-		if (getStreamingPath().equals("") || getStreamingPath().equals(null)) {
-			LOGGER.warn("Kein Pfad angegeben");
-		} else {
-			String[] entries = new File(getStreamingPath()).list();
-			for (int i = 0; i < entries.length; i++) {
-				if (entries[i].endsWith(".json")) {
-					String titel = ohneEndung(entries[i]);
-					String data = entries[i];
-					streamingData.add(new tableData(1, 1, 1, 5.0, "1", titel, data, imv1, false));
-				}
-			}
-			for (int i = 0; i < streamingData.size(); i++) {
-				streamingRoot.getChildren().add(new TreeItem<tableData>(streamingData.get(i))); // adds data to root-node
-			}
-		}
+	public void addSourceToTable(String path, String mode) {
+		sourcesList.add(new tableData(1, 1, 1, 5.0, "1", path, mode, imv1, false));
+		streamingRoot.getChildren().add(new TreeItem<tableData>(sourcesList.get(sourcesList.size() - 1))); // adds data to root-node
 	}
 	
-	// removes the ending
-	private String ohneEndung(String str) {
-		if (str == null)
-			return null;
-		int pos = str.lastIndexOf(".");
-		if (pos == -1)
-			return str;
-		return str.substring(0, pos);
+	public void addSource(String path, String mode) {
+		JsonObject source = null;
+		JsonArray newsources = null;
+
+		try {
+			// read old array
+			newsources = Json.parse(new FileReader(main.getDirectory() + "/sources.json")).asArray();
+
+			// add new source
+			Writer writer = new FileWriter(main.getDirectory() + "/sources.json");
+			source = Json.object().add("path", path).add("mode", mode);
+			newsources.add(source);
+			newsources.writeTo(writer);
+			writer.close();
+		} catch (IOException e) {
+			LOGGER.error(e);
+		}
 	}
 	
 	//set color of UI-Elements
@@ -897,17 +819,15 @@ public class MainWindowController {
 		sideMenuVBox.setStyle(style);
 		topHBox.setStyle(style);
 		searchTextField.setFocusColor(Color.valueOf(getColor()));
-		filmDirTextField.setFocusColor(Color.valueOf(getColor()));
 
 		if (icolor.compareTo(ccolor) == -1) {
 			dialogBtnStyle = btnStyleWhite;
 			settingsBtn.setStyle("-fx-text-fill: WHITE;");
-			streamingSettingsBtn.setStyle("-fx-text-fill: WHITE;");
 			switchBtn.setStyle("-fx-text-fill: WHITE;");
 			aboutBtn.setStyle("-fx-text-fill: WHITE;");
 			debugBtn.setStyle("-fx-text-fill: WHITE;");
-			directoryBtn.setStyle(btnStyleWhite);
-			streamingDirectoryBtn.setStyle(btnStyleWhite);
+			addDirectoryBtn.setStyle(btnStyleWhite);
+			addStreamSourceBtn.setStyle(btnStyleWhite);
 			updateBtn.setStyle(btnStyleWhite);
 			playbtn.setStyle(btnStyleWhite);
 			openfolderbtn.setStyle(btnStyleWhite);
@@ -920,12 +840,11 @@ public class MainWindowController {
 		} else {
 			dialogBtnStyle = btnStyleBlack;
 			settingsBtn.setStyle("-fx-text-fill: BLACK;");
-			streamingSettingsBtn.setStyle("-fx-text-fill: BLACK;");
 			switchBtn.setStyle("-fx-text-fill: BLACK;");
 			aboutBtn.setStyle("-fx-text-fill: BLACK;");
 			debugBtn.setStyle("-fx-text-fill: BLACK;");
-			directoryBtn.setStyle(btnStyleBlack);
-			streamingDirectoryBtn.setStyle(btnStyleBlack);
+			addDirectoryBtn.setStyle(btnStyleBlack);
+			addStreamSourceBtn.setStyle(btnStyleBlack);
 			updateBtn.setStyle(btnStyleBlack);
 			playbtn.setStyle(btnStyleBlack);
 			openfolderbtn.setStyle(btnStyleBlack);
@@ -944,36 +863,21 @@ public class MainWindowController {
 		}
 	}
 	
+	// slide in in 400ms
 	private void sideMenuSlideIn() {
 		sideMenuVBox.setVisible(true);
-		// fade in from 40% to 100% opacity in 400ms
-		FadeTransition fadeTransition = new FadeTransition(Duration.millis(400), sideMenuVBox);
-		fadeTransition.setFromValue(0.4);
-		fadeTransition.setToValue(1.0);
-		// slide in in 400ms
 		TranslateTransition translateTransition = new TranslateTransition(Duration.millis(400), sideMenuVBox);
 		translateTransition.setFromX(-150);
 		translateTransition.setToX(0);
-		// in case both animations are used (add (fadeTransition, translateTransition) in the second line under this command)
-		ParallelTransition parallelTransition = new ParallelTransition();
-		parallelTransition.getChildren().addAll(translateTransition);// (fadeTransition, translateTransition);
-		parallelTransition.play();
+		translateTransition.play();
 	}
 	
+	// slide out in 400ms
 	private void sideMenuSlideOut() {
-		// sideMenuVBox.setVisible(false);
-		// fade out from 100% to 40% opacity in 400ms
-		FadeTransition fadeTransition = new FadeTransition(Duration.millis(400), sideMenuVBox);
-		fadeTransition.setFromValue(1.0);
-		fadeTransition.setToValue(0.4);
-		// slide out in 400ms
 		TranslateTransition translateTransition = new TranslateTransition(Duration.millis(400), sideMenuVBox);
 		translateTransition.setFromX(0);
 		translateTransition.setToX(-150);
-		// in case both animations are used (add (fadeTransition, translateTransition) in the second line under this command)
-		ParallelTransition parallelTransition = new ParallelTransition();
-		parallelTransition.getChildren().addAll(translateTransition);// (fadeTransition, translateTransition);
-		parallelTransition.play();
+		translateTransition.play();
 	}
 	
 	void setLocalUI() {
@@ -993,14 +897,11 @@ public class MainWindowController {
 		}
 		aboutBtn.setText(getBundle().getString("info"));
 		settingsBtn.setText(getBundle().getString("settings"));
-		streamingSettingsBtn.setText(getBundle().getString("streamingSettings"));
-		filmDirTextField.setPromptText(getBundle().getString("filmDirTextField"));
-		streamingPathTextField.setPromptText(getBundle().getString("filmDirTextField"));
 		searchTextField.setPromptText(getBundle().getString("tfSearch"));
 		openfolderbtn.setText(getBundle().getString("openFolder"));
 		updateBtn.setText(getBundle().getString("checkUpdates"));
-		directoryBtn.setText(getBundle().getString("chooseFolder"));
-		streamingDirectoryBtn.setText(getBundle().getString("chooseFolder"));
+		addDirectoryBtn.setText(getBundle().getString("addDirectory"));
+		addStreamSourceBtn.setText(getBundle().getString("addStreamSource"));
 		homeflixSettingsLbl.setText(getBundle().getString("homeflixSettingsLbl"));
 		mainColorLbl.setText(getBundle().getString("mainColorLbl"));
 		fontsizeLbl.setText(getBundle().getString("fontsizeLbl"));
@@ -1059,7 +960,6 @@ public class MainWindowController {
 	public void saveSettings() {
 		LOGGER.info("saving settings ...");
 		try {
-			props.setProperty("path", getPath()); // writes path into property
 			props.setProperty("color", getColor());
 			props.setProperty("autoUpdate", String.valueOf(isAutoUpdate()));
 			props.setProperty("useBeta", String.valueOf(isUseBeta()));
@@ -1085,12 +985,12 @@ public class MainWindowController {
 			InputStream inputStream = new FileInputStream(main.getConfigFile());
 			props.loadFromXML(inputStream); // new input-stream from .xml
 
-			try {
-				setPath(props.getProperty("path")); // read path from property
-			} catch (Exception e) {
-				LOGGER.error("cloud not load path", e);
-				setPath("");
-			}
+//			try {
+//				setPath(props.getProperty("path")); // read path from property
+//			} catch (Exception e) {
+//				LOGGER.error("cloud not load path", e);
+//				setPath("");
+//			}
 
 			try {
 				setStreamingPath(props.getProperty("streamingPath"));
@@ -1198,14 +1098,6 @@ public class MainWindowController {
 		return color;
 	}
 
-	public void setPath(String input) {
-		this.path = input;
-	}
-
-	public String getPath() {
-		return path;
-	}
-
 	public void setStreamingPath(String input) {
 		this.streamingPath = input;
 	}
@@ -1270,12 +1162,12 @@ public class MainWindowController {
 		this.streamingFilms = streamingFilms;
 	}
 
-	public ObservableList<tableData> getStreamingData() {
-		return streamingData;
+	public ObservableList<tableData> getSourcesList() {
+		return sourcesList;
 	}
 
-	public void setStreamingData(ObservableList<tableData> streamingData) {
-		this.streamingData = streamingData;
+	public void setSourcesList(ObservableList<tableData> sourcesList) {
+		this.sourcesList = sourcesList;
 	}
 
 	public String getRatingSortType() {
