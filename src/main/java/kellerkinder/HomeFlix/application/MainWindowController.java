@@ -638,13 +638,15 @@ public class MainWindowController {
 	}
 	
 	@FXML
-	private void openfolderbtnclicked(){
-		//TODO rework
-//		try {
-//			Desktop.getDesktop().open(new File(getPath()));	//open path when button is clicked
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
+	private void openfolderbtnclicked() {
+		String dest = new File(datPath).getParentFile().getAbsolutePath();
+		if (!System.getProperty("os.name").contains("Linux")) {
+			try {
+				Desktop.getDesktop().open(new File(dest));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	@FXML
@@ -984,13 +986,6 @@ public class MainWindowController {
 		try {
 			InputStream inputStream = new FileInputStream(main.getConfigFile());
 			props.loadFromXML(inputStream); // new input-stream from .xml
-
-//			try {
-//				setPath(props.getProperty("path")); // read path from property
-//			} catch (Exception e) {
-//				LOGGER.error("cloud not load path", e);
-//				setPath("");
-//			}
 
 			try {
 				setStreamingPath(props.getProperty("streamingPath"));
