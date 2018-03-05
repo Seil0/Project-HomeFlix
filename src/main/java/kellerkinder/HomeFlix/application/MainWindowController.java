@@ -215,7 +215,7 @@ public class MainWindowController {
 	@FXML
 	TreeTableColumn<FilmTabelDataType, ImageView> columnRating = new TreeTableColumn<>("Rating");
 	@FXML
-	TreeTableColumn<FilmTabelDataType, String> columnTitel = new TreeTableColumn<>("Titel");
+	TreeTableColumn<FilmTabelDataType, String> columnTitle = new TreeTableColumn<>("Title");
 	@FXML
 	TreeTableColumn<FilmTabelDataType, String> columnStreamUrl = new TreeTableColumn<>("File Name");
 	@FXML
@@ -317,14 +317,14 @@ public class MainWindowController {
 		treeTableViewfilm.setShowRoot(false);
 
 		// write content into cell
-		columnTitel.setCellValueFactory(cellData -> cellData.getValue().getValue().titleProperty());
+		columnTitle.setCellValueFactory(cellData -> cellData.getValue().getValue().titleProperty());
 		columnRating.setCellValueFactory(cellData -> cellData.getValue().getValue().imageProperty());
 		columnStreamUrl.setCellValueFactory(cellData -> cellData.getValue().getValue().streamUrlProperty());
 		columnSeason.setCellValueFactory(cellData -> cellData.getValue().getValue().seasonProperty().asObject());
 		columnEpisode.setCellValueFactory(cellData -> cellData.getValue().getValue().episodeProperty().asObject());
 
 		// add columns to treeTableViewfilm
-        treeTableViewfilm.getColumns().add(columnTitel);
+        treeTableViewfilm.getColumns().add(columnTitle);
         treeTableViewfilm.getColumns().add(columnRating);
         treeTableViewfilm.getColumns().add(columnStreamUrl);
         treeTableViewfilm.getColumns().add(columnSeason);
@@ -506,7 +506,7 @@ public class MainWindowController {
 				selected = treeTableViewfilm.getSelectionModel().getSelectedIndex(); // get selected item
 				last = selected - 1;
 				next = selected + 1;
-				title = columnTitel.getCellData(selected); // get name of selected item
+				title = columnTitle.getCellData(selected); // get name of selected item
 				streamUrl = columnStreamUrl.getCellData(selected); // get file path of selected item
 
 				if (mode.equals("local")) {
@@ -732,21 +732,21 @@ public class MainWindowController {
 	}
 	
 	// TODO rework
-	public void addDataUI(){
-		
-		if(mode.equals("local")){
-			for(int i = 0; i < localFilms.size(); i++){
-				filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(localFilms.get(i)));	//add data to root-node
+	public void addDataUI() {
+
+		if (mode.equals("local")) {
+			for (int i = 0; i < localFilms.size(); i++) {
+				filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(localFilms.get(i))); // add data to root-node
 			}
 			columnRating.setMaxWidth(85);
-		    columnTitel.setMaxWidth(290);
+			columnTitle.setMaxWidth(290);
 			treeTableViewfilm.getColumns().get(3).setVisible(false);
 			treeTableViewfilm.getColumns().get(4).setVisible(false);
-		}else if(mode.equals("streaming")){
-			for(int i = 0; i < streamingFilms.size(); i++){
-				filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(streamingFilms.get(i)));	//add data to root-node
+		} else {
+			for (int i = 0; i < streamingFilms.size(); i++) {
+				filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(streamingFilms.get(i))); // add data to root-node
 			}
-			columnTitel.setMaxWidth(215);
+			columnTitle.setMaxWidth(215);
 			columnRating.setMaxWidth(60);
 			columnSeason.setMaxWidth(55);
 			columnEpisode.setMaxWidth(64);
@@ -755,11 +755,13 @@ public class MainWindowController {
 		}
 	}
 	
+	// add a source to the sources table on the settings pane
 	public void addSourceToTable(String path, String mode) {
 		sourcesList.add(new SourceDataType(path, mode));
 		streamingRoot.getChildren().add(new TreeItem<SourceDataType>(sourcesList.get(sourcesList.size() - 1))); // adds data to root-node
 	}
 	
+	// add a source to the newsources list
 	public void addSource(String path, String mode) {
 		JsonObject source = null;
 		JsonArray newsources = null;
@@ -879,7 +881,7 @@ public class MainWindowController {
 		languageLbl.setText(getBundle().getString("languageLbl"));
 		autoUpdateToggleBtn.setText(getBundle().getString("autoUpdate"));
 		branchLbl.setText(getBundle().getString("branchLbl"));
-		columnTitel.setText(getBundle().getString("columnName"));
+		columnTitle.setText(getBundle().getString("columnName"));
 		columnRating.setText(getBundle().getString("columnRating"));
 		columnStreamUrl.setText(getBundle().getString("columnStreamUrl"));
 		columnSeason.setText(getBundle().getString("columnSeason"));

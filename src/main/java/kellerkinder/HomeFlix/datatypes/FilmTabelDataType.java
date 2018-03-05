@@ -46,7 +46,7 @@ public class FilmTabelDataType {
 	 * @param season season if it's a series
 	 * @param episode episode if it's a series
 	 * @param rating indicator for favorites, used for sorting the items
-	 * @param titel title of the film
+	 * @param title title of the film
 	 * @param streamUrl the concrete path to the file or the URL
 	 * @param cached indicator for caching status
 	 */

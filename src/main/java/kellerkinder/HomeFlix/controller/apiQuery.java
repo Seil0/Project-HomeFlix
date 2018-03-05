@@ -70,7 +70,7 @@ public class apiQuery{
 	/**
 	 * apiQuery for Project HomeFlix, sends a query to the omdb api
 	 */
-	public void startQuery(String titel, String streamUrl){
+	public void startQuery(String title, String streamUrl){
 		URL queryURL = null;
 		Scanner sc = null;
 		String moviename = null;
@@ -89,7 +89,7 @@ public class apiQuery{
 
 			//get film title
 			sc = new Scanner(System.in);
-			moviename = titel;
+			moviename = title;
 
 			// in case of no or "" Film title
 			if (moviename == null || moviename.equals("")) {
@@ -139,11 +139,11 @@ public class apiQuery{
 			    int type = originalImage.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : originalImage.getType();
 			    BufferedImage resizeImagePNG = resizeImage(originalImage, type, 198, 297);
 				if (System.getProperty("os.name").equals("Linux")) {
-			    	posterPath = posterCache+"/"+titel+".png";
-			    	ImageIO.write(resizeImagePNG, "png", new File(posterCache+"/"+titel+".png")); //change path where you want it saved
+			    	posterPath = posterCache+"/"+title+".png";
+			    	ImageIO.write(resizeImagePNG, "png", new File(posterCache+"/"+title+".png")); //change path where you want it saved
 			    } else {
-			    	ImageIO.write(resizeImagePNG, "png", new File(posterCache+"\\"+titel+".png")); //change path where you want it saved
-			    	posterPath = posterCache+"\\"+titel+".png";
+			    	ImageIO.write(resizeImagePNG, "png", new File(posterCache+"\\"+title+".png")); //change path where you want it saved
+			    	posterPath = posterCache+"\\"+title+".png";
 			    }
 				LOGGER.info("adding poster to cache: "+posterPath);
 				

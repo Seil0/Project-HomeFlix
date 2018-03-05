@@ -100,8 +100,8 @@ public class DBController {
 	private void createDatabase() {	
 		try {
 			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("create table if not exists film_local (rating, titel, streamUrl, cached)");
-			stmt.executeUpdate("create table if not exists film_streaming (season, episode, rating, titel, streamUrl, cached)");
+			stmt.executeUpdate("create table if not exists film_local (rating, title, streamUrl, cached)");
+			stmt.executeUpdate("create table if not exists film_streaming (season, episode, rating, title, streamUrl, cached)");
 			stmt.executeUpdate("create table if not exists cache ("
 					+ "streamUrl, Title, Year, Rated, Released, Runtime, Genre, Director, Writer,"
 					+ " Actors, Plot, Language, Country, Awards, Metascore, imdbRating, imdbVotes,"
@@ -119,14 +119,14 @@ public class DBController {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local");
 			while (rs.next()) {
-				filmsdbDir.add(rs.getString("titel"));
+				filmsdbDir.add(rs.getString("title"));
 			}
 			stmt.close();
 			rs.close();
 
 			rs = stmt.executeQuery("SELECT * FROM film_streaming;");
 			while (rs.next()) {
-				filmsdbAll.add(rs.getString("titel"));
+				filmsdbAll.add(rs.getString("title"));
 				filmsdbStreamURL.add(rs.getString("streamUrl"));
 			}
 			stmt.close();
@@ -169,10 +169,10 @@ public class DBController {
 						JsonObject object = Json.parse(new FileReader(path)).asObject();
 						JsonArray items = object.get("entries").asArray();
 						for (JsonValue item : items) {
-							filmsAll.add(item.asObject().getString("titel", ""));
+							filmsAll.add(item.asObject().getString("title", ""));
 							filmsStreamURL.add(item.asObject().getString("streamUrl", ""));
 							// TODO check if all this is needed, maybe only use one table!
-//							System.out.println(item.asObject().getString("titel", ""));
+//							System.out.println(item.asObject().getString("title", ""));
 //							System.out.println(item.asObject().getString("streamUrl", ""));
 						}
 						LOGGER.info("added films from: " + path);
@@ -192,29 +192,29 @@ public class DBController {
 		try {
 			//load local Data
 			Statement stmt = connection.createStatement(); 
-			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local ORDER BY titel"); 
+			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local ORDER BY title"); 
 			while (rs.next()) {
 				if (rs.getInt("rating") == 1) {
-					mainWindowController.getLocalFilms().add(new FilmTabelDataType(1, 1, rs.getDouble("rating"), rs.getString("titel"),
+					mainWindowController.getLocalFilms().add(new FilmTabelDataType(1, 1, rs.getDouble("rating"), rs.getString("title"),
 									rs.getString("streamUrl"), new ImageView(favorite_black), rs.getBoolean("cached")));
 				} else {
-					mainWindowController.getLocalFilms().add(new FilmTabelDataType(1, 1, rs.getDouble("rating"), rs.getString("titel"),
+					mainWindowController.getLocalFilms().add(new FilmTabelDataType(1, 1, rs.getDouble("rating"), rs.getString("title"),
 							rs.getString("streamUrl"), new ImageView(favorite_border_black), rs.getBoolean("cached")));
 				}
 			}
 			stmt.close();
 			rs.close();
 			
-			//load streaming Data FIXME check if there are streaming data before loading -> maybe there is an issue now
-			rs = stmt.executeQuery("SELECT * FROM film_streaming ORDER BY titel;"); 
+			//load streaming Data
+			rs = stmt.executeQuery("SELECT * FROM film_streaming ORDER BY title;"); 
 			while (rs.next()) {
 				if (rs.getInt("rating") == 1) {
 					mainWindowController.getStreamingFilms().add(new FilmTabelDataType(rs.getInt("season"),
-							rs.getInt("episode"), rs.getDouble("rating"), rs.getString("titel"), rs.getString("streamUrl"),
+							rs.getInt("episode"), rs.getDouble("rating"), rs.getString("title"), rs.getString("streamUrl"),
 							new ImageView(favorite_black), rs.getBoolean("cached")));
 				} else {
 					mainWindowController.getStreamingFilms().add(new FilmTabelDataType(rs.getInt("season"),
-							rs.getInt("episode"),rs.getDouble("rating"), rs.getString("titel"),rs.getString("streamUrl"),
+							rs.getInt("episode"),rs.getDouble("rating"), rs.getString("title"),rs.getString("streamUrl"),
 							new ImageView(favorite_border_black), rs.getBoolean("cached")));
 				}
 			}
@@ -243,21 +243,21 @@ public class DBController {
 				ResultSet rs = stmt.executeQuery("SELECT * FROM film_local WHERE streamUrl = \"" + streamUrl + "\";");
 				if (rs.getInt("rating") == 1) {
 					mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(1, 1, rs.getDouble("rating"),
-							rs.getString("titel"), rs.getString("streamUrl"), new ImageView(favorite_black), rs.getBoolean("cached")));
+							rs.getString("title"), rs.getString("streamUrl"), new ImageView(favorite_black), rs.getBoolean("cached")));
 				} else {
 					mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(1, 1, rs.getDouble("rating"),
-							rs.getString("titel"), rs.getString("streamUrl"), new ImageView(favorite_border_black), rs.getBoolean("cached")));
+							rs.getString("title"), rs.getString("streamUrl"), new ImageView(favorite_border_black), rs.getBoolean("cached")));
 				}
 				rs.close();
 			} else {
 				ResultSet rs = stmt.executeQuery("SELECT * FROM film_streaming WHERE streamUrl = \"" + streamUrl + "\";");
 				if (rs.getInt("rating") == 1) {
 					mainWindowController.getStreamingFilms().set(index, new FilmTabelDataType(rs.getInt("season"),
-							rs.getInt("episode"), rs.getDouble("rating"), rs.getString("titel"), rs.getString("streamUrl"),
+							rs.getInt("episode"), rs.getDouble("rating"), rs.getString("title"), rs.getString("streamUrl"),
 							new ImageView(favorite_black), rs.getBoolean("cached")));
 				} else {
 					mainWindowController.getStreamingFilms().set(index, new FilmTabelDataType(rs.getInt("season"),
-							rs.getInt("episode"), rs.getDouble("rating"), rs.getString("titel"), rs.getString("streamUrl"),
+							rs.getInt("episode"), rs.getDouble("rating"), rs.getString("title"), rs.getString("streamUrl"),
 							new ImageView(favorite_border_black), rs.getBoolean("cached")));
 				}
 				rs.close();
@@ -313,7 +313,7 @@ public class DBController {
 			
 			for (String entry : filmsdbDir) {
 				if (!filmsAll.contains(cutOffEnd(entry))) {
-					stmt.executeUpdate("delete from film_local where titel = \"" + entry + "\"");
+					stmt.executeUpdate("delete from film_local where title = \"" + entry + "\"");
 					connection.commit();
 					LOGGER.info("removed \"" + entry + "\" from database");
 				}
@@ -341,7 +341,7 @@ public class DBController {
 	 */
 	private void checkAddEntry() throws SQLException, FileNotFoundException, IOException {
 		Statement stmt = connection.createStatement();
-		PreparedStatement ps = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+		PreparedStatement ps = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?)");
 		LOGGER.info("checking for entrys to add to DB ...");
 		
 		// source is a single source of the sources list
@@ -351,7 +351,7 @@ public class DBController {
 				for (String entry : new File(source.getPath()).list()) {
 					if (!filmsdbAll.contains(cutOffEnd(entry))) {
 						stmt.executeUpdate("insert into film_local values (0, \"" + cutOffEnd(entry) + "\", \""
-								+ source.getPath() + "/" + entry + "\",\"favorite_border_black\",0)");
+								+ source.getPath() + "/" + entry + "\",0)");
 						connection.commit();
 						stmt.close();
 						LOGGER.info("added \"" + entry + "\" to database");
@@ -366,21 +366,19 @@ public class DBController {
 						// for each item, check if it's the needed
 						for (JsonValue item : items) {
 							String streamUrl = item.asObject().getString("streamUrl", "");
-							String titel = item.asObject().getString("titel", "");
+							String title = item.asObject().getString("title", "");
 							
 							// if it's the needed add it to the database
 							if (streamUrl.equals(entry)) {
-								ps.setInt(1, item.asObject().getInt("year", 0));
-								ps.setInt(2, item.asObject().getInt("season", 0));
-								ps.setInt(3, item.asObject().getInt("episode", 0));
-								ps.setInt(4, 0);
-								ps.setString(5, item.asObject().getString("resolution", ""));
-								ps.setString(6, titel);
-								ps.setString(7, streamUrl);
-								ps.setBoolean(8, false);
+								ps.setInt(1, item.asObject().getInt("season", 0));
+								ps.setInt(2, item.asObject().getInt("episode", 0));
+								ps.setInt(3, 0);
+								ps.setString(4, title);
+								ps.setString(5, streamUrl);
+								ps.setBoolean(6, false);
 								ps.addBatch(); // adds the entry
-								LOGGER.info("added \"" + titel + "\" to database");
-								filmsAll.add(cutOffEnd(titel));
+								LOGGER.info("added \"" + title + "\" to database");
+								filmsAll.add(cutOffEnd(title));
 							}
 						}
 					}
@@ -400,7 +398,7 @@ public class DBController {
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local");
 			while (rs.next()) {
 				System.out.println(rs.getString("rating"));
-				System.out.println(rs.getString("titel"));
+				System.out.println(rs.getString("title"));
 				System.out.println(rs.getString("streamUrl"));
 				System.out.println(rs.getString("cached") + "\n");
 			}
@@ -414,7 +412,7 @@ public class DBController {
 				System.out.println(rs.getString("season"));
 				System.out.println(rs.getString("episode"));
 				System.out.println(rs.getString("rating"));
-				System.out.println(rs.getString("titel"));
+				System.out.println(rs.getString("title"));
 				System.out.println(rs.getString("streamUrl"));
 				System.out.println(rs.getString("cached") + "\n");
 			}
