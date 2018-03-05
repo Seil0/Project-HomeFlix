@@ -65,11 +65,8 @@ public class DBController {
 	private Image favorite_border_black = new Image("icons/ic_favorite_border_black_18dp_1x.png");
 	private List<String> filmsdbAll = new ArrayList<String>();
 	private List<String> filmsdbDir = new ArrayList<String>(); // needed
-	private List<String> filmsdbStream = new ArrayList<String>();
 	private List<String> filmsdbStreamURL = new ArrayList<String>(); // needed
 	private List<String> filmsAll = new ArrayList<String>();
-//	private List<String> filmsDirURL = new ArrayList<String>();
-	private List<String> filmsStream = new ArrayList<String>();
 	private List<String> filmsStreamURL = new ArrayList<String>(); // needed
 	private List<String> filmsStreamData = new ArrayList<String>();
 	private Connection connection = null;
@@ -130,7 +127,7 @@ public class DBController {
 
 			rs = stmt.executeQuery("SELECT * FROM film_streaming;");
 			while (rs.next()) {
-				filmsdbStream.add(rs.getString(6));
+				filmsdbAll.add(rs.getString(6));
 				filmsdbStreamURL.add(rs.getString(7));
 			}
 			stmt.close();
@@ -140,9 +137,7 @@ public class DBController {
 		}
 			
 		// add all entries to filmsAll and filmsdbAl, for later comparing
-		filmsAll.addAll(filmsStream);
 		filmsdbAll.addAll(filmsdbDir);
-		filmsdbAll.addAll(filmsdbStream);
 		LOGGER.info("films in directory: " + filmsAll.size());
 		LOGGER.info("filme in db: " + filmsdbAll.size());
 	}
@@ -175,7 +170,7 @@ public class DBController {
 						JsonObject object = Json.parse(new FileReader(path)).asObject();
 						JsonArray items = object.get("entries").asArray();
 						for (JsonValue item : items) {
-							filmsStream.add(item.asObject().getString("titel", ""));
+							filmsAll.add(item.asObject().getString("titel", ""));
 							filmsStreamURL.add(item.asObject().getString("streamUrl", ""));
 							filmsStreamData.add(path);
 							// TODO check if all this is needed, maybe only use one table!
@@ -186,7 +181,6 @@ public class DBController {
 						LOGGER.info("added films from: " + path);
 					} catch (IOException e) {
 						LOGGER.error(e);
-						e.printStackTrace();
 					}
 				}
 			}
@@ -288,10 +282,8 @@ public class DBController {
 		// clean all ArraLists
 		filmsdbAll.removeAll(filmsdbAll);
 		filmsdbDir.removeAll(filmsdbDir);
-		filmsdbStream.removeAll(filmsdbStream);
 		filmsdbStreamURL.removeAll(filmsdbStreamURL);
 		filmsAll.removeAll(filmsAll);
-		filmsStream.removeAll(filmsStream);
 		filmsStreamURL.removeAll(filmsStreamURL);
 		filmsStreamData.removeAll(filmsStreamData);
 		
@@ -332,25 +324,14 @@ public class DBController {
 				}
 			}
 			
-			// TODO needs testing, then remove 1
 			for (String entry : filmsdbStreamURL) {
 				if (!filmsStreamURL.contains(entry)) {
-					stmt.executeUpdate("delete from film_streaming where titel = \"" + entry + "\"");
+					stmt.executeUpdate("delete from film_streaming where streamUrl = \"" + entry + "\"");
 					connection.commit();
 					stmt.close();
 					LOGGER.info("removed \"" + entry + "\" from database");
 				}
 			}
-			
-			// this is 1
-//			for (int j = 0; j < filmsdbStreamURL.size(); j++) {
-//				if (!filmsStreamURL.contains(filmsdbStreamURL.get(j))) {
-//					stmt.executeUpdate("delete from film_streaming where titel = \"" + filmsdbStream.get(j) + "\"");
-//					connection.commit();
-//					stmt.close();
-//					LOGGER.info("removed \"" + filmsdbStream.get(j) + "\" from database");
-//				}
-//			}
 			
 		} catch (Exception e) {
 			LOGGER.error(e);

@@ -719,7 +719,7 @@ public class MainWindowController {
 		fileChooser.setTitle("Open Resource File");
 		File selectedFile = fileChooser.showOpenDialog(main.getPrimaryStage());
 		if (selectedFile != null && selectedFile.exists()) {
-			addSource(selectedFile.getPath(), "local");
+			addSource(selectedFile.getPath(), "stream");
 			dbController.refreshDataBase();
 		} else {
 			LOGGER.error("The selected file dosen't exist!");
