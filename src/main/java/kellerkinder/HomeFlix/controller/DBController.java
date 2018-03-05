@@ -68,7 +68,6 @@ public class DBController {
 	private List<String> filmsdbStreamURL = new ArrayList<String>(); // needed
 	private List<String> filmsAll = new ArrayList<String>();
 	private List<String> filmsStreamURL = new ArrayList<String>(); // needed
-	private List<String> filmsStreamData = new ArrayList<String>();
 	private Connection connection = null;
 	private static final Logger LOGGER = LogManager.getLogger(DBController.class.getName());
 	
@@ -172,11 +171,9 @@ public class DBController {
 						for (JsonValue item : items) {
 							filmsAll.add(item.asObject().getString("titel", ""));
 							filmsStreamURL.add(item.asObject().getString("streamUrl", ""));
-							filmsStreamData.add(path);
 							// TODO check if all this is needed, maybe only use one table!
 //							System.out.println(item.asObject().getString("titel", ""));
 //							System.out.println(item.asObject().getString("streamUrl", ""));
-//							System.out.println(fileName);
 						}
 						LOGGER.info("added films from: " + path);
 					} catch (IOException e) {
@@ -285,7 +282,6 @@ public class DBController {
 		filmsdbStreamURL.removeAll(filmsdbStreamURL);
 		filmsAll.removeAll(filmsAll);
 		filmsStreamURL.removeAll(filmsStreamURL);
-		filmsStreamData.removeAll(filmsStreamData);
 		
 		loadSources(); // reload all sources
 		loadDatabase(); // reload all films saved in the DB
@@ -343,10 +339,8 @@ public class DBController {
 	 * @throws SQLException
 	 * @throws FileNotFoundException
 	 * @throws IOException
-	 * if lastName != filmsStreamData.get(b) then set i = 0, file changed
 	 */
 	private void checkAddEntry() throws SQLException, FileNotFoundException, IOException {
-		String lastName = "";
 		Statement stmt = connection.createStatement();
 		PreparedStatement ps = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		LOGGER.info("checking for entrys to add to DB ...");
@@ -368,49 +362,42 @@ public class DBController {
 				}
 			} else {
 				// if it's a streaming source check the file for new films
-				// TODO implement add check for streaming sources
+				for (String entry : filmsStreamURL) {
+					if (!filmsdbStreamURL.contains(entry)) {
+						JsonArray items = Json.parse(new FileReader(source.getTitle())).asObject().get("entries").asArray();
+						// for each item, check if it's the needed
+						for (JsonValue item : items) {
+							String streamUrl = item.asObject().getString("streamUrl", "");
+							String titel = item.asObject().getString("titel", "");
+							
+							// if it's the needed add it to the database
+							if (streamUrl.equals(entry)) {
+								ps.setInt(1, items.get(a).asObject().getInt("year", 0));
+								ps.setInt(2, items.get(a).asObject().getInt("season", 0));
+								ps.setInt(3, items.get(a).asObject().getInt("episode", 0));
+								ps.setInt(4, 0);
+								ps.setString(5, items.get(a).asObject().getString("resolution", ""));
+								ps.setString(6, titel);
+								ps.setString(7, streamUrl);
+								ps.setString(8, "favorite_border_black");
+								ps.setBoolean(9, false);
+								ps.addBatch(); // adds the entry
+								LOGGER.info("added \"" + titel + "\" to database");
+								filmsAll.add(cutOffEnd(titel));
+							}
+						}
+					}
+				}
+				ps.executeBatch();
+				connection.commit();
+				ps.close();
 			}
 		}
-
-		// TODO comment and rework
-		for (int b = 0; b < filmsStreamURL.size(); b++) {
-			if (filmsdbStreamURL.contains(filmsStreamURL.get(b))) {
-			} else {
-				if (lastName != "" && lastName != filmsStreamData.get(b)) {
-					a = 0;
-				}
-				lastName = filmsStreamData.get(b);
-				JsonObject object = Json.parse(new FileReader(filmsStreamData.get(b))).asObject();
-				JsonArray items = object.get("entries").asArray();
-				LOGGER.info(items.size() + ", " + a + "; " + b);
-				String streamURL = items.get(a).asObject().getString("streamUrl", "");
-				String titel = items.get(a).asObject().getString("titel", "");
-
-				if (streamURL.equals(filmsStreamURL.get(b))) {
-					LOGGER.info("added \"" + titel + "\"");
-
-					ps.setInt(1, items.get(a).asObject().getInt("year", 0));
-					ps.setInt(2, items.get(a).asObject().getInt("season", 0));
-					ps.setInt(3, items.get(a).asObject().getInt("episode", 0));
-					ps.setInt(4, 0);
-					ps.setString(5, items.get(a).asObject().getString("resolution", ""));
-					ps.setString(6, items.get(a).asObject().getString("titel", ""));
-					ps.setString(7, items.get(a).asObject().getString("streamUrl", ""));
-					ps.setString(8, "favorite_border_black");
-					ps.setBoolean(9, false);
-					ps.addBatch(); // adds the entry
-				}
-				a++;
-			}
-		}
-		ps.executeBatch();
-		connection.commit();
-		ps.close();
 	}
 	
-	// TODO only for debugging
-	void ausgeben() {
-		LOGGER.info("Outputting all entries ... \n");
+	// prints all entries from the database to the console
+	public void printAllDBEntriesDEBUG() {
+		System.out.println("Outputting all entries ... \n");
 		try {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local");
@@ -424,7 +411,7 @@ public class DBController {
 			stmt.close();
 			rs.close();
 
-			LOGGER.info("Streaming Entries: \n");
+			System.out.println("Streaming Entries: \n");
 
 			rs = stmt.executeQuery("SELECT * FROM film_streaming;");
 			while (rs.next()) {
@@ -442,7 +429,7 @@ public class DBController {
 			rs.close();
 
 		} catch (SQLException e) {
-			LOGGER.error("Ups! an error occured!", e);
+			LOGGER.error("An error occured, while printing all entries", e);
 		}
 	}
 
