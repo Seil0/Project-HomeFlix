@@ -49,7 +49,8 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import kellerkinder.HomeFlix.application.Main;
 import kellerkinder.HomeFlix.application.MainWindowController;
-import kellerkinder.HomeFlix.datatypes.tableData;
+import kellerkinder.HomeFlix.datatypes.SourceDataType;
+import kellerkinder.HomeFlix.datatypes.FilmTabelDataType;
 
 public class DBController {
 
@@ -79,7 +80,7 @@ public class DBController {
 		LOGGER.info("<========== finished loading sql ==========>");
 	}
 
-	public void initDatabaseConnection() {
+	private void initDatabaseConnection() {
 		DB_PATH = main.getDirectory() + "/Homeflix.db";
 		try {
 			// create a database connection
@@ -99,9 +100,8 @@ public class DBController {
 	private void createDatabase() {	
 		try {
 			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("create table if not exists film_local (rating, titel, streamUrl, favIcon, cached)");
-			stmt.executeUpdate("create table if not exists film_streaming (year, season, episode,"
-					+ " rating, resolution, titel, streamUrl, favIcon, cached)");
+			stmt.executeUpdate("create table if not exists film_local (rating, titel, streamUrl, cached)");
+			stmt.executeUpdate("create table if not exists film_streaming (season, episode, rating, titel, streamUrl, cached)");
 			stmt.executeUpdate("create table if not exists cache ("
 					+ "streamUrl, Title, Year, Rated, Released, Runtime, Genre, Director, Writer,"
 					+ " Actors, Plot, Language, Country, Awards, Metascore, imdbRating, imdbVotes,"
@@ -119,15 +119,15 @@ public class DBController {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local");
 			while (rs.next()) {
-				filmsdbDir.add(rs.getString(2));
+				filmsdbDir.add(rs.getString("titel"));
 			}
 			stmt.close();
 			rs.close();
 
 			rs = stmt.executeQuery("SELECT * FROM film_streaming;");
 			while (rs.next()) {
-				filmsdbAll.add(rs.getString(6));
-				filmsdbStreamURL.add(rs.getString(7));
+				filmsdbAll.add(rs.getString("titel"));
+				filmsdbStreamURL.add(rs.getString("streamUrl"));
 			}
 			stmt.close();
 			rs.close();
@@ -145,7 +145,7 @@ public class DBController {
 	private void loadSources() {
 		// remove sources from table
 		mainWindowController.getSourcesList().removeAll(mainWindowController.getSourcesList());
-		mainWindowController.streamingRoot.getChildren().removeAll(mainWindowController.streamingRoot.getChildren());
+		mainWindowController.getStreamingRoot().getChildren().removeAll(mainWindowController.getStreamingRoot().getChildren());
 		
 		try {
 			JsonArray sources = Json.parse(new FileReader(main.getDirectory() + "/sources.json")).asArray();
@@ -187,19 +187,19 @@ public class DBController {
 	}
 	
 	// loading data from database to mainWindowController 
-	public void loadDataToMWC() {
+	private void loadDataToMWC() {
 		LOGGER.info("loading data to mwc ...");
 		try {
 			//load local Data
 			Statement stmt = connection.createStatement(); 
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local ORDER BY titel"); 
 			while (rs.next()) {
-				if (rs.getString(4).equals("favorite_black")) {
-					mainWindowController.getLocalFilms().add(new tableData(1, 1, 1, rs.getDouble(1), "1",
-							rs.getString(2), rs.getString(3), new ImageView(favorite_black), rs.getBoolean(5)));
+				if (rs.getInt("rating") == 1) {
+					mainWindowController.getLocalFilms().add(new FilmTabelDataType(1, 1, rs.getDouble("rating"), rs.getString("titel"),
+									rs.getString("streamUrl"), new ImageView(favorite_black), rs.getBoolean("cached")));
 				} else {
-					mainWindowController.getLocalFilms().add(new tableData(1, 1, 1, rs.getDouble(1), "1",
-							rs.getString(2), rs.getString(3), new ImageView(favorite_border_black), rs.getBoolean(5)));
+					mainWindowController.getLocalFilms().add(new FilmTabelDataType(1, 1, rs.getDouble("rating"), rs.getString("titel"),
+							rs.getString("streamUrl"), new ImageView(favorite_border_black), rs.getBoolean("cached")));
 				}
 			}
 			stmt.close();
@@ -208,14 +208,14 @@ public class DBController {
 			//load streaming Data FIXME check if there are streaming data before loading -> maybe there is an issue now
 			rs = stmt.executeQuery("SELECT * FROM film_streaming ORDER BY titel;"); 
 			while (rs.next()) {
-				if (rs.getString(8).equals("favorite_black")) {
-					mainWindowController.getStreamingFilms().add(new tableData(rs.getInt(1),
-							rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6),
-							rs.getString(7), new ImageView(favorite_black),rs.getBoolean(9)));
+				if (rs.getInt("rating") == 1) {
+					mainWindowController.getStreamingFilms().add(new FilmTabelDataType(rs.getInt("season"),
+							rs.getInt("episode"), rs.getDouble("rating"), rs.getString("titel"), rs.getString("streamUrl"),
+							new ImageView(favorite_black), rs.getBoolean("cached")));
 				} else {
-					mainWindowController.getStreamingFilms().add(new tableData(rs.getInt(1),
-							rs.getInt(2), rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6),
-							rs.getString(7), new ImageView(favorite_border_black), rs.getBoolean(9)));
+					mainWindowController.getStreamingFilms().add(new FilmTabelDataType(rs.getInt("season"),
+							rs.getInt("episode"),rs.getDouble("rating"), rs.getString("titel"),rs.getString("streamUrl"),
+							new ImageView(favorite_border_black), rs.getBoolean("cached")));
 				}
 			}
 			stmt.close();
@@ -228,43 +228,43 @@ public class DBController {
 		mainWindowController.addDataUI();
 	}
 	
-	//Refreshes the data in mainWindowController.newDaten and mainWindowController.streamData
-	//FIXME it seems that there is an issue at the moment with streaming refreshing wrong entry if there is more than one with the same name
-	public void refresh(String name, int i) throws SQLException {
+	/**
+	 * refresh data in mainWindowController localFilms and streamingFilms
+	 * @param title of the film
+	 * @param i index of the film in LocalFilms list
+	 * @throws SQLException
+	 */
+	public void refresh(String streamUrl, int index) {
 		LOGGER.info("refresh ...");
-		Statement stmt;
-		
 		try {
-			stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local WHERE titel = \""+name+"\";" );
-			if (rs.getString(4).equals("favorite_black")) {
-				mainWindowController.getLocalFilms().set(i, new tableData(1, 1, 1, rs.getDouble(1), "1",
-						rs.getString(2), rs.getString(3), new ImageView(favorite_black), rs.getBoolean(5)));
+			Statement stmt = connection.createStatement();
+			
+			if (mainWindowController.getMode().equals("local")) {
+				ResultSet rs = stmt.executeQuery("SELECT * FROM film_local WHERE streamUrl = \"" + streamUrl + "\";");
+				if (rs.getInt("rating") == 1) {
+					mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(1, 1, rs.getDouble("rating"),
+							rs.getString("titel"), rs.getString("streamUrl"), new ImageView(favorite_black), rs.getBoolean("cached")));
+				} else {
+					mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(1, 1, rs.getDouble("rating"),
+							rs.getString("titel"), rs.getString("streamUrl"), new ImageView(favorite_border_black), rs.getBoolean("cached")));
+				}
+				rs.close();
 			} else {
-				mainWindowController.getLocalFilms().set(i, new tableData(1, 1, 1, rs.getDouble(1), "1",
-						rs.getString(2), rs.getString(3), new ImageView(favorite_border_black), rs.getBoolean(5)));
+				ResultSet rs = stmt.executeQuery("SELECT * FROM film_streaming WHERE streamUrl = \"" + streamUrl + "\";");
+				if (rs.getInt("rating") == 1) {
+					mainWindowController.getStreamingFilms().set(index, new FilmTabelDataType(rs.getInt("season"),
+							rs.getInt("episode"), rs.getDouble("rating"), rs.getString("titel"), rs.getString("streamUrl"),
+							new ImageView(favorite_black), rs.getBoolean("cached")));
+				} else {
+					mainWindowController.getStreamingFilms().set(index, new FilmTabelDataType(rs.getInt("season"),
+							rs.getInt("episode"), rs.getDouble("rating"), rs.getString("titel"), rs.getString("streamUrl"),
+							new ImageView(favorite_border_black), rs.getBoolean("cached")));
+				}
+				rs.close();
 			}
 			stmt.close();
-			rs.close();
-		} catch (SQLException e) {
-			LOGGER.error(e);
-			try {
-				stmt = connection.createStatement();
-				ResultSet rs = stmt.executeQuery("SELECT * FROM film_streaming WHERE titel = \""+name+"\";" );
-				if (rs.getString(8).equals("favorite_black")) {
-					mainWindowController.getStreamingFilms().set(i, new tableData(rs.getInt(1), rs.getInt(2),
-							rs.getInt(3), rs.getDouble(4),rs.getString(5), rs.getString(6), rs.getString(7),
-							new ImageView(favorite_black), rs.getBoolean(9)));
-				} else {
-					mainWindowController.getStreamingFilms().set(i, new tableData(rs.getInt(1), rs.getInt(2),
-							rs.getInt(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7),
-							new ImageView(favorite_border_black), rs.getBoolean(9)));
-				}
-				stmt.close();
-				rs.close();
-			} catch (SQLException e1) {
-				LOGGER.error("Ups! an error occured!", e1);
-			} 
+		} catch (Exception e) {
+			LOGGER.error("Ups! error while refreshing mwc!", e);
 		} 
 	}
 	
@@ -297,7 +297,7 @@ public class DBController {
 		// remove all films from the mwc lists
 		mainWindowController.getLocalFilms().removeAll(mainWindowController.getLocalFilms());
 		mainWindowController.getStreamingFilms().removeAll(mainWindowController.getStreamingFilms());
-		mainWindowController.root.getChildren().removeAll(mainWindowController.root.getChildren());
+		mainWindowController.getFilmRoot().getChildren().removeAll(mainWindowController.getFilmRoot().getChildren());
 		
 		loadDataToMWC(); // load the new data to the mwc
 	}
@@ -315,7 +315,6 @@ public class DBController {
 				if (!filmsAll.contains(cutOffEnd(entry))) {
 					stmt.executeUpdate("delete from film_local where titel = \"" + entry + "\"");
 					connection.commit();
-					stmt.close();
 					LOGGER.info("removed \"" + entry + "\" from database");
 				}
 			}
@@ -324,11 +323,11 @@ public class DBController {
 				if (!filmsStreamURL.contains(entry)) {
 					stmt.executeUpdate("delete from film_streaming where streamUrl = \"" + entry + "\"");
 					connection.commit();
-					stmt.close();
 					LOGGER.info("removed \"" + entry + "\" from database");
 				}
 			}
 			
+			stmt.close();
 		} catch (Exception e) {
 			LOGGER.error(e);
 		}
@@ -346,13 +345,13 @@ public class DBController {
 		LOGGER.info("checking for entrys to add to DB ...");
 		
 		// source is a single source of the sources list
-		for (tableData source : mainWindowController.getSourcesList()) {
+		for (SourceDataType source : mainWindowController.getSourcesList()) {
 			// if it's a local source check the folder for new film
-			if (source.getStreamUrl().equals("local")) {
-				for (String entry : new File(source.getTitle()).list()) {
+			if (source.getMode().equals("local")) {
+				for (String entry : new File(source.getPath()).list()) {
 					if (!filmsdbAll.contains(cutOffEnd(entry))) {
 						stmt.executeUpdate("insert into film_local values (0, \"" + cutOffEnd(entry) + "\", \""
-								+ source.getTitle() + "/" + entry + "\",\"favorite_border_black\",0)");
+								+ source.getPath() + "/" + entry + "\",\"favorite_border_black\",0)");
 						connection.commit();
 						stmt.close();
 						LOGGER.info("added \"" + entry + "\" to database");
@@ -363,7 +362,7 @@ public class DBController {
 				// if it's a streaming source check the file for new films
 				for (String entry : filmsStreamURL) {
 					if (!filmsdbStreamURL.contains(entry)) {
-						JsonArray items = Json.parse(new FileReader(source.getTitle())).asObject().get("entries").asArray();
+						JsonArray items = Json.parse(new FileReader(source.getPath())).asObject().get("entries").asArray();
 						// for each item, check if it's the needed
 						for (JsonValue item : items) {
 							String streamUrl = item.asObject().getString("streamUrl", "");
@@ -378,8 +377,7 @@ public class DBController {
 								ps.setString(5, item.asObject().getString("resolution", ""));
 								ps.setString(6, titel);
 								ps.setString(7, streamUrl);
-								ps.setString(8, "favorite_border_black");
-								ps.setBoolean(9, false);
+								ps.setBoolean(8, false);
 								ps.addBatch(); // adds the entry
 								LOGGER.info("added \"" + titel + "\" to database");
 								filmsAll.add(cutOffEnd(titel));
@@ -401,11 +399,10 @@ public class DBController {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local");
 			while (rs.next()) {
-				System.out.println(rs.getString(1));
-				System.out.println(rs.getString(2));
-				System.out.println(rs.getString(3));
-				System.out.println(rs.getString(4));
-				System.out.println(rs.getString(5) + "\n");
+				System.out.println(rs.getString("rating"));
+				System.out.println(rs.getString("titel"));
+				System.out.println(rs.getString("streamUrl"));
+				System.out.println(rs.getString("cached") + "\n");
 			}
 			stmt.close();
 			rs.close();
@@ -414,15 +411,12 @@ public class DBController {
 
 			rs = stmt.executeQuery("SELECT * FROM film_streaming;");
 			while (rs.next()) {
-				System.out.println(rs.getString(1));
-				System.out.println(rs.getString(2));
-				System.out.println(rs.getString(3));
-				System.out.println(rs.getString(4));
-				System.out.println(rs.getString(5));
-				System.out.println(rs.getString(6));
-				System.out.println(rs.getString(7));
-				System.out.println(rs.getString(8));
-				System.out.println(rs.getString(9) + "\n");
+				System.out.println(rs.getString("season"));
+				System.out.println(rs.getString("episode"));
+				System.out.println(rs.getString("rating"));
+				System.out.println(rs.getString("titel"));
+				System.out.println(rs.getString("streamUrl"));
+				System.out.println(rs.getString("cached") + "\n");
 			}
 			stmt.close();
 			rs.close();
@@ -431,80 +425,21 @@ public class DBController {
 			LOGGER.error("An error occured, while printing all entries", e);
 		}
 	}
-
-	// get favorite status
-	public void getFavStatus(String name) {
-		try {
-			if (mainWindowController.getMode().equals("local")) {
-				Statement stmt = connection.createStatement();
-				ResultSet rs = stmt.executeQuery("SELECT titel, rating, favIcon FROM film_local WHERE titel = \"" + name + "\";"); // SQL Befehl
-				LOGGER.info("local:" + rs.getString("rating") + ", " + rs.getString("titel") + ", " + rs.getString("favIcon"));
-				stmt.close();
-				rs.close();
-			} else {
-				Statement stmtS = connection.createStatement();
-				ResultSet rsS = stmtS.executeQuery("SELECT titel, rating, favIcon FROM film_streaming WHERE titel = \"" + name + "\";");
-				LOGGER.info("streaming:" + rsS.getString("rating") + ", " + rsS.getString("titel") + ", " + rsS.getString("favIcon"));
-				stmtS.close();
-				rsS.close();
-			}	
-		} catch (SQLException e) {
-			LOGGER.error("Ups! an error occured!", e);
-		}
-	}
 	
-	// set rating=0 and favorite_border_black
-	public void dislike(String name, String streamUrl) {
-		LOGGER.info("defavorisieren ...");
-		try {
-			if (mainWindowController.getMode().equals("local")) {
-				Statement stmt = connection.createStatement();
-				stmt.executeUpdate("UPDATE film_local SET rating=0,favIcon='favorite_border_black' WHERE titel=\"" + name + "\";");
-				connection.commit();
-				stmt.close();
-			} else {
-				Statement stmt = connection.createStatement();
-				stmt.executeUpdate("UPDATE film_streaming SET rating=0,favIcon='favorite_border_black' WHERE streamUrl=\"" + streamUrl + "\";");
-				connection.commit();
-				stmt.close();
-			}
-		} catch (SQLException e) {
-			LOGGER.error("Ups! an error occured!", e);
-		}
-	}
-	
-	// set rating=1 and favorite_black
-	public void like(String name, String streamUrl) {
-		LOGGER.info("favorisieren ...");
-		try {
-			if (mainWindowController.getMode().equals("local")) {
-				Statement stmt = connection.createStatement();
-				stmt.executeUpdate("UPDATE film_local SET rating=1,favIcon='favorite_black' WHERE titel=\"" + name + "\";");
-				connection.commit();
-				stmt.close();
-			} else {
-				Statement stmt = connection.createStatement();
-				stmt.executeUpdate("UPDATE film_streaming SET rating=1,favIcon='favorite_black' WHERE streamUrl=\"" + streamUrl + "\";");
-				connection.commit();
-				stmt.close();
-			}
-		} catch (SQLException e) {
-			LOGGER.error("Ups! an error occured!", e);
-		}
-	}
-	
-	void setCached(String streamUrl) throws SQLException {
+	/**
+	 * update the database entry for the given film, rating = 0
+	 * @param name of the film
+	 * @param streamUrl URL of the film
+	 */
+	public void dislike(String streamUrl) {
+		LOGGER.info("dislike " + streamUrl);
 		try {
 			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("UPDATE film_local SET cached=1 WHERE streamUrl=\"" + streamUrl + "\";");
-			connection.commit();
-			stmt.close();
-		} catch (SQLException e) {
-			LOGGER.error("Ups! an error occured!", e);
-		}
-		try {
-			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("UPDATE film_streaming SET cached=1 WHERE streamUrl=\"" + streamUrl + "\";");
+			if (mainWindowController.getMode().equals("local")) {
+				stmt.executeUpdate("UPDATE film_local SET rating=0 WHERE streamUrl=\"" + streamUrl + "\";");
+			} else {
+				stmt.executeUpdate("UPDATE film_streaming SET rating=0 WHERE streamUrl=\"" + streamUrl + "\";");
+			}
 			connection.commit();
 			stmt.close();
 		} catch (SQLException e) {
@@ -512,6 +447,71 @@ public class DBController {
 		}
 	}
 	
+	/**
+	 * update the database entry for the given film, rating = 1
+	 * @param name of the film
+	 * @param streamUrl URL of the film
+	 */
+	public void like(String streamUrl) {
+		LOGGER.info("like " + streamUrl);
+		try {
+			Statement stmt = connection.createStatement();
+			if (mainWindowController.getMode().equals("local")) {
+				stmt.executeUpdate("UPDATE film_local SET rating=1 WHERE streamUrl=\"" + streamUrl + "\";");
+			} else {
+				stmt.executeUpdate("UPDATE film_streaming SET rating=1 WHERE streamUrl=\"" + streamUrl + "\";");
+			}
+			connection.commit();
+			stmt.close();
+		} catch (SQLException e) {
+			LOGGER.error("Ups! an error occured!", e);
+		}
+	}
+	
+	/**
+	 * update the database entry for the given film, cached = 1
+	 * @param streamUrl URL of the film
+	 */
+	void setCached(String streamUrl) {
+		try {
+			Statement stmt = connection.createStatement();
+			if (mainWindowController.getMode().equals("local")) {
+				stmt.executeUpdate("UPDATE film_local SET cached=1 WHERE streamUrl=\"" + streamUrl + "\";");
+			} else {
+				stmt.executeUpdate("UPDATE film_streaming SET cached=1 WHERE streamUrl=\"" + streamUrl + "\";");
+			}
+			connection.commit();
+			stmt.close();
+		} catch (SQLException e) {
+			LOGGER.error("Ups! an error occured!", e);
+		}
+	}
+	
+	/**
+	 * add the received data to the cache table
+	 * @param streamUrl URL of the film
+	 * @param Title
+	 * @param Year
+	 * @param Rated
+	 * @param Released
+	 * @param Runtime
+	 * @param Genre
+	 * @param Director
+	 * @param Writer
+	 * @param Actors
+	 * @param Plot
+	 * @param Language
+	 * @param Country
+	 * @param Awards
+	 * @param Metascore
+	 * @param imdbRating
+	 * @param Type
+	 * @param imdbVotes
+	 * @param imdbID
+	 * @param Poster
+	 * @param Response
+	 * @throws SQLException
+	 */
 	void addCache(	String streamUrl, String Title, String Year, String Rated, String Released, String Runtime, String Genre, String Director,
 					String Writer, String Actors, String Plot, String Language, String Country, String Awards, String Metascore, String imdbRating,
 					String Type, String imdbVotes, String imdbID, String Poster, String Response) throws SQLException{
@@ -546,6 +546,10 @@ public class DBController {
 		LOGGER.info("done!");
 	}
 	
+	/**
+	 * sets the cached data to mwc's TextFlow
+	 * @param streamUrl URL of the film
+	 */
 	public void readCache(String streamUrl) {
 		try {
 			Statement stmt = connection.createStatement();
@@ -573,7 +577,7 @@ public class DBController {
 			nameText.add(13, new Text(mainWindowController.getBundle().getString("metascore") + ": "));
 			nameText.add(14, new Text(mainWindowController.getBundle().getString("imdbRating") + ": "));
 			nameText.add(15, new Text(mainWindowController.getBundle().getString("type") + ": "));
-
+			
 			for (int i = 0; i < 15; i++) {
 				responseText.add(new Text(rs.getString(j) + "\n"));
 				j++;
