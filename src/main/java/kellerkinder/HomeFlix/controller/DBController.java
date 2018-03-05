@@ -344,7 +344,6 @@ public class DBController {
 		Statement stmt = connection.createStatement();
 		PreparedStatement ps = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		LOGGER.info("checking for entrys to add to DB ...");
-		int a = 0;
 		
 		// source is a single source of the sources list
 		for (tableData source : mainWindowController.getSourcesList()) {
@@ -372,11 +371,11 @@ public class DBController {
 							
 							// if it's the needed add it to the database
 							if (streamUrl.equals(entry)) {
-								ps.setInt(1, items.get(a).asObject().getInt("year", 0));
-								ps.setInt(2, items.get(a).asObject().getInt("season", 0));
-								ps.setInt(3, items.get(a).asObject().getInt("episode", 0));
+								ps.setInt(1, item.asObject().getInt("year", 0));
+								ps.setInt(2, item.asObject().getInt("season", 0));
+								ps.setInt(3, item.asObject().getInt("episode", 0));
 								ps.setInt(4, 0);
-								ps.setString(5, items.get(a).asObject().getString("resolution", ""));
+								ps.setString(5, item.asObject().getString("resolution", ""));
 								ps.setString(6, titel);
 								ps.setString(7, streamUrl);
 								ps.setString(8, "favorite_border_black");
