@@ -211,7 +211,7 @@ public class MainWindowController {
     private ImageView imv1;
     
 	@FXML
-	private TreeItem<FilmTabelDataType> filmRoot = new TreeItem<>(new FilmTabelDataType(1, 1, 5.0, "filme", "1", imv1, false));
+	private TreeItem<FilmTabelDataType> filmRoot = new TreeItem<>(new FilmTabelDataType("", "", 0, 0, 0, false, imv1));
 	@FXML
 	TreeTableColumn<FilmTabelDataType, ImageView> columnRating = new TreeTableColumn<>("Rating");
 	@FXML
@@ -245,7 +245,6 @@ public class MainWindowController {
 	// text strings
 	private String errorPlay;
 	private String errorOpenStream;
-	private String errorMode;
 	private String errorLoad;
 	private String errorSave;
 	private String infoText;
@@ -554,7 +553,8 @@ public class MainWindowController {
 	}
 	
 	@FXML
-	private void playbtnclicked(){	
+	private void playbtnclicked() {
+		// TODO open streams with desktop player, works at least with vlc under linux, part of #19 
 		if (mode.equals("streaming")) {
 			if (Desktop.isDesktopSupported()) {
 				new Thread(() -> {
@@ -568,7 +568,7 @@ public class MainWindowController {
 			} else {
 				LOGGER.info("Desktop not supported");
 			}
-		}else if (mode.equals("local")) {
+		}else {
 			if(System.getProperty("os.name").contains("Linux")){
 				String line;
 				String output = "";
@@ -603,9 +603,6 @@ public class MainWindowController {
 			} else {
 				LOGGER.error(System.getProperty("os.name") + ", OS is not supported, please contact a developer! ");
 			}	
-		} else {
-			IOException e = new IOException("error");
-			showErrorMsg(errorMode, e);
 		}
 	}
 	
@@ -735,9 +732,32 @@ public class MainWindowController {
 	public void addDataUI() {
 
 		if (mode.equals("local")) {
-			for (int i = 0; i < localFilms.size(); i++) {
-				filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(localFilms.get(i))); // add data to root-node
+			for (FilmTabelDataType element : localFilms) {
+				if (element.getSeason() != 0) {
+//					System.out.println("Found Series: " + element.getTitle());
+					// check if there is a series node to add the item
+					
+					for (int i = 0; i < filmRoot.getChildren().size(); i++) {
+						if (filmRoot.getChildren().get(i).getValue().getTitle().equals(element.getTitle())) {
+//							System.out.println("Found a root node to add child");
+//							System.out.println("Adding: " + element.getStreamUrl());
+							TreeItem<FilmTabelDataType> episodeNode = new TreeItem<>(new FilmTabelDataType(element.getStreamUrl(),
+									element.getTitle(), element.getSeason(), element.getEpisode(), element.getRating(),
+									element.getCached(), element.getImage()));
+							filmRoot.getChildren().get(i).getChildren().add(episodeNode);
+						} else if (i == filmRoot.getChildren().size() - 1) {
+//							System.out.println("Create a root node to add child");
+//							System.out.println("Adding: " + element.getStreamUrl());
+							TreeItem<FilmTabelDataType> seriesRootNode = new TreeItem<>(new FilmTabelDataType(element.getStreamUrl(),
+									element.getTitle(), 0, 0, element.getRating(), element.getCached(), element.getImage()));
+							filmRoot.getChildren().add(seriesRootNode);
+						}
+					}
+				} else {
+					filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(element)); // add data to root-node
+				}
 			}
+
 			columnRating.setMaxWidth(85);
 			columnTitle.setMaxWidth(290);
 			treeTableViewfilm.getColumns().get(3).setVisible(false);
@@ -887,7 +907,6 @@ public class MainWindowController {
 		columnSeason.setText(getBundle().getString("columnSeason"));
 		errorPlay = getBundle().getString("errorPlay");
 		errorOpenStream = getBundle().getString("errorOpenStream");
-		errorMode = getBundle().getString("errorMode");
 		errorLoad = getBundle().getString("errorLoad");
 		errorSave = getBundle().getString("errorSave");
 		infoText = getBundle().getString("infoText");

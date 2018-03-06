@@ -100,6 +100,7 @@ public class DBController {
 	private void createDatabase() {	
 		try {
 			Statement stmt = connection.createStatement();
+			// TODO use only one table
 			stmt.executeUpdate("create table if not exists film_loc (streamUrl, title, season, episode, rating, cached)");
 			stmt.executeUpdate("create table if not exists film_str (streamUrl, title, season, episode, rating, cached)");
 			stmt.executeUpdate("create table if not exists cache ("
@@ -120,6 +121,7 @@ public class DBController {
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_loc");
 			while (rs.next()) {
 				filmsdbDir.add(rs.getString("title"));
+				filmsdbStreamURL.add(rs.getString("streamUrl"));
 			}
 			stmt.close();
 			rs.close();
@@ -171,9 +173,6 @@ public class DBController {
 						for (JsonValue item : items) {
 							filmsAll.add(item.asObject().getString("title", ""));
 							filmsStreamURL.add(item.asObject().getString("streamUrl", ""));
-							// TODO check if all this is needed, maybe only use one table!
-//							System.out.println(item.asObject().getString("title", ""));
-//							System.out.println(item.asObject().getString("streamUrl", ""));
 						}
 						LOGGER.info("added films from: " + path);
 					} catch (IOException e) {
@@ -195,11 +194,13 @@ public class DBController {
 			ResultSet rs = stmt.executeQuery("SELECT * FROM film_loc ORDER BY title"); 
 			while (rs.next()) {
 				if (rs.getInt("rating") == 1) {
-					mainWindowController.getLocalFilms().add(new FilmTabelDataType(1, 1, rs.getDouble("rating"), rs.getString("title"),
-									rs.getString("streamUrl"), new ImageView(favorite_black), rs.getBoolean("cached")));
+					mainWindowController.getLocalFilms().add(new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getInt("season"), rs.getInt("episode") ,rs.getDouble("rating"),
+							rs.getBoolean("cached"), new ImageView(favorite_black)));
 				} else {
-					mainWindowController.getLocalFilms().add(new FilmTabelDataType(1, 1, rs.getDouble("rating"), rs.getString("title"),
-							rs.getString("streamUrl"), new ImageView(favorite_border_black), rs.getBoolean("cached")));
+					mainWindowController.getLocalFilms().add(new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getInt("season"), rs.getInt("episode"), rs.getDouble("rating"),
+							rs.getBoolean("cached"), new ImageView(favorite_border_black)));
 				}
 			}
 			stmt.close();
@@ -209,13 +210,13 @@ public class DBController {
 			rs = stmt.executeQuery("SELECT * FROM film_str ORDER BY title;"); 
 			while (rs.next()) {
 				if (rs.getInt("rating") == 1) {
-					mainWindowController.getStreamingFilms().add(new FilmTabelDataType(rs.getInt("season"),
-							rs.getInt("episode"), rs.getDouble("rating"), rs.getString("title"), rs.getString("streamUrl"),
-							new ImageView(favorite_black), rs.getBoolean("cached")));
+					mainWindowController.getStreamingFilms().add(new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getInt("season"), rs.getInt("episode") ,rs.getDouble("rating"),
+							rs.getBoolean("cached"), new ImageView(favorite_black)));
 				} else {
-					mainWindowController.getStreamingFilms().add(new FilmTabelDataType(rs.getInt("season"),
-							rs.getInt("episode"),rs.getDouble("rating"), rs.getString("title"),rs.getString("streamUrl"),
-							new ImageView(favorite_border_black), rs.getBoolean("cached")));
+					mainWindowController.getStreamingFilms().add(new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getInt("season"), rs.getInt("episode"), rs.getDouble("rating"),
+							rs.getBoolean("cached"), new ImageView(favorite_border_black)));
 				}
 			}
 			stmt.close();
@@ -230,9 +231,8 @@ public class DBController {
 	
 	/**
 	 * refresh data in mainWindowController localFilms and streamingFilms
-	 * @param title of the film
-	 * @param i index of the film in LocalFilms list
-	 * @throws SQLException
+	 * @param streamUrl of the film
+	 * @param index of the film in LocalFilms list
 	 */
 	public void refresh(String streamUrl, int index) {
 		LOGGER.info("refresh ...");
@@ -242,23 +242,25 @@ public class DBController {
 			if (mainWindowController.getMode().equals("local")) {
 				ResultSet rs = stmt.executeQuery("SELECT * FROM film_loc WHERE streamUrl = \"" + streamUrl + "\";");
 				if (rs.getInt("rating") == 1) {
-					mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(1, 1, rs.getDouble("rating"),
-							rs.getString("title"), rs.getString("streamUrl"), new ImageView(favorite_black), rs.getBoolean("cached")));
+					mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getInt("season"), rs.getInt("episode") ,rs.getDouble("rating"),
+							rs.getBoolean("cached"), new ImageView(favorite_black)));
 				} else {
-					mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(1, 1, rs.getDouble("rating"),
-							rs.getString("title"), rs.getString("streamUrl"), new ImageView(favorite_border_black), rs.getBoolean("cached")));
-				}
+					mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getInt("season"), rs.getInt("episode"), rs.getDouble("rating"),
+							rs.getBoolean("cached"), new ImageView(favorite_border_black)));
+					}
 				rs.close();
 			} else {
 				ResultSet rs = stmt.executeQuery("SELECT * FROM film_str WHERE streamUrl = \"" + streamUrl + "\";");
 				if (rs.getInt("rating") == 1) {
-					mainWindowController.getStreamingFilms().set(index, new FilmTabelDataType(rs.getInt("season"),
-							rs.getInt("episode"), rs.getDouble("rating"), rs.getString("title"), rs.getString("streamUrl"),
-							new ImageView(favorite_black), rs.getBoolean("cached")));
+					mainWindowController.getStreamingFilms().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getInt("season"), rs.getInt("episode") ,rs.getDouble("rating"),
+							rs.getBoolean("cached"), new ImageView(favorite_black)));
 				} else {
-					mainWindowController.getStreamingFilms().set(index, new FilmTabelDataType(rs.getInt("season"),
-							rs.getInt("episode"), rs.getDouble("rating"), rs.getString("title"), rs.getString("streamUrl"),
-							new ImageView(favorite_border_black), rs.getBoolean("cached")));
+					mainWindowController.getStreamingFilms().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getInt("season"), rs.getInt("episode"), rs.getDouble("rating"),
+							rs.getBoolean("cached"), new ImageView(favorite_border_black)));
 				}
 				rs.close();
 			}
@@ -289,7 +291,7 @@ public class DBController {
 		
 		try {
 			checkAddEntry();
-			checkRemoveEntry();
+//			checkRemoveEntry();
 		} catch (Exception e) {
 			LOGGER.error("Error while refreshing the database", e);
 		}
@@ -303,8 +305,10 @@ public class DBController {
 	}
 
 	/**
+	 * TODO needs reworking currently broken
 	 * check if there are any entries that have been removed from the film-directory
 	 */
+	@SuppressWarnings("unused")
 	private void checkRemoveEntry() {
 		LOGGER.info("checking for entrys to remove to DB ...");
 		
@@ -348,19 +352,50 @@ public class DBController {
 		for (SourceDataType source : mainWindowController.getSourcesList()) {
 			// if it's a local source check the folder for new film
 			if (source.getMode().equals("local")) {
-				for (String file : new File(source.getPath()).list()) {
-					if (!filmsdbAll.contains(cutOffEnd(file))) {
-						stmt.executeUpdate("insert into film_loc values ("
-								+ "'" + source.getPath() + "/" + file + "',"
-								+ "'" + cutOffEnd(file) + "', 0, 0, 0, 0)");
-						connection.commit();
-						stmt.close();
-						LOGGER.info("added \"" + file + "\" to database");
-						filmsAll.add(cutOffEnd(file));
+				for (File file : new File(source.getPath()).listFiles()) {
+					
+					if (file.isFile()) {
+						// get all files (films)
+						if (!filmsdbStreamURL.contains(file.getPath())) {
+							stmt.executeUpdate("insert into film_loc values ("
+									+ "'" + file.getPath() + "',"
+									+ "'" + cutOffEnd(file.getName()) + "', 0, 0, 0, 0)");
+							connection.commit();
+							stmt.close();
+							LOGGER.info("Added \"" + file.getName() + "\" to database");
+							filmsAll.add(cutOffEnd(file.getName()));
+						}
+					} else {
+						// get all folders (series)
+						int sn = 1;
+						for (File season : file.listFiles()) {
+							if (season.isDirectory()) {
+								int ep = 1;
+								LOGGER.info("Added \"" + file.getName() + "\", Season " + sn + " to database");
+//								System.out.println("Series name: " + file.getName() + " <=========");
+//								System.out.println("Season found: " + season + " <=========");
+								for (File episode : season.listFiles()) {
+									if (!filmsdbStreamURL.contains(episode.getPath())) {
+//										System.out.println("Found episode: " + episode);
+//										System.out.println("Season: " + sn + "; Episod: " + ep);
+										
+										stmt.executeUpdate("insert into film_loc values ("
+										+ "'" + episode.getPath() + "',"
+										+ "'" + cutOffEnd(file.getName()) + "',"+ sn + "," + ep + ", 0, 0)");
+										connection.commit();
+										stmt.close();
+										filmsdbStreamURL.add(episode.getPath());
+										ep++;
+									}
+								}
+								sn++;
+							}
+						}
 					}
+					
 				}
 			} else {
-				// if it's a streaming source check the file for new films
+				// if it's a streaming source check the file for new films // TODO implement series support
 				for (String entry : filmsStreamURL) {
 					if (!filmsdbStreamURL.contains(entry)) {
 						JsonArray items = Json.parse(new FileReader(source.getPath())).asObject().get("entries").asArray();
@@ -378,7 +413,7 @@ public class DBController {
 								ps.setInt(5, 0);
 								ps.setBoolean(6, false);
 								ps.addBatch(); // adds the entry
-								LOGGER.info("added \"" + title + "\" to database");
+								LOGGER.info("Added \"" + title + "\" to database");
 								filmsAll.add(cutOffEnd(title));
 							}
 						}

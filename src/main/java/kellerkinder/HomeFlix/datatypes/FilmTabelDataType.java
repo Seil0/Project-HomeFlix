@@ -43,22 +43,31 @@ public class FilmTabelDataType {
 	
 	/** TODO rating boolean
 	 * tableData is the data-type of tree-table-view
+	 * @param streamUrl the concrete path to the file or the URL
+	 * @param title title of the film
 	 * @param season season if it's a series
 	 * @param episode episode if it's a series
 	 * @param rating indicator for favorites, used for sorting the items
-	 * @param title title of the film
-	 * @param streamUrl the concrete path to the file or the URL
 	 * @param cached indicator for caching status
+	 * @param image favorite icon
 	 */
-	public FilmTabelDataType(final int season, final int episode, final double rating, final String title,
-			final String streamUrl, final ImageView image, final boolean cached) {
+	public FilmTabelDataType(final String streamUrl, final String title, final int season, final int episode,
+			final double rating, final boolean cached, final ImageView image) {
+		this.streamUrl.set(streamUrl);
+		this.title.set(title);
 		this.season.set(season);
 		this.episode.set(episode);
 		this.rating.set(rating);
-		this.title.set(title);
-		this.streamUrl.set(streamUrl);
-		this.image.set(image);
 		this.cached.set(cached);
+		this.image.set(image);
+	}
+	
+	public StringProperty streamUrlProperty(){
+		return streamUrl;
+	}
+	
+	public StringProperty titleProperty(){
+		return title;
 	}
 	
 	public IntegerProperty seasonProperty(){
@@ -73,22 +82,22 @@ public class FilmTabelDataType {
 		return rating;
 	}
 	
-	public StringProperty titleProperty(){
-		return title;
-	}
-	
-	public StringProperty streamUrlProperty(){
-		return streamUrl;
+	public BooleanProperty cachedProperty(){
+		return cached;
 	}
 	
 	public SimpleObjectProperty<ImageView> imageProperty(){
 		return image;
 	}
 	
-	public BooleanProperty cachedProperty(){
-		return cached;
+	
+	public final String getStreamUrl() {
+		return streamUrlProperty().get();
 	}
 	
+	public final String getTitle() {
+		return titleProperty().get();
+	}
 
 	public final int getSeason() {
 		return seasonProperty().get();
@@ -102,23 +111,22 @@ public class FilmTabelDataType {
 		return ratingProperty().get();
 	}
 	
-	public final String getTitle() {
-		return titleProperty().get();
-	}
-	
-	public final String getStreamUrl() {
-		return streamUrlProperty().get();
+	public final boolean getCached(){
+		return cachedProperty().get();
 	}
 	
 	public final ImageView getImage() {
 		return imageProperty().get();
 	}
 	
-	public final boolean getCached(){
-		return cachedProperty().get();
+	
+	public final void setStreamUrl(String streamUrl) {
+		streamUrlProperty().set(streamUrl);
 	}
 
-
+	public final void setTitle(String title) {
+		titleProperty().set(title);
+	}
 
 	public final void setSeason(int season) {
 		seasonProperty().set(season);
@@ -132,19 +140,13 @@ public class FilmTabelDataType {
 		ratingProperty().set(rating);
 	}
 	
-	public final void setTitle(String title) {
-		titleProperty().set(title);
-	}
-
-	public final void setStreamUrl(String streamUrl) {
-		streamUrlProperty().set(streamUrl);
+	public final void setCached(boolean cached){
+		cachedProperty().set(cached);
 	}
 	
 	public final void setImage(ImageView image) {
 		imageProperty().set(image);
 	}
 	
-	public final void setCached(boolean cached){
-		cachedProperty().set(cached);
-	}
+
 }
