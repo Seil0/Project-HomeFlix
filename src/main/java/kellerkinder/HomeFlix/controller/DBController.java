@@ -65,9 +65,8 @@ public class DBController {
 	private Image favorite_black = new Image("icons/ic_favorite_black_18dp_1x.png");
 	private Image favorite_border_black = new Image("icons/ic_favorite_border_black_18dp_1x.png");
 	private List<String> filmsdbAll = new ArrayList<String>();
-	private List<String> filmsdbDir = new ArrayList<String>(); // needed
+	private List<String> filmsdbDir = new ArrayList<String>();
 	private List<String> filmsdbStreamURL = new ArrayList<String>(); // needed
-	private List<String> filmsAll = new ArrayList<String>();
 	private List<String> filmsStreamURL = new ArrayList<String>(); // needed
 	private Connection connection = null;
 	private static final Logger LOGGER = LogManager.getLogger(DBController.class.getName());
@@ -100,9 +99,7 @@ public class DBController {
 	private void createDatabase() {	
 		try {
 			Statement stmt = connection.createStatement();
-			// TODO use only one table
-			stmt.executeUpdate("create table if not exists film_loc (streamUrl, title, season, episode, rating, cached)");
-			stmt.executeUpdate("create table if not exists film_str (streamUrl, title, season, episode, rating, cached)");
+			stmt.executeUpdate("create table if not exists films (streamUrl, title, season, episode, rating, cached)");
 			stmt.executeUpdate("create table if not exists cache ("
 					+ "streamUrl, Title, Year, Rated, Released, Runtime, Genre, Director, Writer,"
 					+ " Actors, Plot, Language, Country, Awards, Metascore, imdbRating, imdbVotes,"
@@ -114,21 +111,12 @@ public class DBController {
 	}
 	
 	private void loadDatabase() {
-		
-		// get all entries from the tables
+		// get all entries from the table
 		try {
 			Statement stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM film_loc");
+			ResultSet rs = stmt.executeQuery("SELECT * FROM films");
 			while (rs.next()) {
 				filmsdbDir.add(rs.getString("title"));
-				filmsdbStreamURL.add(rs.getString("streamUrl"));
-			}
-			stmt.close();
-			rs.close();
-
-			rs = stmt.executeQuery("SELECT * FROM film_str;");
-			while (rs.next()) {
-				filmsdbAll.add(rs.getString("title"));
 				filmsdbStreamURL.add(rs.getString("streamUrl"));
 			}
 			stmt.close();
@@ -139,8 +127,8 @@ public class DBController {
 			
 		// add all entries to filmsAll and filmsdbAl, for later comparing
 		filmsdbAll.addAll(filmsdbDir);
-		LOGGER.info("films in directory: " + filmsAll.size());
-		LOGGER.info("filme in db: " + filmsdbAll.size());
+		LOGGER.info("films in directory: " + filmsStreamURL.size());
+		LOGGER.info("filme in db: " + filmsdbStreamURL.size());
 	}
 	
 	// load the sources from sources.json
@@ -156,22 +144,30 @@ public class DBController {
 				String mode = source.asObject().getString("mode", "");
 				mainWindowController.addSourceToTable(path, mode); // add source to source-table
 				if (mode.equals("local")) {
-					// getting all files from the selected directory
-					if (new File(path).exists()) {
-						for (String entry : new File(path).list()) {
-							filmsAll.add(cutOffEnd(entry));
+					for (File file : new File(path).listFiles()) {
+						if (file.isFile()) {
+							// get all files (films)
+							filmsStreamURL.add(file.getPath());
+						} else {
+							// get all folders (series)
+							for (File season : file.listFiles()) {
+								if (season.isDirectory()) {
+									for (File episode : season.listFiles()) {
+										if (!filmsdbStreamURL.contains(episode.getPath())) {
+											filmsStreamURL.add(episode.getPath());
+										}
+									}
+								}
+							}
 						}
-						LOGGER.info("added files from: " + path);
-					} else {
-						LOGGER.error(path + "dosen't exist!");
 					}
+					LOGGER.info("added files from: " + path);
 				} else {
 					// getting all entries from the streaming lists
 					try {
 						JsonObject object = Json.parse(new FileReader(path)).asObject();
 						JsonArray items = object.get("entries").asArray();
 						for (JsonValue item : items) {
-							filmsAll.add(item.asObject().getString("title", ""));
 							filmsStreamURL.add(item.asObject().getString("streamUrl", ""));
 						}
 						LOGGER.info("added films from: " + path);
@@ -191,7 +187,7 @@ public class DBController {
 		try {
 			//load local Data
 			Statement stmt = connection.createStatement(); 
-			ResultSet rs = stmt.executeQuery("SELECT * FROM film_loc ORDER BY title"); 
+			ResultSet rs = stmt.executeQuery("SELECT * FROM films ORDER BY title"); 
 			while (rs.next()) {
 				if (rs.getInt("rating") == 1) {
 					mainWindowController.getLocalFilms().add(new FilmTabelDataType(rs.getString("streamUrl"),
@@ -204,23 +200,7 @@ public class DBController {
 				}
 			}
 			stmt.close();
-			rs.close();
-			
-			//load streaming Data
-			rs = stmt.executeQuery("SELECT * FROM film_str ORDER BY title;"); 
-			while (rs.next()) {
-				if (rs.getInt("rating") == 1) {
-					mainWindowController.getStreamingFilms().add(new FilmTabelDataType(rs.getString("streamUrl"),
-							rs.getString("title"), rs.getInt("season"), rs.getInt("episode") ,rs.getDouble("rating"),
-							rs.getBoolean("cached"), new ImageView(favorite_black)));
-				} else {
-					mainWindowController.getStreamingFilms().add(new FilmTabelDataType(rs.getString("streamUrl"),
-							rs.getString("title"), rs.getInt("season"), rs.getInt("episode"), rs.getDouble("rating"),
-							rs.getBoolean("cached"), new ImageView(favorite_border_black)));
-				}
-			}
-			stmt.close();
-			rs.close(); 		
+			rs.close();		
 		} catch (SQLException e) {
 			LOGGER.error("Ups! an error occured!", e);
 		}
@@ -238,32 +218,18 @@ public class DBController {
 		LOGGER.info("refresh ...");
 		try {
 			Statement stmt = connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE streamUrl = \"" + streamUrl + "\";");
 			
-			if (mainWindowController.getMode().equals("local")) {
-				ResultSet rs = stmt.executeQuery("SELECT * FROM film_loc WHERE streamUrl = \"" + streamUrl + "\";");
-				if (rs.getInt("rating") == 1) {
-					mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
-							rs.getString("title"), rs.getInt("season"), rs.getInt("episode") ,rs.getDouble("rating"),
-							rs.getBoolean("cached"), new ImageView(favorite_black)));
-				} else {
-					mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
-							rs.getString("title"), rs.getInt("season"), rs.getInt("episode"), rs.getDouble("rating"),
-							rs.getBoolean("cached"), new ImageView(favorite_border_black)));
-					}
-				rs.close();
+			if (rs.getInt("rating") == 1) {
+				mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
+						rs.getString("title"), rs.getInt("season"), rs.getInt("episode") ,rs.getDouble("rating"),
+						rs.getBoolean("cached"), new ImageView(favorite_black)));
 			} else {
-				ResultSet rs = stmt.executeQuery("SELECT * FROM film_str WHERE streamUrl = \"" + streamUrl + "\";");
-				if (rs.getInt("rating") == 1) {
-					mainWindowController.getStreamingFilms().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
-							rs.getString("title"), rs.getInt("season"), rs.getInt("episode") ,rs.getDouble("rating"),
-							rs.getBoolean("cached"), new ImageView(favorite_black)));
-				} else {
-					mainWindowController.getStreamingFilms().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
-							rs.getString("title"), rs.getInt("season"), rs.getInt("episode"), rs.getDouble("rating"),
-							rs.getBoolean("cached"), new ImageView(favorite_border_black)));
-				}
-				rs.close();
+				mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
+						rs.getString("title"), rs.getInt("season"), rs.getInt("episode"), rs.getDouble("rating"),
+						rs.getBoolean("cached"), new ImageView(favorite_border_black)));
 			}
+			rs.close();
 			stmt.close();
 		} catch (Exception e) {
 			LOGGER.error("Ups! error while refreshing mwc!", e);
@@ -282,7 +248,6 @@ public class DBController {
 		filmsdbAll.removeAll(filmsdbAll);
 		filmsdbDir.removeAll(filmsdbDir);
 		filmsdbStreamURL.removeAll(filmsdbStreamURL);
-		filmsAll.removeAll(filmsAll);
 		filmsStreamURL.removeAll(filmsStreamURL);
 		
 		loadSources(); // reload all sources
@@ -291,46 +256,37 @@ public class DBController {
 		
 		try {
 			checkAddEntry();
-//			checkRemoveEntry();
+			checkRemoveEntry();
 		} catch (Exception e) {
 			LOGGER.error("Error while refreshing the database", e);
 		}
 		
 		// remove all films from the mwc lists
 		mainWindowController.getLocalFilms().removeAll(mainWindowController.getLocalFilms());
-		mainWindowController.getStreamingFilms().removeAll(mainWindowController.getStreamingFilms());
 		mainWindowController.getFilmRoot().getChildren().removeAll(mainWindowController.getFilmRoot().getChildren());
 		
 		loadDataToMWC(); // load the new data to the mwc
 	}
 
 	/**
-	 * TODO needs reworking currently broken
 	 * check if there are any entries that have been removed from the film-directory
 	 */
-	@SuppressWarnings("unused")
 	private void checkRemoveEntry() {
 		LOGGER.info("checking for entrys to remove to DB ...");
 		
 		try {
 			Statement stmt = connection.createStatement();
 			
-			for (String entry : filmsdbDir) {
-				if (!filmsAll.contains(entry)) {
-					stmt.executeUpdate("delete from film_loc where title = \"" + entry + "\"");
-					connection.commit();
-					LOGGER.info("removed \"" + entry + "\" from loc database");
-				}
-			}
-			
 			for (String entry : filmsdbStreamURL) {
 				if (!filmsStreamURL.contains(entry)) {
-					stmt.executeUpdate("delete from film_str where streamUrl = \"" + entry + "\"");
+					System.out.println(filmsdbStreamURL + "\n");
+					System.out.println(filmsStreamURL);
+					stmt.executeUpdate("delete from films where streamUrl = \"" + entry + "\"");
 					connection.commit();
-					LOGGER.info("removed \"" + entry + "\" from str database");
+					LOGGER.info("removed \"" + entry + "\" from database");
 				}
 			}
-			
+
 			stmt.close();
 		} catch (Exception e) {
 			LOGGER.error(e);
@@ -345,7 +301,7 @@ public class DBController {
 	 */
 	private void checkAddEntry() throws SQLException, FileNotFoundException, IOException {
 		Statement stmt = connection.createStatement();
-		PreparedStatement ps = connection.prepareStatement("insert into film_str values (?, ?, ?, ?, ?, ?)");
+		PreparedStatement ps = connection.prepareStatement("insert into films values (?, ?, ?, ?, ?, ?)");
 		LOGGER.info("checking for entrys to add to DB ...");
 		
 		// source is a single source of the sources list
@@ -357,13 +313,13 @@ public class DBController {
 					if (file.isFile()) {
 						// get all files (films)
 						if (!filmsdbStreamURL.contains(file.getPath())) {
-							stmt.executeUpdate("insert into film_loc values ("
+							stmt.executeUpdate("insert into films values ("
 									+ "'" + file.getPath() + "',"
 									+ "'" + cutOffEnd(file.getName()) + "', 0, 0, 0, 0)");
 							connection.commit();
 							stmt.close();
 							LOGGER.info("Added \"" + file.getName() + "\" to database");
-							filmsAll.add(cutOffEnd(file.getName()));
+							filmsdbStreamURL.add(file.getPath());
 						}
 					} else {
 						// get all folders (series)
@@ -371,19 +327,15 @@ public class DBController {
 						for (File season : file.listFiles()) {
 							if (season.isDirectory()) {
 								int ep = 1;
-								LOGGER.info("Added \"" + file.getName() + "\", Season " + sn + " to database");
-//								System.out.println("Series name: " + file.getName() + " <=========");
-//								System.out.println("Season found: " + season + " <=========");
 								for (File episode : season.listFiles()) {
 									if (!filmsdbStreamURL.contains(episode.getPath())) {
-//										System.out.println("Found episode: " + episode);
-//										System.out.println("Season: " + sn + "; Episod: " + ep);
-										
-										stmt.executeUpdate("insert into film_loc values ("
+										LOGGER.info("Added \"" + file.getName() + "\", Episode: " + episode.getName() + " to database");
+										stmt.executeUpdate("insert into films values ("
 										+ "'" + episode.getPath() + "',"
 										+ "'" + cutOffEnd(file.getName()) + "',"+ sn + "," + ep + ", 0, 0)");
 										connection.commit();
 										stmt.close();
+										filmsStreamURL.add(episode.getPath());
 										filmsdbStreamURL.add(episode.getPath());
 										ep++;
 									}
@@ -414,7 +366,7 @@ public class DBController {
 								ps.setBoolean(6, false);
 								ps.addBatch(); // adds the entry
 								LOGGER.info("Added \"" + title + "\" to database");
-								filmsAll.add(cutOffEnd(title));
+								filmsdbStreamURL.add(streamUrl);
 							}
 						}
 					}
@@ -431,7 +383,7 @@ public class DBController {
 		System.out.println("Outputting all entries ... \n");
 		try {
 			Statement stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM film_loc");
+			ResultSet rs = stmt.executeQuery("SELECT * FROM films");
 			while (rs.next()) {
 				System.out.println(rs.getString("streamUrl"));
 				System.out.println(rs.getString("title"));
@@ -442,21 +394,6 @@ public class DBController {
 			}
 			stmt.close();
 			rs.close();
-
-			System.out.println("Streaming Entries: \n");
-
-			rs = stmt.executeQuery("SELECT * FROM film_str;");
-			while (rs.next()) {
-				System.out.println(rs.getString("streamUrl"));
-				System.out.println(rs.getString("title"));
-				System.out.println(rs.getString("season"));
-				System.out.println(rs.getString("episode"));
-				System.out.println(rs.getString("rating"));
-				System.out.println(rs.getString("cached") + "\n");
-			}
-			stmt.close();
-			rs.close();
-
 		} catch (SQLException e) {
 			LOGGER.error("An error occured, while printing all entries", e);
 		}
@@ -471,11 +408,7 @@ public class DBController {
 		LOGGER.info("dislike " + streamUrl);
 		try {
 			Statement stmt = connection.createStatement();
-			if (mainWindowController.getMode().equals("local")) {
-				stmt.executeUpdate("UPDATE film_loc SET rating=0 WHERE streamUrl=\"" + streamUrl + "\";");
-			} else {
-				stmt.executeUpdate("UPDATE film_str SET rating=0 WHERE streamUrl=\"" + streamUrl + "\";");
-			}
+			stmt.executeUpdate("UPDATE films SET rating=0 WHERE streamUrl=\"" + streamUrl + "\";");
 			connection.commit();
 			stmt.close();
 		} catch (SQLException e) {
@@ -492,11 +425,7 @@ public class DBController {
 		LOGGER.info("like " + streamUrl);
 		try {
 			Statement stmt = connection.createStatement();
-			if (mainWindowController.getMode().equals("local")) {
-				stmt.executeUpdate("UPDATE film_loc SET rating=1 WHERE streamUrl=\"" + streamUrl + "\";");
-			} else {
-				stmt.executeUpdate("UPDATE film_str SET rating=1 WHERE streamUrl=\"" + streamUrl + "\";");
-			}
+			stmt.executeUpdate("UPDATE films SET rating=1 WHERE streamUrl=\"" + streamUrl + "\";");
 			connection.commit();
 			stmt.close();
 		} catch (SQLException e) {
@@ -511,11 +440,7 @@ public class DBController {
 	void setCached(String streamUrl) {
 		try {
 			Statement stmt = connection.createStatement();
-			if (mainWindowController.getMode().equals("local")) {
-				stmt.executeUpdate("UPDATE film_loc SET cached=1 WHERE streamUrl=\"" + streamUrl + "\";");
-			} else {
-				stmt.executeUpdate("UPDATE film_str SET cached=1 WHERE streamUrl=\"" + streamUrl + "\";");
-			}
+			stmt.executeUpdate("UPDATE films SET cached=1 WHERE streamUrl=\"" + streamUrl + "\";");
 			connection.commit();
 			stmt.close();
 		} catch (SQLException e) {

@@ -63,7 +63,6 @@ public class Main extends Application {
 	
 	private String path;
 	private String FONT_FAMILY = "System";
-	private String mode = "local";	//local or streaming TODO
 	private String local = System.getProperty("user.language")+"_"+System.getProperty("user.country");
 	private double FONT_SIZE = 17;
 	private ResourceBundle bundle;
@@ -112,7 +111,6 @@ public class Main extends Application {
 				mainWindowController.setSize(FONT_SIZE);
 				mainWindowController.setAutoUpdate(false);
 				mainWindowController.setLocal(local);
-				mainWindowController.setMode(mode);
 				mainWindowController.saveSettings();
 				try {
 					Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar"); // start again (preventing Bugs) TODO is this really needed

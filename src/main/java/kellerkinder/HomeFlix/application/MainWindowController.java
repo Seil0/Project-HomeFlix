@@ -37,8 +37,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Properties;
@@ -146,9 +144,6 @@ public class MainWindowController {
     private JFXButton settingsBtn;
     
     @FXML
-    private JFXButton switchBtn;
-    
-    @FXML
     private JFXButton debugBtn;
     
     @FXML
@@ -237,25 +232,22 @@ public class MainWindowController {
     private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	private int hashA = -647380320;
 	
-	private String version = "0.5.2";
-	private String buildNumber = "131";
+	private String version = "0.5.99";
+	private String buildNumber = "137";
 	private String versionName = "solidify cow";
 	private String dialogBtnStyle;
+	private String color;
+	private String title;
+	private String streamUrl;
+	private String ratingSortType;
+	private String local;
 	
 	// text strings
 	private String errorPlay;
-	private String errorOpenStream;
 	private String errorLoad;
 	private String errorSave;
 	private String infoText;
 	private String vlcNotInstalled;
-	private String streamingPath;
-	private String color;
-	private String title;
-	private String streamUrl;
-	private String mode;
-	private String ratingSortType;
-	private String local;
 	
 	public double size;
 	private int last;
@@ -267,7 +259,6 @@ public class MainWindowController {
 	private ObservableList<String> languages = FXCollections.observableArrayList("English (en_US)", "Deutsch (de_DE)");
 	private ObservableList<String> branches = FXCollections.observableArrayList("stable", "beta");
 	private ObservableList<FilmTabelDataType> localFilms = FXCollections.observableArrayList();
-	private ObservableList<FilmTabelDataType> streamingFilms = FXCollections.observableArrayList();
 	private ObservableList<SourceDataType> sourcesList = FXCollections.observableArrayList();
 	private ImageView skip_previous_white = new ImageView(new Image("icons/ic_skip_previous_white_18dp_1x.png"));
 	private ImageView skip_previous_black = new ImageView(new Image("icons/ic_skip_previous_black_18dp_1x.png"));
@@ -309,6 +300,10 @@ public class MainWindowController {
 
 		// film Table
 		columnStreamUrl.setMaxWidth(0);
+		columnTitle.setMaxWidth(215);
+		columnRating.setMaxWidth(60);
+		columnSeason.setMaxWidth(55);
+		columnEpisode.setMaxWidth(64);
 		columnRating.setStyle("-fx-alignment: CENTER;");
 
 		treeTableViewfilm.setRoot(filmRoot);
@@ -323,12 +318,12 @@ public class MainWindowController {
 		columnEpisode.setCellValueFactory(cellData -> cellData.getValue().getValue().episodeProperty().asObject());
 
 		// add columns to treeTableViewfilm
+		 treeTableViewfilm.getColumns().add(columnStreamUrl);
         treeTableViewfilm.getColumns().add(columnTitle);
         treeTableViewfilm.getColumns().add(columnRating);
-        treeTableViewfilm.getColumns().add(columnStreamUrl);
         treeTableViewfilm.getColumns().add(columnSeason);
         treeTableViewfilm.getColumns().add(columnEpisode);
-        treeTableViewfilm.getColumns().get(2).setVisible(false); //hide columnStreamUrl (column with file URL, important for opening a file/stream)
+        treeTableViewfilm.getColumns().get(0).setVisible(false); //hide columnStreamUrl (column with file URL, important for opening a file/stream)
 	    
 	    // context menu for treeTableViewfilm  
 	    treeTableViewfilm.setContextMenu(menu);
@@ -369,11 +364,8 @@ public class MainWindowController {
 				filterData.removeAll(filterData);
 				filmRoot.getChildren().removeAll(filmRoot.getChildren());
 
-				if (mode.equals("local")) {
-					helpData = localFilms;
-				} else {
-					helpData = streamingFilms;
-				}
+				helpData = localFilms;
+
 
 				for (int i = 0; i < helpData.size(); i++) {
 					if (helpData.get(i).getTitle().toLowerCase().contains(searchTextField.getText().toLowerCase())) {
@@ -458,11 +450,7 @@ public class MainWindowController {
 //				treeTableViewfilm.getSelectionModel().clearSelection(selected);
 				filmRoot.getChildren().removeAll(filmRoot.getChildren());
 
-				if (mode.equals("local")) {
-					helpData = localFilms;
-				} else {
-					helpData = streamingFilms;
-				}
+				helpData = localFilms;
 
 				for (int i = 0; i < helpData.size(); i++) {
 					if (helpData.get(i).getRating() == 1.0) {
@@ -508,20 +496,11 @@ public class MainWindowController {
 				title = columnTitle.getCellData(selected); // get name of selected item
 				streamUrl = columnStreamUrl.getCellData(selected); // get file path of selected item
 
-				if (mode.equals("local")) {
-					if (localFilms.get(selected).getCached() == true) {
-						LOGGER.info("loading from cache: " + title);
-						dbController.readCache(streamUrl);
-					} else {
-						ApiQuery.startQuery(title, streamUrl); // start api query
-					}
+				if (localFilms.get(selected).getCached() == true) {
+					LOGGER.info("loading from cache: " + title);
+					dbController.readCache(streamUrl);
 				} else {
-					if (streamingFilms.get(selected).getCached() == true) {
-						LOGGER.info("loading from cache: " + title);
-						dbController.readCache(streamUrl);
-					} else {
-						ApiQuery.startQuery(title, streamUrl); // start api query
-					}
+					ApiQuery.startQuery(title, streamUrl); // start api query
 				}
 			}
 		});
@@ -529,7 +508,6 @@ public class MainWindowController {
 	
 	// initialize UI elements
 	private void initUI() {
-		LOGGER.info("Mode: " + mode); // TODO debugging
 		debugBtn.setDisable(true); // debugging button for tests
 		debugBtn.setVisible(false);
 
@@ -554,55 +532,42 @@ public class MainWindowController {
 	
 	@FXML
 	private void playbtnclicked() {
-		// TODO open streams with desktop player, works at least with vlc under linux, part of #19 
-		if (mode.equals("streaming")) {
-			if (Desktop.isDesktopSupported()) {
-				new Thread(() -> {
-					try {
-				        Desktop.getDesktop().browse(new URI(streamUrl));	//open the streaming URL in browser
-				    } catch (IOException | URISyntaxException e) {
-				    	e.printStackTrace();
-				        showErrorMsg(errorOpenStream, (IOException) e);
-				    }
-				}).start();	
-			} else {
-				LOGGER.info("Desktop not supported");
+		// TODO rework when #19 is coming
+
+		if (System.getProperty("os.name").contains("Linux")) {
+			String line;
+			String output = "";
+			Process p;
+			try {
+				p = Runtime.getRuntime().exec("which vlc");
+				BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+				while ((line = input.readLine()) != null) {
+					output = line;
+				}
+				LOGGER.info(output);
+				input.close();
+			} catch (IOException e1) {
+				e1.printStackTrace();
 			}
-		}else {
-			if(System.getProperty("os.name").contains("Linux")){
-				String line;
-				String output = "";
-				Process p;
-				try {
-					p = Runtime.getRuntime().exec("which vlc");
-					BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-					while ((line = input.readLine()) != null) {
-						output = line;
-					}
-					LOGGER.info(output);
-					input.close();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-				if(output.contains("which: no vlc")||output == ""){
-					JFXInfoDialog vlcInfoDialog = new JFXInfoDialog("Info", vlcNotInstalled, dialogBtnStyle, 350, 200, main.getPane());
-					vlcInfoDialog.show();
-				}else{
-					try {
-						Runtime.getRuntime().exec(new String[] { "vlc", streamUrl}); // TODO switch to ProcessBuilder
-					} catch (IOException e) {
-						showErrorMsg(errorPlay,e);
-					}
-				}
-			}else if(System.getProperty("os.name").contains("Windows") || System.getProperty("os.name").contains("Mac OS X")){
-					try {
-						Desktop.getDesktop().open(new File(streamUrl));
-					} catch (IOException e) {
-						showErrorMsg(errorPlay,e);
-					}
+			if (output.contains("which: no vlc") || output == "") {
+				JFXInfoDialog vlcInfoDialog = new JFXInfoDialog("Info", vlcNotInstalled, dialogBtnStyle, 350, 200, main.getPane());
+				vlcInfoDialog.show();
 			} else {
-				LOGGER.error(System.getProperty("os.name") + ", OS is not supported, please contact a developer! ");
-			}	
+				try {
+					Runtime.getRuntime().exec(new String[] { "vlc", streamUrl }); // TODO switch to ProcessBuilder
+				} catch (IOException e) {
+					showErrorMsg(errorPlay, e);
+				}
+			}
+			
+		} else if (System.getProperty("os.name").contains("Windows") || System.getProperty("os.name").contains("Mac OS X")) {
+			try {
+				Desktop.getDesktop().open(new File(streamUrl));
+			} catch (IOException e) {
+				showErrorMsg(errorPlay, e);
+			}
+		} else {
+			LOGGER.error(System.getProperty("os.name") + ", OS is not supported, please contact a developer! ");
 		}
 	}
 	
@@ -646,24 +611,6 @@ public class MainWindowController {
 			saveSettings();
 			settingsTrue = false;
 		}
-	}
-	
-	@FXML
-	private void switchBtnclicked(){
-		if(mode.equals("local")){	//switch to streaming mode
-			setMode("streaming");
-			switchBtn.setText("local");
-		}else if(mode.equals("streaming")){	//switch to local mode
-			setMode("local");
-			switchBtn.setText("streaming");
-		}
-		saveSettings();
-		filmRoot.getChildren().removeAll(filmRoot.getChildren());
-		addDataUI();
-		settingsScrollPane.setVisible(false);
-		sideMenuSlideOut();		//disables side-menu
-		menuTrue = false;
-		settingsTrue = false;
 	}
 	
 	@FXML
@@ -721,57 +668,35 @@ public class MainWindowController {
 	
 	// refresh the selected child of the root node
 	private void refreshTable() {
-		if (mode.equals("local")) {
-			filmRoot.getChildren().get(selected).setValue(localFilms.get(selected));
-		} else {
-			filmRoot.getChildren().get(selected).setValue(streamingFilms.get(selected));
-		}
+		filmRoot.getChildren().get(selected).setValue(localFilms.get(selected));
 	}
 	
 	// TODO rework
 	public void addDataUI() {
 
-		if (mode.equals("local")) {
-			for (FilmTabelDataType element : localFilms) {
-				if (element.getSeason() != 0) {
-//					System.out.println("Found Series: " + element.getTitle());
-					// check if there is a series node to add the item
-					
-					for (int i = 0; i < filmRoot.getChildren().size(); i++) {
-						if (filmRoot.getChildren().get(i).getValue().getTitle().equals(element.getTitle())) {
-//							System.out.println("Found a root node to add child");
-//							System.out.println("Adding: " + element.getStreamUrl());
-							TreeItem<FilmTabelDataType> episodeNode = new TreeItem<>(new FilmTabelDataType(element.getStreamUrl(),
-									element.getTitle(), element.getSeason(), element.getEpisode(), element.getRating(),
-									element.getCached(), element.getImage()));
-							filmRoot.getChildren().get(i).getChildren().add(episodeNode);
-						} else if (i == filmRoot.getChildren().size() - 1) {
-//							System.out.println("Create a root node to add child");
-//							System.out.println("Adding: " + element.getStreamUrl());
-							TreeItem<FilmTabelDataType> seriesRootNode = new TreeItem<>(new FilmTabelDataType(element.getStreamUrl(),
-									element.getTitle(), 0, 0, element.getRating(), element.getCached(), element.getImage()));
-							filmRoot.getChildren().add(seriesRootNode);
-						}
+		for (FilmTabelDataType element : localFilms) {
+			if (element.getSeason() != 0) {
+//				System.out.println("Found Series: " + element.getTitle());
+				// check if there is a series node to add the item
+				for (int i = 0; i < filmRoot.getChildren().size(); i++) {
+					if (filmRoot.getChildren().get(i).getValue().getTitle().equals(element.getTitle())) {
+//						System.out.println("Found a root node to add child");
+//						System.out.println("Adding: " + element.getStreamUrl());
+						TreeItem<FilmTabelDataType> episodeNode = new TreeItem<>(new FilmTabelDataType(element.getStreamUrl(),
+								element.getTitle(), element.getSeason(), element.getEpisode(), element.getRating(),
+								element.getCached(), element.getImage()));
+						filmRoot.getChildren().get(i).getChildren().add(episodeNode);
+					} else if (i == filmRoot.getChildren().size() - 1) {
+//						System.out.println("Create a root node to add child");
+//						System.out.println("Adding: " + element.getStreamUrl());
+						TreeItem<FilmTabelDataType> seriesRootNode = new TreeItem<>(new FilmTabelDataType(element.getStreamUrl(),
+								element.getTitle(), 0, 0, element.getRating(), element.getCached(), element.getImage()));
+						filmRoot.getChildren().add(seriesRootNode);
 					}
-				} else {
-					filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(element)); // add data to root-node
 				}
+			} else {
+				filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(element)); // add data to root-node
 			}
-
-			columnRating.setMaxWidth(85);
-			columnTitle.setMaxWidth(290);
-			treeTableViewfilm.getColumns().get(3).setVisible(false);
-			treeTableViewfilm.getColumns().get(4).setVisible(false);
-		} else {
-			for (int i = 0; i < streamingFilms.size(); i++) {
-				filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(streamingFilms.get(i))); // add data to root-node
-			}
-			columnTitle.setMaxWidth(215);
-			columnRating.setMaxWidth(60);
-			columnSeason.setMaxWidth(55);
-			columnEpisode.setMaxWidth(64);
-			treeTableViewfilm.getColumns().get(3).setVisible(true);
-			treeTableViewfilm.getColumns().get(4).setVisible(true);
 		}
 	}
 	
@@ -816,7 +741,6 @@ public class MainWindowController {
 		if (icolor.compareTo(ccolor) == -1) {
 			dialogBtnStyle = btnStyleWhite;
 			settingsBtn.setStyle("-fx-text-fill: WHITE;");
-			switchBtn.setStyle("-fx-text-fill: WHITE;");
 			aboutBtn.setStyle("-fx-text-fill: WHITE;");
 			debugBtn.setStyle("-fx-text-fill: WHITE;");
 			addDirectoryBtn.setStyle(btnStyleWhite);
@@ -833,7 +757,6 @@ public class MainWindowController {
 		} else {
 			dialogBtnStyle = btnStyleBlack;
 			settingsBtn.setStyle("-fx-text-fill: BLACK;");
-			switchBtn.setStyle("-fx-text-fill: BLACK;");
 			aboutBtn.setStyle("-fx-text-fill: BLACK;");
 			debugBtn.setStyle("-fx-text-fill: BLACK;");
 			addDirectoryBtn.setStyle(btnStyleBlack);
@@ -847,12 +770,6 @@ public class MainWindowController {
 			returnBtn.setGraphic(skip_previous_black);
 			forwardBtn.setGraphic(skip_next_black);
 			menuHam.getStyleClass().add("jfx-hamburgerB");
-		}
-
-		if (mode.equals("local")) {
-			switchBtn.setText("streaming");
-		} else if (mode.equals("streaming")) {
-			switchBtn.setText("local");
 		}
 	}
 	
@@ -906,7 +823,6 @@ public class MainWindowController {
 		columnStreamUrl.setText(getBundle().getString("columnStreamUrl"));
 		columnSeason.setText(getBundle().getString("columnSeason"));
 		errorPlay = getBundle().getString("errorPlay");
-		errorOpenStream = getBundle().getString("errorOpenStream");
 		errorLoad = getBundle().getString("errorLoad");
 		errorSave = getBundle().getString("errorSave");
 		infoText = getBundle().getString("infoText");
@@ -955,8 +871,6 @@ public class MainWindowController {
 			props.setProperty("useBeta", String.valueOf(isUseBeta()));
 			props.setProperty("size", getSize().toString());
 			props.setProperty("local", getLocal());
-			props.setProperty("streamingPath", getStreamingPath());
-			props.setProperty("mode", getMode());
 			props.setProperty("ratingSortType", columnRating.getSortType().toString());
 
 			OutputStream outputStream = new FileOutputStream(main.getConfigFile()); // new output-stream
@@ -974,13 +888,6 @@ public class MainWindowController {
 		try {
 			InputStream inputStream = new FileInputStream(main.getConfigFile());
 			props.loadFromXML(inputStream); // new input-stream from .xml
-
-			try {
-				setStreamingPath(props.getProperty("streamingPath"));
-			} catch (Exception e) {
-				LOGGER.error("cloud not load streamingPath", e);
-				setStreamingPath("");
-			}
 
 			try {
 				setColor(props.getProperty("color"));
@@ -1024,23 +931,6 @@ public class MainWindowController {
 				setRatingSortType("");
 			}
 
-			try {
-				switch (props.getProperty("mode")) {
-				case "local":
-					setMode("local");
-					break;
-				case "streaming":
-					setMode("streaming");
-					break;
-				default:
-					setMode("local");
-					break;
-				}
-			} catch (Exception e) {
-				setMode("local");
-				LOGGER.error("cloud not load mode", e);
-			}
-
 			inputStream.close();
 		} catch (IOException e) {
 			LOGGER.error(errorSave, e);
@@ -1081,14 +971,6 @@ public class MainWindowController {
 		return color;
 	}
 
-	public void setStreamingPath(String input) {
-		this.streamingPath = input;
-	}
-
-	public String getStreamingPath() {
-		return streamingPath;
-	}
-
 	public void setSize(Double input) {
 		this.size = input;
 	}
@@ -1121,28 +1003,12 @@ public class MainWindowController {
 		return local;
 	}
 
-	public void setMode(String input) {
-		this.mode = input;
-	}
-
-	public String getMode() {
-		return mode;
-	}
-
 	public ObservableList<FilmTabelDataType> getLocalFilms() {
 		return localFilms;
 	}
 
 	public void setLocalFilms(ObservableList<FilmTabelDataType> localFilms) {
 		this.localFilms = localFilms;
-	}
-
-	public ObservableList<FilmTabelDataType> getStreamingFilms() {
-		return streamingFilms;
-	}
-
-	public void setStreamingFilms(ObservableList<FilmTabelDataType> streamingFilms) {
-		this.streamingFilms = streamingFilms;
 	}
 
 	public ObservableList<SourceDataType> getSourcesList() {
