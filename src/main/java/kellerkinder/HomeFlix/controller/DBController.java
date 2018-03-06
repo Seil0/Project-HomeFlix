@@ -100,8 +100,8 @@ public class DBController {
 	private void createDatabase() {	
 		try {
 			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("create table if not exists film_local (rating, title, streamUrl, cached)");
-			stmt.executeUpdate("create table if not exists film_streaming (season, episode, rating, title, streamUrl, cached)");
+			stmt.executeUpdate("create table if not exists film_loc (streamUrl, title, season, episode, rating, cached)");
+			stmt.executeUpdate("create table if not exists film_str (streamUrl, title, season, episode, rating, cached)");
 			stmt.executeUpdate("create table if not exists cache ("
 					+ "streamUrl, Title, Year, Rated, Released, Runtime, Genre, Director, Writer,"
 					+ " Actors, Plot, Language, Country, Awards, Metascore, imdbRating, imdbVotes,"
@@ -117,14 +117,14 @@ public class DBController {
 		// get all entries from the tables
 		try {
 			Statement stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local");
+			ResultSet rs = stmt.executeQuery("SELECT * FROM film_loc");
 			while (rs.next()) {
 				filmsdbDir.add(rs.getString("title"));
 			}
 			stmt.close();
 			rs.close();
 
-			rs = stmt.executeQuery("SELECT * FROM film_streaming;");
+			rs = stmt.executeQuery("SELECT * FROM film_str;");
 			while (rs.next()) {
 				filmsdbAll.add(rs.getString("title"));
 				filmsdbStreamURL.add(rs.getString("streamUrl"));
@@ -192,7 +192,7 @@ public class DBController {
 		try {
 			//load local Data
 			Statement stmt = connection.createStatement(); 
-			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local ORDER BY title"); 
+			ResultSet rs = stmt.executeQuery("SELECT * FROM film_loc ORDER BY title"); 
 			while (rs.next()) {
 				if (rs.getInt("rating") == 1) {
 					mainWindowController.getLocalFilms().add(new FilmTabelDataType(1, 1, rs.getDouble("rating"), rs.getString("title"),
@@ -206,7 +206,7 @@ public class DBController {
 			rs.close();
 			
 			//load streaming Data
-			rs = stmt.executeQuery("SELECT * FROM film_streaming ORDER BY title;"); 
+			rs = stmt.executeQuery("SELECT * FROM film_str ORDER BY title;"); 
 			while (rs.next()) {
 				if (rs.getInt("rating") == 1) {
 					mainWindowController.getStreamingFilms().add(new FilmTabelDataType(rs.getInt("season"),
@@ -240,7 +240,7 @@ public class DBController {
 			Statement stmt = connection.createStatement();
 			
 			if (mainWindowController.getMode().equals("local")) {
-				ResultSet rs = stmt.executeQuery("SELECT * FROM film_local WHERE streamUrl = \"" + streamUrl + "\";");
+				ResultSet rs = stmt.executeQuery("SELECT * FROM film_loc WHERE streamUrl = \"" + streamUrl + "\";");
 				if (rs.getInt("rating") == 1) {
 					mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(1, 1, rs.getDouble("rating"),
 							rs.getString("title"), rs.getString("streamUrl"), new ImageView(favorite_black), rs.getBoolean("cached")));
@@ -250,7 +250,7 @@ public class DBController {
 				}
 				rs.close();
 			} else {
-				ResultSet rs = stmt.executeQuery("SELECT * FROM film_streaming WHERE streamUrl = \"" + streamUrl + "\";");
+				ResultSet rs = stmt.executeQuery("SELECT * FROM film_str WHERE streamUrl = \"" + streamUrl + "\";");
 				if (rs.getInt("rating") == 1) {
 					mainWindowController.getStreamingFilms().set(index, new FilmTabelDataType(rs.getInt("season"),
 							rs.getInt("episode"), rs.getDouble("rating"), rs.getString("title"), rs.getString("streamUrl"),
@@ -312,18 +312,18 @@ public class DBController {
 			Statement stmt = connection.createStatement();
 			
 			for (String entry : filmsdbDir) {
-				if (!filmsAll.contains(cutOffEnd(entry))) {
-					stmt.executeUpdate("delete from film_local where title = \"" + entry + "\"");
+				if (!filmsAll.contains(entry)) {
+					stmt.executeUpdate("delete from film_loc where title = \"" + entry + "\"");
 					connection.commit();
-					LOGGER.info("removed \"" + entry + "\" from database");
+					LOGGER.info("removed \"" + entry + "\" from loc database");
 				}
 			}
 			
 			for (String entry : filmsdbStreamURL) {
 				if (!filmsStreamURL.contains(entry)) {
-					stmt.executeUpdate("delete from film_streaming where streamUrl = \"" + entry + "\"");
+					stmt.executeUpdate("delete from film_str where streamUrl = \"" + entry + "\"");
 					connection.commit();
-					LOGGER.info("removed \"" + entry + "\" from database");
+					LOGGER.info("removed \"" + entry + "\" from str database");
 				}
 			}
 			
@@ -341,21 +341,22 @@ public class DBController {
 	 */
 	private void checkAddEntry() throws SQLException, FileNotFoundException, IOException {
 		Statement stmt = connection.createStatement();
-		PreparedStatement ps = connection.prepareStatement("insert into film_streaming values (?, ?, ?, ?, ?, ?)");
+		PreparedStatement ps = connection.prepareStatement("insert into film_str values (?, ?, ?, ?, ?, ?)");
 		LOGGER.info("checking for entrys to add to DB ...");
 		
 		// source is a single source of the sources list
 		for (SourceDataType source : mainWindowController.getSourcesList()) {
 			// if it's a local source check the folder for new film
 			if (source.getMode().equals("local")) {
-				for (String entry : new File(source.getPath()).list()) {
-					if (!filmsdbAll.contains(cutOffEnd(entry))) {
-						stmt.executeUpdate("insert into film_local values (0, \"" + cutOffEnd(entry) + "\", \""
-								+ source.getPath() + "/" + entry + "\",0)");
+				for (String file : new File(source.getPath()).list()) {
+					if (!filmsdbAll.contains(cutOffEnd(file))) {
+						stmt.executeUpdate("insert into film_loc values ("
+								+ "'" + source.getPath() + "/" + file + "',"
+								+ "'" + cutOffEnd(file) + "', 0, 0, 0, 0)");
 						connection.commit();
 						stmt.close();
-						LOGGER.info("added \"" + entry + "\" to database");
-						filmsAll.add(cutOffEnd(entry));
+						LOGGER.info("added \"" + file + "\" to database");
+						filmsAll.add(cutOffEnd(file));
 					}
 				}
 			} else {
@@ -370,11 +371,11 @@ public class DBController {
 							
 							// if it's the needed add it to the database
 							if (streamUrl.equals(entry)) {
-								ps.setInt(1, item.asObject().getInt("season", 0));
-								ps.setInt(2, item.asObject().getInt("episode", 0));
-								ps.setInt(3, 0);
-								ps.setString(4, title);
-								ps.setString(5, streamUrl);
+								ps.setString(1, streamUrl);
+								ps.setString(2, title);
+								ps.setInt(3, item.asObject().getInt("season", 0));
+								ps.setInt(4, item.asObject().getInt("episode", 0));
+								ps.setInt(5, 0);
 								ps.setBoolean(6, false);
 								ps.addBatch(); // adds the entry
 								LOGGER.info("added \"" + title + "\" to database");
@@ -395,11 +396,13 @@ public class DBController {
 		System.out.println("Outputting all entries ... \n");
 		try {
 			Statement stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM film_local");
+			ResultSet rs = stmt.executeQuery("SELECT * FROM film_loc");
 			while (rs.next()) {
-				System.out.println(rs.getString("rating"));
-				System.out.println(rs.getString("title"));
 				System.out.println(rs.getString("streamUrl"));
+				System.out.println(rs.getString("title"));
+				System.out.println(rs.getString("season"));
+				System.out.println(rs.getString("episode"));
+				System.out.println(rs.getString("rating"));
 				System.out.println(rs.getString("cached") + "\n");
 			}
 			stmt.close();
@@ -407,13 +410,13 @@ public class DBController {
 
 			System.out.println("Streaming Entries: \n");
 
-			rs = stmt.executeQuery("SELECT * FROM film_streaming;");
+			rs = stmt.executeQuery("SELECT * FROM film_str;");
 			while (rs.next()) {
+				System.out.println(rs.getString("streamUrl"));
+				System.out.println(rs.getString("title"));
 				System.out.println(rs.getString("season"));
 				System.out.println(rs.getString("episode"));
 				System.out.println(rs.getString("rating"));
-				System.out.println(rs.getString("title"));
-				System.out.println(rs.getString("streamUrl"));
 				System.out.println(rs.getString("cached") + "\n");
 			}
 			stmt.close();
@@ -434,9 +437,9 @@ public class DBController {
 		try {
 			Statement stmt = connection.createStatement();
 			if (mainWindowController.getMode().equals("local")) {
-				stmt.executeUpdate("UPDATE film_local SET rating=0 WHERE streamUrl=\"" + streamUrl + "\";");
+				stmt.executeUpdate("UPDATE film_loc SET rating=0 WHERE streamUrl=\"" + streamUrl + "\";");
 			} else {
-				stmt.executeUpdate("UPDATE film_streaming SET rating=0 WHERE streamUrl=\"" + streamUrl + "\";");
+				stmt.executeUpdate("UPDATE film_str SET rating=0 WHERE streamUrl=\"" + streamUrl + "\";");
 			}
 			connection.commit();
 			stmt.close();
@@ -455,9 +458,9 @@ public class DBController {
 		try {
 			Statement stmt = connection.createStatement();
 			if (mainWindowController.getMode().equals("local")) {
-				stmt.executeUpdate("UPDATE film_local SET rating=1 WHERE streamUrl=\"" + streamUrl + "\";");
+				stmt.executeUpdate("UPDATE film_loc SET rating=1 WHERE streamUrl=\"" + streamUrl + "\";");
 			} else {
-				stmt.executeUpdate("UPDATE film_streaming SET rating=1 WHERE streamUrl=\"" + streamUrl + "\";");
+				stmt.executeUpdate("UPDATE film_str SET rating=1 WHERE streamUrl=\"" + streamUrl + "\";");
 			}
 			connection.commit();
 			stmt.close();
@@ -474,9 +477,9 @@ public class DBController {
 		try {
 			Statement stmt = connection.createStatement();
 			if (mainWindowController.getMode().equals("local")) {
-				stmt.executeUpdate("UPDATE film_local SET cached=1 WHERE streamUrl=\"" + streamUrl + "\";");
+				stmt.executeUpdate("UPDATE film_loc SET cached=1 WHERE streamUrl=\"" + streamUrl + "\";");
 			} else {
-				stmt.executeUpdate("UPDATE film_streaming SET cached=1 WHERE streamUrl=\"" + streamUrl + "\";");
+				stmt.executeUpdate("UPDATE film_str SET cached=1 WHERE streamUrl=\"" + streamUrl + "\";");
 			}
 			connection.commit();
 			stmt.close();
