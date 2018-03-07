@@ -117,7 +117,7 @@ public class MainWindowController {
 	private VBox sideMenuVBox;
 	
 	@FXML
-	private TreeTableView<FilmTabelDataType> treeTableViewfilm;
+	private TreeTableView<FilmTabelDataType> filmsTreeTable;
 	
 	@FXML
 	private TableView<SourceDataType> sourcesTable;
@@ -201,25 +201,24 @@ public class MainWindowController {
 	private Label versionLbl;
 
     @FXML
-	private ImageView image1;
-    
+	private ImageView posterImageView;
     private ImageView imv1;
     
 	@FXML
 	private TreeItem<FilmTabelDataType> filmRoot = new TreeItem<>(new FilmTabelDataType("", "", 0, 0, 0, false, imv1));
 	@FXML
-	TreeTableColumn<FilmTabelDataType, ImageView> columnRating = new TreeTableColumn<>("Rating");
+	private TreeTableColumn<FilmTabelDataType, String> columnStreamUrl = new TreeTableColumn<>("File Name");
 	@FXML
-	TreeTableColumn<FilmTabelDataType, String> columnTitle = new TreeTableColumn<>("Title");
+	private TreeTableColumn<FilmTabelDataType, String> columnTitle = new TreeTableColumn<>("Title");
 	@FXML
-	TreeTableColumn<FilmTabelDataType, String> columnStreamUrl = new TreeTableColumn<>("File Name");
+	private TreeTableColumn<FilmTabelDataType, Integer> columnSeason = new TreeTableColumn<>("Season");
 	@FXML
-	TreeTableColumn<FilmTabelDataType, Integer> columnSeason = new TreeTableColumn<>("Season");
+	private TreeTableColumn<FilmTabelDataType, Integer> columnEpisode = new TreeTableColumn<>("Episode");
 	@FXML
-	TreeTableColumn<FilmTabelDataType, Integer> columnEpisode = new TreeTableColumn<>("Episode");
+	private TreeTableColumn<FilmTabelDataType, ImageView> columnRating = new TreeTableColumn<>("Rating");
     
     @FXML
-    private TreeItem<SourceDataType> streamingRoot =new TreeItem<>(new SourceDataType("", ""));
+    private TreeItem<SourceDataType> sourceRoot =new TreeItem<>(new SourceDataType("", ""));
     @FXML
     private TableColumn<SourceDataType, String> sourceColumn;
     @FXML
@@ -255,10 +254,10 @@ public class MainWindowController {
 	private int next;
 	private ResourceBundle bundle;
 
-	private ObservableList<FilmTabelDataType> filterData = FXCollections.observableArrayList();
 	private ObservableList<String> languages = FXCollections.observableArrayList("English (en_US)", "Deutsch (de_DE)");
 	private ObservableList<String> branches = FXCollections.observableArrayList("stable", "beta");
-	private ObservableList<FilmTabelDataType> localFilms = FXCollections.observableArrayList();
+	private ObservableList<FilmTabelDataType> filterData = FXCollections.observableArrayList();
+	private ObservableList<FilmTabelDataType> filmsList = FXCollections.observableArrayList();
 	private ObservableList<SourceDataType> sourcesList = FXCollections.observableArrayList();
 	private ImageView skip_previous_white = new ImageView(new Image("icons/ic_skip_previous_white_18dp_1x.png"));
 	private ImageView skip_previous_black = new ImageView(new Image("icons/ic_skip_previous_black_18dp_1x.png"));
@@ -275,7 +274,7 @@ public class MainWindowController {
 	private Main main;
 	private UpdateController updateController;
 	private apiQuery ApiQuery;
-	DBController dbController;
+	private DBController dbController;
 	
 	/**
 	 * "Main" Method called in Main.java main() when starting
@@ -306,9 +305,9 @@ public class MainWindowController {
 		columnEpisode.setMaxWidth(64);
 		columnRating.setStyle("-fx-alignment: CENTER;");
 
-		treeTableViewfilm.setRoot(filmRoot);
-		treeTableViewfilm.setColumnResizePolicy(TreeTableView.CONSTRAINED_RESIZE_POLICY);
-		treeTableViewfilm.setShowRoot(false);
+		filmsTreeTable.setRoot(filmRoot);
+		filmsTreeTable.setColumnResizePolicy(TreeTableView.CONSTRAINED_RESIZE_POLICY);
+		filmsTreeTable.setShowRoot(false);
 
 		// write content into cell
 		columnTitle.setCellValueFactory(cellData -> cellData.getValue().getValue().titleProperty());
@@ -318,15 +317,15 @@ public class MainWindowController {
 		columnEpisode.setCellValueFactory(cellData -> cellData.getValue().getValue().episodeProperty().asObject());
 
 		// add columns to treeTableViewfilm
-		 treeTableViewfilm.getColumns().add(columnStreamUrl);
-        treeTableViewfilm.getColumns().add(columnTitle);
-        treeTableViewfilm.getColumns().add(columnRating);
-        treeTableViewfilm.getColumns().add(columnSeason);
-        treeTableViewfilm.getColumns().add(columnEpisode);
-        treeTableViewfilm.getColumns().get(0).setVisible(false); //hide columnStreamUrl (column with file URL, important for opening a file/stream)
+		filmsTreeTable.getColumns().add(columnStreamUrl);
+		filmsTreeTable.getColumns().add(columnTitle);
+		filmsTreeTable.getColumns().add(columnRating);
+		filmsTreeTable.getColumns().add(columnSeason);
+		filmsTreeTable.getColumns().add(columnEpisode);
+		filmsTreeTable.getColumns().get(0).setVisible(false); //hide columnStreamUrl (column with file URL, important for opening a file/stream)
 	    
 	    // context menu for treeTableViewfilm  
-	    treeTableViewfilm.setContextMenu(menu);
+		filmsTreeTable.setContextMenu(menu);
 	    
 	    // sourcesTreeTable
 	    sourceColumn.setCellValueFactory(cellData -> cellData.getValue().pathProperty());
@@ -364,7 +363,7 @@ public class MainWindowController {
 				filterData.removeAll(filterData);
 				filmRoot.getChildren().removeAll(filmRoot.getChildren());
 
-				helpData = localFilms;
+				helpData = filmsList;
 
 
 				for (int i = 0; i < helpData.size(); i++) {
@@ -450,7 +449,7 @@ public class MainWindowController {
 //				treeTableViewfilm.getSelectionModel().clearSelection(selected);
 				filmRoot.getChildren().removeAll(filmRoot.getChildren());
 
-				helpData = localFilms;
+				helpData = filmsList;
 
 				for (int i = 0; i < helpData.size(); i++) {
 					if (helpData.get(i).getRating() == 1.0) {
@@ -486,17 +485,17 @@ public class MainWindowController {
 		});
         
 		// Change-listener for treeTableViewfilm
-		treeTableViewfilm.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {
+		filmsTreeTable.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {
 			@Override
 			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal) {
 				// last = selected; //for auto-play
-				selected = treeTableViewfilm.getSelectionModel().getSelectedIndex(); // get selected item
+				selected = filmsTreeTable.getSelectionModel().getSelectedIndex(); // get selected item
 				last = selected - 1;
 				next = selected + 1;
 				title = columnTitle.getCellData(selected); // get name of selected item
 				streamUrl = columnStreamUrl.getCellData(selected); // get file path of selected item
 
-				if (localFilms.get(selected).getCached() == true) {
+				if (filmsList.get(selected).getCached() == true) {
 					LOGGER.info("loading from cache: " + title);
 					dbController.readCache(streamUrl);
 				} else {
@@ -585,12 +584,12 @@ public class MainWindowController {
 	
 	@FXML
 	private void returnBtnclicked(){
-		treeTableViewfilm.getSelectionModel().select(last);
+		filmsTreeTable.getSelectionModel().select(last);
 	}
 	
 	@FXML
 	private void forwardBtnclicked(){
-		treeTableViewfilm.getSelectionModel().select(next);
+		filmsTreeTable.getSelectionModel().select(next);
 	}
 	
 	@FXML
@@ -668,13 +667,15 @@ public class MainWindowController {
 	
 	// refresh the selected child of the root node
 	private void refreshTable() {
-		filmRoot.getChildren().get(selected).setValue(localFilms.get(selected));
+		filmRoot.getChildren().get(selected).setValue(filmsList.get(selected));
 	}
 	
-	// TODO rework
+	/**
+	 * add data from films-list to films-table
+	 */
 	public void addDataUI() {
 
-		for (FilmTabelDataType element : localFilms) {
+		for (FilmTabelDataType element : filmsList) {
 			if (element.getSeason() != 0) {
 //				System.out.println("Found Series: " + element.getTitle());
 				// check if there is a series node to add the item
@@ -703,7 +704,7 @@ public class MainWindowController {
 	// add a source to the sources table on the settings pane
 	public void addSourceToTable(String path, String mode) {
 		sourcesList.add(new SourceDataType(path, mode));
-		streamingRoot.getChildren().add(new TreeItem<SourceDataType>(sourcesList.get(sourcesList.size() - 1))); // adds data to root-node
+		sourceRoot.getChildren().add(new TreeItem<SourceDataType>(sourcesList.get(sourcesList.size() - 1))); // adds data to root-node
 	}
 	
 	// add a source to the newsources list
@@ -963,6 +964,10 @@ public class MainWindowController {
 	}
 
 	// getter and setter
+	public DBController getDbController() {
+		return dbController;
+	}
+
 	public void setColor(String input) {
 		this.color = input;
 	}
@@ -1003,20 +1008,12 @@ public class MainWindowController {
 		return local;
 	}
 
-	public ObservableList<FilmTabelDataType> getLocalFilms() {
-		return localFilms;
-	}
-
-	public void setLocalFilms(ObservableList<FilmTabelDataType> localFilms) {
-		this.localFilms = localFilms;
+	public ObservableList<FilmTabelDataType> getFilmsList() {
+		return filmsList;
 	}
 
 	public ObservableList<SourceDataType> getSourcesList() {
 		return sourcesList;
-	}
-
-	public void setSourcesList(ObservableList<SourceDataType> sourcesList) {
-		this.sourcesList = sourcesList;
 	}
 
 	public String getRatingSortType() {
@@ -1039,8 +1036,8 @@ public class MainWindowController {
 		return textFlow;
 	}
 
-	public ImageView getImage1() {
-		return image1;
+	public ImageView getPosterImageView() {
+		return posterImageView;
 	}
 
 	public JFXButton getUpdateBtn() {
@@ -1051,7 +1048,7 @@ public class MainWindowController {
 		return filmRoot;
 	}
 
-	public TreeItem<SourceDataType> getStreamingRoot() {
-		return streamingRoot;
+	public TreeItem<SourceDataType> getSourceRoot() {
+		return sourceRoot;
 	}
 }

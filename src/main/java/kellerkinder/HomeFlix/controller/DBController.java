@@ -135,7 +135,7 @@ public class DBController {
 	private void loadSources() {
 		// remove sources from table
 		mainWindowController.getSourcesList().removeAll(mainWindowController.getSourcesList());
-		mainWindowController.getStreamingRoot().getChildren().removeAll(mainWindowController.getStreamingRoot().getChildren());
+		mainWindowController.getSourceRoot().getChildren().removeAll(mainWindowController.getSourceRoot().getChildren());
 		
 		try {
 			JsonArray sources = Json.parse(new FileReader(main.getDirectory() + "/sources.json")).asArray();
@@ -190,11 +190,11 @@ public class DBController {
 			ResultSet rs = stmt.executeQuery("SELECT * FROM films ORDER BY title"); 
 			while (rs.next()) {
 				if (rs.getInt("rating") == 1) {
-					mainWindowController.getLocalFilms().add(new FilmTabelDataType(rs.getString("streamUrl"),
+					mainWindowController.getFilmsList().add(new FilmTabelDataType(rs.getString("streamUrl"),
 							rs.getString("title"), rs.getInt("season"), rs.getInt("episode") ,rs.getDouble("rating"),
 							rs.getBoolean("cached"), new ImageView(favorite_black)));
 				} else {
-					mainWindowController.getLocalFilms().add(new FilmTabelDataType(rs.getString("streamUrl"),
+					mainWindowController.getFilmsList().add(new FilmTabelDataType(rs.getString("streamUrl"),
 							rs.getString("title"), rs.getInt("season"), rs.getInt("episode"), rs.getDouble("rating"),
 							rs.getBoolean("cached"), new ImageView(favorite_border_black)));
 				}
@@ -221,11 +221,11 @@ public class DBController {
 			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE streamUrl = \"" + streamUrl + "\";");
 			
 			if (rs.getInt("rating") == 1) {
-				mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
+				mainWindowController.getFilmsList().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
 						rs.getString("title"), rs.getInt("season"), rs.getInt("episode") ,rs.getDouble("rating"),
 						rs.getBoolean("cached"), new ImageView(favorite_black)));
 			} else {
-				mainWindowController.getLocalFilms().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
+				mainWindowController.getFilmsList().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
 						rs.getString("title"), rs.getInt("season"), rs.getInt("episode"), rs.getDouble("rating"),
 						rs.getBoolean("cached"), new ImageView(favorite_border_black)));
 			}
@@ -262,7 +262,7 @@ public class DBController {
 		}
 		
 		// remove all films from the mwc lists
-		mainWindowController.getLocalFilms().removeAll(mainWindowController.getLocalFilms());
+		mainWindowController.getFilmsList().removeAll(mainWindowController.getFilmsList());
 		mainWindowController.getFilmRoot().getChildren().removeAll(mainWindowController.getFilmRoot().getChildren());
 		
 		loadDataToMWC(); // load the new data to the mwc
@@ -347,7 +347,7 @@ public class DBController {
 					
 				}
 			} else {
-				// if it's a streaming source check the file for new films // TODO implement series support
+				// if it's a streaming source check the file for new films
 				for (String entry : filmsStreamURL) {
 					if (!filmsdbStreamURL.contains(entry)) {
 						JsonArray items = Json.parse(new FileReader(source.getPath())).asObject().get("entries").asArray();
@@ -562,12 +562,12 @@ public class DBController {
 			}
 
 			try {
-				mainWindowController.getImage1().setImage(im);
+				mainWindowController.getPosterImageView().setImage(im);
 			} catch (Exception e) {
-				mainWindowController.getImage1().setImage(new Image("resources/icons/close_black_2048x2048.png"));
+				mainWindowController.getPosterImageView().setImage(new Image("resources/icons/close_black_2048x2048.png"));
 				LOGGER.error(e);
 			}
-			mainWindowController.getImage1().setImage(im);
+			mainWindowController.getPosterImageView().setImage(im);
 
 		} catch (SQLException e) {
 			LOGGER.error("Ups! an error occured!", e);

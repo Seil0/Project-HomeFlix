@@ -164,7 +164,7 @@ public class apiQuery{
 				if (retdata.contains("\"Response\":\"False\"")) { // TODO + FIXME
 					mainWindowController.getTextFlow().getChildren().add(new Text(mainWindowController.getBundle().getString("noFilmFound")));
 					im = new Image("resources/icons/close_black_2048x2048.png");
-					mainWindowController.getImage1().setImage(im);
+					mainWindowController.getPosterImageView().setImage(im);
 				} else {
 					nameText.add(0, new Text(mainWindowController.getBundle().getString("title") + ": "));
 					nameText.add(1, new Text(mainWindowController.getBundle().getString("year") + ": "));
@@ -200,7 +200,7 @@ public class apiQuery{
 					} else {
 						im = new Image(responseString[18]);
 					}
-					mainWindowController.getImage1().setImage(im);
+					mainWindowController.getPosterImageView().setImage(im);
 				}
 			}
 

@@ -29,7 +29,7 @@
             <TextFlow fx:id="textFlow" accessibleRole="TEXT_AREA" maxHeight="544.0" maxWidth="320.0" visible="true" />
          </content>
       </ScrollPane>
-		<TreeTableView fx:id="treeTableViewfilm" layoutX="14.0" layoutY="88.0" prefHeight="500.0" prefWidth="375.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="568.0" AnchorPane.topAnchor="88.0" />
+		<TreeTableView fx:id="filmsTreeTable" layoutX="14.0" layoutY="88.0" prefHeight="500.0" prefWidth="375.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="568.0" AnchorPane.topAnchor="88.0" />
 		<JFXButton fx:id="playbtn" contentDisplay="CENTER" layoutX="690.0" layoutY="363.0" onAction="#playbtnclicked" prefHeight="25.0" prefWidth="198.0" AnchorPane.bottomAnchor="212.0" AnchorPane.rightAnchor="12.0">
          <font>
             <Font name="System Bold" size="14.0" />

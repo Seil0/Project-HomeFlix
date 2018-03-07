@@ -132,7 +132,7 @@ public class Main extends Application {
 			
 			// init here as it loads the games to the mwc and the gui, therefore the window must exist
 			mainWindowController.init();
-			mainWindowController.dbController.init();
+			mainWindowController.getDbController().init();
 		} catch (IOException e) {
 			LOGGER.error(e);
 		}
