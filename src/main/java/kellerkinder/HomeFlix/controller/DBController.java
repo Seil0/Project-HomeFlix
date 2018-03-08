@@ -214,22 +214,22 @@ public class DBController {
 	 * @param streamUrl of the film
 	 * @param index of the film in LocalFilms list
 	 */
-	public void refresh(String streamUrl, int index) {
-		// FIXME we need to refresh the entry in the table as well, else indexOf for indexList won't work
+	public void refresh(String streamUrl, int indexList) {
 		LOGGER.info("refresh ...");
 		try {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE streamUrl = \"" + streamUrl + "\";");
 			
 			if (rs.getInt("rating") == 1) {
-				mainWindowController.getFilmsList().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
+				mainWindowController.getFilmsList().set(indexList, new FilmTabelDataType(rs.getString("streamUrl"),
 						rs.getString("title"), rs.getInt("season"), rs.getInt("episode") ,rs.getDouble("rating"),
 						rs.getBoolean("cached"), new ImageView(favorite_black)));
 			} else {
-				mainWindowController.getFilmsList().set(index, new FilmTabelDataType(rs.getString("streamUrl"),
+				mainWindowController.getFilmsList().set(indexList, new FilmTabelDataType(rs.getString("streamUrl"),
 						rs.getString("title"), rs.getInt("season"), rs.getInt("episode"), rs.getDouble("rating"),
 						rs.getBoolean("cached"), new ImageView(favorite_border_black)));
 			}
+			
 			rs.close();
 			stmt.close();
 		} catch (Exception e) {
@@ -448,8 +448,7 @@ public class DBController {
 			LOGGER.error("Ups! an error occured!", e);
 		}
 		
-		// FIXME see fixme at refresh()
-//		refresh(streamUrl, mainWindowController.getIndexList());
+		refresh(streamUrl, mainWindowController.getIndexList());
 	}
 	
 	/**

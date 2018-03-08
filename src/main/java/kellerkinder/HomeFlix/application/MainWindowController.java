@@ -493,15 +493,16 @@ public class MainWindowController {
 			@Override
 			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal) {
 				indexTable = filmsTreeTable.getSelectionModel().getSelectedIndex(); // get selected item
-				indexList = filmsList.indexOf(filmsTreeTable.getSelectionModel().getSelectedItem().getValue());
 				last = indexTable - 1;
 				next = indexTable + 1;
 				title = columnTitle.getCellData(indexTable); // get name of selected item
 				streamUrl = columnStreamUrl.getCellData(indexTable); // get file path of selected item
-
-				System.out.println("index table: " + indexTable);
-				System.out.println("index list: " + indexList);
-				System.out.println(title);
+				
+				for (FilmTabelDataType helpData : filmsList) {
+					if (helpData.getStreamUrl().equals(streamUrl)) {
+						indexList = filmsList.indexOf(helpData);
+					}
+				}
 				
 				if (filmsList.get(indexList).getCached()) {
 					LOGGER.info("loading from cache: " + title);
@@ -1070,6 +1071,10 @@ public class MainWindowController {
 
 	public void setBundle(ResourceBundle bundle) {
 		this.bundle = bundle;
+	}
+
+	public TreeTableView<FilmTabelDataType> getFilmsTreeTable() {
+		return filmsTreeTable;
 	}
 
 	public TextFlow getTextFlow() {
