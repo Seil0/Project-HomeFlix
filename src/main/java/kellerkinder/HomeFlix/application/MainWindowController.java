@@ -94,8 +94,8 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import kellerkinder.HomeFlix.controller.DBController;
+import kellerkinder.HomeFlix.controller.OMDbAPIController;
 import kellerkinder.HomeFlix.controller.UpdateController;
-import kellerkinder.HomeFlix.controller.apiQuery;
 import kellerkinder.HomeFlix.datatypes.SourceDataType;
 import kellerkinder.HomeFlix.datatypes.FilmTabelDataType;
 
@@ -240,6 +240,7 @@ public class MainWindowController {
 	private String streamUrl;
 	private String ratingSortType;
 	private String local;
+	private String omdbAPIKey;
 	
 	// text strings
 	private String errorPlay;
@@ -250,7 +251,8 @@ public class MainWindowController {
 	
 	public double size;
 	private int last;
-	private int selected;
+	private int indexTable;
+	private int indexList;
 	private int next;
 	private ResourceBundle bundle;
 
@@ -272,8 +274,9 @@ public class MainWindowController {
 	private Properties props = new Properties();
 	
 	private Main main;
+	private MainWindowController mainWindowController;
 	private UpdateController updateController;
-	private apiQuery ApiQuery;
+	private OMDbAPIController omdbAPIController;
 	private DBController dbController;
 	
 	/**
@@ -282,8 +285,9 @@ public class MainWindowController {
 	 */
 	void setMain(Main main) {
 		this.main = main;
+		mainWindowController = this;
 		dbController = new DBController(this.main, this);	
-		ApiQuery = new apiQuery(this, dbController, this.main);
+		omdbAPIController = new OMDbAPIController(this, dbController, this.main);
 	}
 	
 	void init() {
@@ -310,11 +314,11 @@ public class MainWindowController {
 		filmsTreeTable.setShowRoot(false);
 
 		// write content into cell
-		columnTitle.setCellValueFactory(cellData -> cellData.getValue().getValue().titleProperty());
-		columnRating.setCellValueFactory(cellData -> cellData.getValue().getValue().imageProperty());
 		columnStreamUrl.setCellValueFactory(cellData -> cellData.getValue().getValue().streamUrlProperty());
+		columnTitle.setCellValueFactory(cellData -> cellData.getValue().getValue().titleProperty());
 		columnSeason.setCellValueFactory(cellData -> cellData.getValue().getValue().seasonProperty().asObject());
 		columnEpisode.setCellValueFactory(cellData -> cellData.getValue().getValue().episodeProperty().asObject());
+		columnRating.setCellValueFactory(cellData -> cellData.getValue().getValue().imageProperty());
 
 		// add columns to treeTableViewfilm
 		filmsTreeTable.getColumns().add(columnStreamUrl);
@@ -322,7 +326,7 @@ public class MainWindowController {
 		filmsTreeTable.getColumns().add(columnRating);
 		filmsTreeTable.getColumns().add(columnSeason);
 		filmsTreeTable.getColumns().add(columnEpisode);
-		filmsTreeTable.getColumns().get(0).setVisible(false); //hide columnStreamUrl (column with file URL, important for opening a file/stream)
+		filmsTreeTable.getColumns().get(0).setVisible(false); //hide columnStreamUrl (important)
 	    
 	    // context menu for treeTableViewfilm  
 		filmsTreeTable.setContextMenu(menu);
@@ -421,7 +425,7 @@ public class MainWindowController {
 			@Override
 			public void handle(ActionEvent event) {
 				dbController.like(streamUrl);
-				dbController.refresh(streamUrl, selected);
+				dbController.refresh(streamUrl, indexList);
 				refreshTable();
 			}
 		});
@@ -430,7 +434,7 @@ public class MainWindowController {
 			@Override
 			public void handle(ActionEvent event) {
 				dbController.dislike(streamUrl);
-				dbController.refresh(streamUrl, selected);
+				dbController.refresh(streamUrl, indexList);
 				refreshTable();
 			}
 		});
@@ -488,18 +492,25 @@ public class MainWindowController {
 		filmsTreeTable.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {
 			@Override
 			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal) {
-				// last = selected; //for auto-play
-				selected = filmsTreeTable.getSelectionModel().getSelectedIndex(); // get selected item
-				last = selected - 1;
-				next = selected + 1;
-				title = columnTitle.getCellData(selected); // get name of selected item
-				streamUrl = columnStreamUrl.getCellData(selected); // get file path of selected item
+				indexTable = filmsTreeTable.getSelectionModel().getSelectedIndex(); // get selected item
+				indexList = filmsList.indexOf(filmsTreeTable.getSelectionModel().getSelectedItem().getValue());
+				last = indexTable - 1;
+				next = indexTable + 1;
+				title = columnTitle.getCellData(indexTable); // get name of selected item
+				streamUrl = columnStreamUrl.getCellData(indexTable); // get file path of selected item
 
-				if (filmsList.get(selected).getCached() == true) {
+				System.out.println("index table: " + indexTable);
+				System.out.println("index list: " + indexList);
+				System.out.println(title);
+				
+				if (filmsList.get(indexList).getCached()) {
 					LOGGER.info("loading from cache: " + title);
 					dbController.readCache(streamUrl);
 				} else {
-					ApiQuery.startQuery(title, streamUrl); // start api query
+					omdbAPIController = new OMDbAPIController(mainWindowController, dbController, main);
+					Thread omdbAPIThread = new Thread(omdbAPIController);
+					omdbAPIThread.setName("OMDbAPI");
+					omdbAPIThread.start();	
 				}
 			}
 		});
@@ -667,7 +678,7 @@ public class MainWindowController {
 	
 	// refresh the selected child of the root node
 	private void refreshTable() {
-		filmRoot.getChildren().get(selected).setValue(filmsList.get(selected));
+		filmRoot.getChildren().get(indexTable).setValue(filmsList.get(indexList));
 	}
 	
 	/**
@@ -936,6 +947,15 @@ public class MainWindowController {
 		} catch (IOException e) {
 			LOGGER.error(errorSave, e);
 		}
+		
+		// try loading the omdbAPI key
+		try {
+			File file = new File(getClass().getClassLoader().getResource("apiKeys.json").getFile());
+			JsonObject apiKeys = Json.parse(new FileReader(file)).asObject();
+			omdbAPIKey = apiKeys.getString("omdbAPIKey", "");
+		} catch (Exception e) {
+			LOGGER.error("Cloud not load the omdbAPI key. Please contact the developer!", e);
+		}
 	}
 	
 	// if AutoUpdate, then check for updates
@@ -976,12 +996,28 @@ public class MainWindowController {
 		return color;
 	}
 
+	public String getTitle() {
+		return title;
+	}
+
+	public String getStreamUrl() {
+		return streamUrl;
+	}
+
 	public void setSize(Double input) {
 		this.size = input;
 	}
 
 	public Double getSize() {
 		return size;
+	}
+
+	public int getIndexTable() {
+		return indexTable;
+	}
+	
+	public int getIndexList() {
+		return indexList;
 	}
 
 	public void setAutoUpdate(boolean input) {
@@ -1006,6 +1042,10 @@ public class MainWindowController {
 
 	public String getLocal() {
 		return local;
+	}
+
+	public String getOmdbAPIKey() {
+		return omdbAPIKey;
 	}
 
 	public ObservableList<FilmTabelDataType> getFilmsList() {

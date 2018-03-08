@@ -215,6 +215,7 @@ public class DBController {
 	 * @param index of the film in LocalFilms list
 	 */
 	public void refresh(String streamUrl, int index) {
+		// FIXME we need to refresh the entry in the table as well, else indexOf for indexList won't work
 		LOGGER.info("refresh ...");
 		try {
 			Statement stmt = connection.createStatement();
@@ -446,6 +447,9 @@ public class DBController {
 		} catch (SQLException e) {
 			LOGGER.error("Ups! an error occured!", e);
 		}
+		
+		// FIXME see fixme at refresh()
+//		refresh(streamUrl, mainWindowController.getIndexList());
 	}
 	
 	/**
@@ -475,36 +479,40 @@ public class DBController {
 	 */
 	void addCache(	String streamUrl, String Title, String Year, String Rated, String Released, String Runtime, String Genre, String Director,
 					String Writer, String Actors, String Plot, String Language, String Country, String Awards, String Metascore, String imdbRating,
-					String Type, String imdbVotes, String imdbID, String Poster, String Response) throws SQLException{
-		PreparedStatement ps = connection.prepareStatement("insert into cache values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-		
-		LOGGER.info("adding to cache: " + Title);
-		ps.setString(1,streamUrl);
-		ps.setString(2,Title);
-		ps.setString(3,Year);
-		ps.setString(4,Rated);
-		ps.setString(5,Released);
-		ps.setString(6,Runtime);
-		ps.setString(7,Genre);
-		ps.setString(8,Director);
-		ps.setString(9,Writer);
-		ps.setString(10,Actors);
-		ps.setString(11,Plot);
-		ps.setString(12,Language);
-		ps.setString(13,Country);
-		ps.setString(14,Awards);
-		ps.setString(15,Metascore);
-		ps.setString(16,imdbRating);
-		ps.setString(17,imdbVotes);
-		ps.setString(18,imdbID);
-		ps.setString(19,Type);
-		ps.setString(20,Poster);
-		ps.setString(21,Response);
-		ps.addBatch();
-		ps.executeBatch();			
-		connection.commit();
-		ps.close();
-		LOGGER.info("done!");
+					String Type, String imdbVotes, String imdbID, String Poster, String Response) {
+		try {
+			PreparedStatement ps = connection.prepareStatement("insert into cache values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+			
+			LOGGER.info("adding to cache: " + Title);
+			ps.setString(1,streamUrl);
+			ps.setString(2,Title);
+			ps.setString(3,Year);
+			ps.setString(4,Rated);
+			ps.setString(5,Released);
+			ps.setString(6,Runtime);
+			ps.setString(7,Genre);
+			ps.setString(8,Director);
+			ps.setString(9,Writer);
+			ps.setString(10,Actors);
+			ps.setString(11,Plot);
+			ps.setString(12,Language);
+			ps.setString(13,Country);
+			ps.setString(14,Awards);
+			ps.setString(15,Metascore);
+			ps.setString(16,imdbRating);
+			ps.setString(17,imdbVotes);
+			ps.setString(18,imdbID);
+			ps.setString(19,Type);
+			ps.setString(20,Poster);
+			ps.setString(21,Response);
+			ps.addBatch();
+			ps.executeBatch();			
+			connection.commit();
+			ps.close();
+			LOGGER.info("done!");
+		} catch (Exception e) {
+			LOGGER.error(e);
+		}
 	}
 	
 	/**
@@ -567,7 +575,6 @@ public class DBController {
 				mainWindowController.getPosterImageView().setImage(new Image("resources/icons/close_black_2048x2048.png"));
 				LOGGER.error(e);
 			}
-			mainWindowController.getPosterImageView().setImage(im);
 
 		} catch (SQLException e) {
 			LOGGER.error("Ups! an error occured!", e);
