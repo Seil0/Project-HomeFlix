@@ -205,17 +205,17 @@ public class MainWindowController {
     private ImageView imv1;
     
 	@FXML
-	private TreeItem<FilmTabelDataType> filmRoot = new TreeItem<>(new FilmTabelDataType("", "", 0, 0, 0, false, imv1));
+	private TreeItem<FilmTabelDataType> filmRoot = new TreeItem<>(new FilmTabelDataType("", "", "", "", false, false, imv1));
 	@FXML
 	private TreeTableColumn<FilmTabelDataType, String> columnStreamUrl = new TreeTableColumn<>("File Name");
 	@FXML
 	private TreeTableColumn<FilmTabelDataType, String> columnTitle = new TreeTableColumn<>("Title");
 	@FXML
-	private TreeTableColumn<FilmTabelDataType, Integer> columnSeason = new TreeTableColumn<>("Season");
+	private TreeTableColumn<FilmTabelDataType, String> columnSeason = new TreeTableColumn<>("Season");
 	@FXML
-	private TreeTableColumn<FilmTabelDataType, Integer> columnEpisode = new TreeTableColumn<>("Episode");
+	private TreeTableColumn<FilmTabelDataType, String> columnEpisode = new TreeTableColumn<>("Episode");
 	@FXML
-	private TreeTableColumn<FilmTabelDataType, ImageView> columnRating = new TreeTableColumn<>("Rating");
+	private TreeTableColumn<FilmTabelDataType, ImageView> columnFavorite = new TreeTableColumn<>("Favorite");
     
     @FXML
     private TreeItem<SourceDataType> sourceRoot =new TreeItem<>(new SourceDataType("", ""));
@@ -304,10 +304,10 @@ public class MainWindowController {
 		// film Table
 		columnStreamUrl.setMaxWidth(0);
 		columnTitle.setMaxWidth(215);
-		columnRating.setMaxWidth(60);
+		columnFavorite.setMaxWidth(60);
 		columnSeason.setMaxWidth(55);
 		columnEpisode.setMaxWidth(64);
-		columnRating.setStyle("-fx-alignment: CENTER;");
+		columnFavorite.setStyle("-fx-alignment: CENTER;");
 
 		filmsTreeTable.setRoot(filmRoot);
 		filmsTreeTable.setColumnResizePolicy(TreeTableView.CONSTRAINED_RESIZE_POLICY);
@@ -316,14 +316,14 @@ public class MainWindowController {
 		// write content into cell
 		columnStreamUrl.setCellValueFactory(cellData -> cellData.getValue().getValue().streamUrlProperty());
 		columnTitle.setCellValueFactory(cellData -> cellData.getValue().getValue().titleProperty());
-		columnSeason.setCellValueFactory(cellData -> cellData.getValue().getValue().seasonProperty().asObject());
-		columnEpisode.setCellValueFactory(cellData -> cellData.getValue().getValue().episodeProperty().asObject());
-		columnRating.setCellValueFactory(cellData -> cellData.getValue().getValue().imageProperty());
+		columnSeason.setCellValueFactory(cellData -> cellData.getValue().getValue().seasonProperty());
+		columnEpisode.setCellValueFactory(cellData -> cellData.getValue().getValue().episodeProperty());
+		columnFavorite.setCellValueFactory(cellData -> cellData.getValue().getValue().imageProperty());
 
 		// add columns to treeTableViewfilm
 		filmsTreeTable.getColumns().add(columnStreamUrl);
 		filmsTreeTable.getColumns().add(columnTitle);
-		filmsTreeTable.getColumns().add(columnRating);
+		filmsTreeTable.getColumns().add(columnFavorite);
 		filmsTreeTable.getColumns().add(columnSeason);
 		filmsTreeTable.getColumns().add(columnEpisode);
 		filmsTreeTable.getColumns().get(0).setVisible(false); //hide columnStreamUrl (important)
@@ -442,7 +442,7 @@ public class MainWindowController {
 		/**
 		 * FIXME fix bug when sort by ASCENDING, wrong order
 		 */
-		columnRating.sortTypeProperty().addListener(new ChangeListener<SortType>() {
+		columnFavorite.sortTypeProperty().addListener(new ChangeListener<SortType>() {
 			@Override
 			public void changed(ObservableValue<? extends SortType> paramObservableValue, SortType paramT1, SortType paramT2) {
 				LOGGER.info("NAME Clicked -- sortType = " + paramT1 + ", SortType=" + paramT2);
@@ -456,7 +456,7 @@ public class MainWindowController {
 				helpData = filmsList;
 
 				for (int i = 0; i < helpData.size(); i++) {
-					if (helpData.get(i).getRating() == 1.0) {
+					if (helpData.get(i).getFavorite() == true) {
 						fav_true.add(i);
 					} else {
 						fav_false.add(i);
@@ -688,7 +688,9 @@ public class MainWindowController {
 	public void addDataUI() {
 
 		for (FilmTabelDataType element : filmsList) {
-			if (element.getSeason() != 0) {
+			
+			// only if the entry contains a season and a episode it's a valid series
+			if (!element.getSeason().isEmpty() && !element.getEpisode().isEmpty()) {
 //				System.out.println("Found Series: " + element.getTitle());
 				// check if there is a series node to add the item
 				for (int i = 0; i < filmRoot.getChildren().size(); i++) {
@@ -696,14 +698,14 @@ public class MainWindowController {
 //						System.out.println("Found a root node to add child");
 //						System.out.println("Adding: " + element.getStreamUrl());
 						TreeItem<FilmTabelDataType> episodeNode = new TreeItem<>(new FilmTabelDataType(element.getStreamUrl(),
-								element.getTitle(), element.getSeason(), element.getEpisode(), element.getRating(),
+								element.getTitle(), element.getSeason(), element.getEpisode(), element.getFavorite(),
 								element.getCached(), element.getImage()));
 						filmRoot.getChildren().get(i).getChildren().add(episodeNode);
 					} else if (i == filmRoot.getChildren().size() - 1) {
 //						System.out.println("Create a root node to add child");
 //						System.out.println("Adding: " + element.getStreamUrl());
 						TreeItem<FilmTabelDataType> seriesRootNode = new TreeItem<>(new FilmTabelDataType(element.getStreamUrl(),
-								element.getTitle(), 0, 0, element.getRating(), element.getCached(), element.getImage()));
+								element.getTitle(), "", "", element.getFavorite(), element.getCached(), element.getImage()));
 						filmRoot.getChildren().add(seriesRootNode);
 					}
 				}
@@ -831,10 +833,11 @@ public class MainWindowController {
 		languageLbl.setText(getBundle().getString("languageLbl"));
 		autoUpdateToggleBtn.setText(getBundle().getString("autoUpdate"));
 		branchLbl.setText(getBundle().getString("branchLbl"));
-		columnTitle.setText(getBundle().getString("columnName"));
-		columnRating.setText(getBundle().getString("columnRating"));
 		columnStreamUrl.setText(getBundle().getString("columnStreamUrl"));
+		columnTitle.setText(getBundle().getString("columnName"));
 		columnSeason.setText(getBundle().getString("columnSeason"));
+		columnEpisode.setText(getBundle().getString("columnEpisode"));
+		columnFavorite.setText(getBundle().getString("columnFavorite"));
 		errorPlay = getBundle().getString("errorPlay");
 		errorLoad = getBundle().getString("errorLoad");
 		errorSave = getBundle().getString("errorSave");
@@ -884,7 +887,7 @@ public class MainWindowController {
 			props.setProperty("useBeta", String.valueOf(isUseBeta()));
 			props.setProperty("size", getSize().toString());
 			props.setProperty("local", getLocal());
-			props.setProperty("ratingSortType", columnRating.getSortType().toString());
+			props.setProperty("ratingSortType", columnFavorite.getSortType().toString());
 
 			OutputStream outputStream = new FileOutputStream(main.getConfigFile()); // new output-stream
 			props.storeToXML(outputStream, "Project HomeFlix settings"); // writes new .xml

@@ -99,7 +99,7 @@ public class DBController {
 	private void createDatabase() {	
 		try {
 			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("create table if not exists films (streamUrl, title, season, episode, rating, cached)");
+			stmt.executeUpdate("create table if not exists films (streamUrl, title, season, episode, favorite, cached)");
 			stmt.executeUpdate("create table if not exists cache ("
 					+ "streamUrl, Title, Year, Rated, Released, Runtime, Genre, Director, Writer,"
 					+ " Actors, Plot, Language, Country, Awards, Metascore, imdbRating, imdbVotes,"
@@ -189,13 +189,14 @@ public class DBController {
 			Statement stmt = connection.createStatement(); 
 			ResultSet rs = stmt.executeQuery("SELECT * FROM films ORDER BY title"); 
 			while (rs.next()) {
-				if (rs.getInt("rating") == 1) {
+//				System.out.println(rs.getString("title") + "Season:"  + rs.getString("season") + ":");
+				if (rs.getBoolean("favorite") == true) {
 					mainWindowController.getFilmsList().add(new FilmTabelDataType(rs.getString("streamUrl"),
-							rs.getString("title"), rs.getInt("season"), rs.getInt("episode") ,rs.getDouble("rating"),
+							rs.getString("title"), rs.getString("season"), rs.getString("episode") ,rs.getBoolean("favorite"),
 							rs.getBoolean("cached"), new ImageView(favorite_black)));
 				} else {
 					mainWindowController.getFilmsList().add(new FilmTabelDataType(rs.getString("streamUrl"),
-							rs.getString("title"), rs.getInt("season"), rs.getInt("episode"), rs.getDouble("rating"),
+							rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
 							rs.getBoolean("cached"), new ImageView(favorite_border_black)));
 				}
 			}
@@ -220,13 +221,13 @@ public class DBController {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE streamUrl = \"" + streamUrl + "\";");
 			
-			if (rs.getInt("rating") == 1) {
+			if (rs.getBoolean("favorite") == true) {
 				mainWindowController.getFilmsList().set(indexList, new FilmTabelDataType(rs.getString("streamUrl"),
-						rs.getString("title"), rs.getInt("season"), rs.getInt("episode") ,rs.getDouble("rating"),
+						rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
 						rs.getBoolean("cached"), new ImageView(favorite_black)));
 			} else {
 				mainWindowController.getFilmsList().set(indexList, new FilmTabelDataType(rs.getString("streamUrl"),
-						rs.getString("title"), rs.getInt("season"), rs.getInt("episode"), rs.getDouble("rating"),
+						rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
 						rs.getBoolean("cached"), new ImageView(favorite_border_black)));
 			}
 			
@@ -316,7 +317,7 @@ public class DBController {
 						if (!filmsdbStreamURL.contains(file.getPath())) {
 							stmt.executeUpdate("insert into films values ("
 									+ "'" + file.getPath() + "',"
-									+ "'" + cutOffEnd(file.getName()) + "', 0, 0, 0, 0)");
+									+ "'" + cutOffEnd(file.getName()) + "', '', '', 0, 0)");
 							connection.commit();
 							stmt.close();
 							LOGGER.info("Added \"" + file.getName() + "\" to database");
@@ -333,7 +334,7 @@ public class DBController {
 										LOGGER.info("Added \"" + file.getName() + "\", Episode: " + episode.getName() + " to database");
 										stmt.executeUpdate("insert into films values ("
 										+ "'" + episode.getPath() + "',"
-										+ "'" + cutOffEnd(file.getName()) + "',"+ sn + "," + ep + ", 0, 0)");
+										+ "'" + cutOffEnd(file.getName()) + "','" + sn + "','" + ep + "', 0, 0)");
 										connection.commit();
 										stmt.close();
 										filmsStreamURL.add(episode.getPath());
@@ -361,8 +362,8 @@ public class DBController {
 							if (streamUrl.equals(entry)) {
 								ps.setString(1, streamUrl);
 								ps.setString(2, title);
-								ps.setInt(3, item.asObject().getInt("season", 0));
-								ps.setInt(4, item.asObject().getInt("episode", 0));
+								ps.setString(3, item.asObject().getString("season", ""));
+								ps.setString(4, item.asObject().getString("episode", ""));
 								ps.setInt(5, 0);
 								ps.setBoolean(6, false);
 								ps.addBatch(); // adds the entry
@@ -401,15 +402,14 @@ public class DBController {
 	}
 	
 	/**
-	 * update the database entry for the given film, rating = 0
-	 * @param name of the film
+	 * update the database entry for the given film, favorite = 0
 	 * @param streamUrl URL of the film
 	 */
 	public void dislike(String streamUrl) {
 		LOGGER.info("dislike " + streamUrl);
 		try {
 			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("UPDATE films SET rating=0 WHERE streamUrl=\"" + streamUrl + "\";");
+			stmt.executeUpdate("UPDATE films SET favorite=0 WHERE streamUrl=\"" + streamUrl + "\";");
 			connection.commit();
 			stmt.close();
 		} catch (SQLException e) {
@@ -418,15 +418,14 @@ public class DBController {
 	}
 	
 	/**
-	 * update the database entry for the given film, rating = 1
-	 * @param name of the film
+	 * update the database entry for the given film, favorite = 1
 	 * @param streamUrl URL of the film
 	 */
 	public void like(String streamUrl) {
 		LOGGER.info("like " + streamUrl);
 		try {
 			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("UPDATE films SET rating=1 WHERE streamUrl=\"" + streamUrl + "\";");
+			stmt.executeUpdate("UPDATE films SET favorite=1 WHERE streamUrl=\"" + streamUrl + "\";");
 			connection.commit();
 			stmt.close();
 		} catch (SQLException e) {

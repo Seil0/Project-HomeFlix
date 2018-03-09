@@ -22,42 +22,39 @@
 package kellerkinder.HomeFlix.datatypes;
 
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.image.ImageView;
 
 public class FilmTabelDataType {
-	private final IntegerProperty season = new SimpleIntegerProperty();
-	private final IntegerProperty episode = new SimpleIntegerProperty();
-	private final DoubleProperty rating = new SimpleDoubleProperty();
-	private final StringProperty title = new SimpleStringProperty();
 	private final StringProperty streamUrl = new SimpleStringProperty();
-	private final SimpleObjectProperty<ImageView> image = new SimpleObjectProperty<>();
+	private final StringProperty title = new SimpleStringProperty();
+	private final StringProperty season = new SimpleStringProperty();
+	private final StringProperty episode = new SimpleStringProperty();
+	private final BooleanProperty favorite = new SimpleBooleanProperty();
 	private final BooleanProperty cached = new SimpleBooleanProperty();
+	private final SimpleObjectProperty<ImageView> image = new SimpleObjectProperty<>();
+
 	
-	/** TODO rating boolean
+	/**
 	 * tableData is the data-type of tree-table-view
 	 * @param streamUrl the concrete path to the file or the URL
 	 * @param title title of the film
 	 * @param season season if it's a series
 	 * @param episode episode if it's a series
-	 * @param rating indicator for favorites, used for sorting the items
+	 * @param favorite indicator for favorites, used for sorting the items
 	 * @param cached indicator for caching status
 	 * @param image favorite icon
 	 */
-	public FilmTabelDataType(final String streamUrl, final String title, final int season, final int episode,
-			final double rating, final boolean cached, final ImageView image) {
+	public FilmTabelDataType(final String streamUrl, final String title, final String season, final String episode,
+			final boolean favorite, final boolean cached, final ImageView image) {
 		this.streamUrl.set(streamUrl);
 		this.title.set(title);
 		this.season.set(season);
 		this.episode.set(episode);
-		this.rating.set(rating);
+		this.favorite.set(favorite);
 		this.cached.set(cached);
 		this.image.set(image);
 	}
@@ -70,16 +67,16 @@ public class FilmTabelDataType {
 		return title;
 	}
 	
-	public IntegerProperty seasonProperty(){
+	public StringProperty seasonProperty(){
 		return season;
 	}
 	
-	public IntegerProperty episodeProperty(){
+	public StringProperty episodeProperty(){
 		return episode;
 	}
 	
-	public DoubleProperty ratingProperty(){
-		return rating;
+	public BooleanProperty favoriteProperty(){
+		return favorite;
 	}
 	
 	public BooleanProperty cachedProperty(){
@@ -99,16 +96,16 @@ public class FilmTabelDataType {
 		return titleProperty().get();
 	}
 
-	public final int getSeason() {
+	public final String getSeason() {
 		return seasonProperty().get();
 	}
 	
-	public final int getEpisode() {
+	public final String getEpisode() {
 		return episodeProperty().get();
 	}
 	
-	public final double getRating() {
-		return ratingProperty().get();
+	public final boolean getFavorite() {
+		return favoriteProperty().get();
 	}
 	
 	public final boolean getCached(){
@@ -128,16 +125,16 @@ public class FilmTabelDataType {
 		titleProperty().set(title);
 	}
 
-	public final void setSeason(int season) {
+	public final void setSeason(String season) {
 		seasonProperty().set(season);
 	}
 	
-	public final void setEpisode(int season) {
+	public final void setEpisode(String season) {
 		episodeProperty().set(season);
 	}
 	
-	public final void setRating(int rating) {
-		ratingProperty().set(rating);
+	public final void setFavorite(boolean favorite) {
+		favoriteProperty().set(favorite);
 	}
 	
 	public final void setCached(boolean cached){
