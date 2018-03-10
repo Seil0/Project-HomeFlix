@@ -1,6 +1,27 @@
+/**
+ * Project-HomeFlix
+ * 
+ * Copyright 2018  <@Seil0>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
+ * 
+ */
+
 package kellerkinder.HomeFlix.controller;
 
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -82,10 +103,8 @@ public class OMDbAPIController implements Runnable {
 		//resize the image to fit in the posterImageView and add it to the cache
 	    try {
 			BufferedImage originalImage = ImageIO.read(new URL(responseString[18])); //change path to where file is located
-		    int type = originalImage.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : originalImage.getType();
-		    BufferedImage resizeImagePNG = resizeImage(originalImage, type, 198, 297);
 		    posterPath = main.getPosterCache() + "/" + mainWindowController.getTitle() + ".png";
-			ImageIO.write(resizeImagePNG, "png", new File(posterPath));
+			ImageIO.write(originalImage, "png", new File(posterPath));
 			LOGGER.info("adding poster to cache: "+posterPath);
 		} catch (Exception e) {
 			LOGGER.error(e);
@@ -103,22 +122,5 @@ public class OMDbAPIController implements Runnable {
 		Platform.runLater(() -> {
 			dbController.readCache(mainWindowController.getStreamUrl());
 		});
-	}
-	
-	/**
-	 * resize a image
-	 * @param originalImage is the original image
-	 * @param type of the original image
-	 * @param IMG_WIDTH width to resize
-	 * @param IMG_HEIGHT heigth to resize
-	 * @return resized image
-	 */
-	private static BufferedImage resizeImage(BufferedImage originalImage, int type, int IMG_WIDTH, int IMG_HEIGHT) {
-	    BufferedImage resizedImage = new BufferedImage(IMG_WIDTH, IMG_HEIGHT, type);
-	    Graphics2D g = resizedImage.createGraphics();
-	    g.drawImage(originalImage, 0, 0, IMG_WIDTH, IMG_HEIGHT, null);
-	    g.dispose();
-
-	    return resizedImage;
 	}
 }

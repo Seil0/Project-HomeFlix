@@ -1,7 +1,7 @@
 /**
  * Project-HomeFlix
  * 
- * Copyright 2018  <@Seil0>
+ * Copyright 2016-2018  <@Seil0>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -845,7 +845,7 @@ public class MainWindowController {
 		vlcNotInstalled = getBundle().getString("vlcNotInstalled");
 	}
 	
-	// TODO rework to material design
+	// TODO remove after #19 has landed
 	public void showErrorMsg(String msg, Exception exception) {
 		Alert alert = new Alert(AlertType.ERROR);
 		alert.setTitle("Error");
