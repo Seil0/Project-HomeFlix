@@ -47,4 +47,6 @@ Temporary Items
 .apdisk
 config.xml
 .directory
+target/
+apiKeys.json
 
