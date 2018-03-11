@@ -955,8 +955,9 @@ public class MainWindowController {
 		
 		// try loading the omdbAPI key
 		try {
-			File file = new File(getClass().getClassLoader().getResource("apiKeys.json").getFile());
-			JsonObject apiKeys = Json.parse(new FileReader(file)).asObject();
+			InputStream in = getClass().getClassLoader().getResourceAsStream("apiKeys.json");
+			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+			JsonObject apiKeys = Json.parse(reader).asObject();
 			omdbAPIKey = apiKeys.getString("omdbAPIKey", "");
 		} catch (Exception e) {
 			LOGGER.error("Cloud not load the omdbAPI key. Please contact the developer!", e);
