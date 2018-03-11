@@ -22,14 +22,14 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.TextFlow?>
 
-<AnchorPane fx:id="mainAnchorPane" prefHeight="600.0" prefWidth="950.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kellerkinder.HomeFlix.application.MainWindowController">
+<AnchorPane fx:id="mainAnchorPane" prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kellerkinder.HomeFlix.application.MainWindowController">
 	<children>
-      <ScrollPane fx:id="textScrollPane" fitToWidth="true" layoutX="408.0" layoutY="44.0" prefHeight="544.0" prefWidth="320.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="408.0" AnchorPane.rightAnchor="222.0" AnchorPane.topAnchor="44.0">
+      <ScrollPane fx:id="textScrollPane" fitToWidth="true" layoutX="408.0" layoutY="44.0" prefHeight="544.0" prefWidth="320.0" AnchorPane.bottomAnchor="12.0" AnchorPane.rightAnchor="222.0" AnchorPane.topAnchor="44.0">
          <content>
             <TextFlow fx:id="textFlow" accessibleRole="TEXT_AREA" maxHeight="544.0" maxWidth="320.0" visible="true" />
          </content>
       </ScrollPane>
-		<TreeTableView fx:id="filmsTreeTable" layoutX="14.0" layoutY="88.0" prefHeight="500.0" prefWidth="375.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="568.0" AnchorPane.topAnchor="88.0" />
+		<TreeTableView fx:id="filmsTreeTable" layoutX="14.0" layoutY="88.0" prefHeight="500.0" prefWidth="420.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="568.0" AnchorPane.topAnchor="88.0" />
 		<JFXButton fx:id="playbtn" contentDisplay="CENTER" layoutX="690.0" layoutY="363.0" onAction="#playbtnclicked" prefHeight="25.0" prefWidth="198.0" AnchorPane.bottomAnchor="212.0" AnchorPane.rightAnchor="12.0">
          <font>
             <Font name="System Bold" size="14.0" />
@@ -38,7 +38,7 @@
          <font>
             <Font name="System Bold" size="14.0" />
          </font></JFXButton>
-		<JFXTextField fx:id="searchTextField" layoutX="12.0" layoutY="44.0" maxWidth="477.0" minWidth="359.0" prefHeight="31.0" prefWidth="370.0" promptText="search ..." AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="568.0" AnchorPane.topAnchor="44.0">
+		<JFXTextField fx:id="searchTextField" layoutX="12.0" layoutY="44.0" maxWidth="-Infinity" minWidth="420.0" prefHeight="31.0" promptText="search ..." AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="568.0" AnchorPane.topAnchor="44.0">
          <font>
             <Font name="Arial" size="12.0" />
          </font></JFXTextField>
@@ -119,7 +119,7 @@
                                     <JFXSlider fx:id="fontsizeSlider" max="48.0" min="2.0" prefWidth="250.0" />
                                  </children>
                               </HBox>
-                              <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0">
+                              <HBox spacing="10.0">
                                  <children>
                                     <Label fx:id="languageLbl" prefHeight="25.0" text="Language" />
                                     <ChoiceBox fx:id="languageChoisBox" prefWidth="150.0" />

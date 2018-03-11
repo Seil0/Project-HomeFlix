@@ -231,9 +231,9 @@ public class MainWindowController {
     private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	private int hashA = -647380320;
 	
-	private String version = "0.5.99";
-	private String buildNumber = "137";
-	private String versionName = "solidify cow";
+	private String version = "0.6.0";
+	private String buildNumber = "141";
+	private String versionName = "plasma vampire";
 	private String dialogBtnStyle;
 	private String color;
 	private String title;
@@ -303,10 +303,10 @@ public class MainWindowController {
 
 		// film Table
 		columnStreamUrl.setMaxWidth(0);
-		columnTitle.setMaxWidth(215);
-		columnFavorite.setMaxWidth(60);
-		columnSeason.setMaxWidth(55);
-		columnEpisode.setMaxWidth(64);
+		columnTitle.setMaxWidth(190);
+		columnFavorite.setMaxWidth(80);
+		columnSeason.setMaxWidth(73);
+		columnEpisode.setMaxWidth(77);
 		columnFavorite.setStyle("-fx-alignment: CENTER;");
 
 		filmsTreeTable.setRoot(filmRoot);
@@ -441,6 +441,7 @@ public class MainWindowController {
         
 		/**
 		 * FIXME fix bug when sort by ASCENDING, wrong order
+		 * FIXME when sorting, series are expanded
 		 */
 		columnFavorite.sortTypeProperty().addListener(new ChangeListener<SortType>() {
 			@Override
