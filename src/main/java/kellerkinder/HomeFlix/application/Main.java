@@ -112,12 +112,6 @@ public class Main extends Application {
 				mainWindowController.setAutoUpdate(false);
 				mainWindowController.setLocal(local);
 				mainWindowController.saveSettings();
-				try {
-					Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar"); // start again (preventing Bugs) TODO is this really needed
-					System.exit(0); // finishes it self
-				} catch (Exception e) {
-					LOGGER.error("error while restarting HomeFlix", e);
-				}
 			}
 
 			if (!posterCache.exists()) {
@@ -152,10 +146,11 @@ public class Main extends Application {
 			break;
 		}
 		
-		Alert alert = new Alert(AlertType.CONFIRMATION);	//new alert with file-chooser
+		Alert alert = new Alert(AlertType.CONFIRMATION);	//new alert with DirectoryChooser
 		alert.setTitle("Project HomeFlix");
 		alert.setHeaderText(bundle.getString("firstStartHeader"));
 		alert.setContentText(bundle.getString("firstStartContent"));
+		alert.setResizable(true);
 
 		Optional<ButtonType> result = alert.showAndWait();
 		if (result.get() == ButtonType.OK){
@@ -165,9 +160,12 @@ public class Main extends Application {
                 path = selectedDirectory.getAbsolutePath();
             
 		} else {
-		    path = "";
+			LOGGER.warn("No directory selected!");
+			System.exit(1);
 		}
+		
 		return path;
+		
 	}
 
 	public static void main(String[] args) {

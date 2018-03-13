@@ -729,12 +729,17 @@ public class MainWindowController {
 
 		try {
 			// read old array
-			newsources = Json.parse(new FileReader(main.getDirectory() + "/sources.json")).asArray();
+			File oldSources = new File(main.getDirectory() + "/sources.json");
+			if (oldSources.exists()) {
+				newsources = Json.parse(new FileReader(main.getDirectory() + "/sources.json")).asArray();
+			} else {
+				newsources = Json.array();
+			}
 
 			// add new source
-			Writer writer = new FileWriter(main.getDirectory() + "/sources.json");
 			source = Json.object().add("path", path).add("mode", mode);
 			newsources.add(source);
+			Writer writer = new FileWriter(main.getDirectory() + "/sources.json");
 			newsources.writeTo(writer);
 			writer.close();
 		} catch (IOException e) {
