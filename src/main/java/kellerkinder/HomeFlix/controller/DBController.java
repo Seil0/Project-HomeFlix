@@ -333,7 +333,7 @@ public class DBController {
 									if (!filmsdbStreamURL.contains(episode.getPath())) {
 										LOGGER.info("Added \"" + file.getName() + "\", Episode: " + episode.getName() + " to database");
 										stmt.executeUpdate("insert into films values ("
-										+ "'" + episode.getPath() + "',"
+										+ "'" + episode.getPath().replace("'", "''") + "',"
 										+ "'" + cutOffEnd(file.getName()) + "','" + sn + "','" + ep + "', 0, 0)");
 										connection.commit();
 										stmt.close();

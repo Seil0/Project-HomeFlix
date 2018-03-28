@@ -93,7 +93,7 @@ public class Main extends Application {
 
 			
 			// get OS and the specific paths
-			if (osName.equals("Windows")) {
+			if (osName.contains("Windows")) {
 				directory = new File(dirWin);
 				configFile = new File(dirWin + "/config.xml");
 				posterCache = new File(dirWin + "/posterCache");
