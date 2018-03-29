@@ -44,6 +44,7 @@ import java.util.ResourceBundle;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.kellerkinder.Alerts.JFXInfoAlert;
 
 import com.cemu_UI.uiElements.JFXInfoDialog;
 import com.eclipsesource.json.Json;
@@ -231,9 +232,9 @@ public class MainWindowController {
     private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	private int hashA = -647380320;
 	
-	private String version = "0.6.0";
-	private String buildNumber = "141";
-	private String versionName = "plasma vampire";
+	private String version = "0.6.1";
+	private String buildNumber = "145";
+	private String versionName = "glowing vampire";
 	private String dialogBtnStyle;
 	private String color;
 	private String title;
@@ -609,8 +610,8 @@ public class MainWindowController {
 	private void aboutBtnAction() {
 		String bodyText = "cemu_UI by @Seil0 \nVersion: " + version + " (Build: " + buildNumber + ")  \""
 				+ versionName + "\" \n" + infoText;
-		JFXInfoDialog aboutDialog = new JFXInfoDialog("Project HomeFlix", bodyText, dialogBtnStyle, 350, 200, main.getPane());
-		aboutDialog.show();
+		JFXInfoAlert infoAlert = new JFXInfoAlert("Project HomeFlix", bodyText, dialogBtnStyle, main.getPrimaryStage());
+		infoAlert.showAndWait();
 	}
 	
 	@FXML

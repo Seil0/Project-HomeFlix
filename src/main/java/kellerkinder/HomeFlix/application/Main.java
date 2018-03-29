@@ -25,35 +25,25 @@ package kellerkinder.HomeFlix.application;
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import com.jfoenix.controls.JFXAlert;
-import com.jfoenix.controls.JFXButton;
-import com.jfoenix.controls.JFXDialogLayout;
+import org.kellerkinder.Alerts.JFX2BtnCancelAlert;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonBar.ButtonData;
-import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-	
+
 	private Stage primaryStage;
 	private Scene scene;
 	private AnchorPane pane;
@@ -64,29 +54,29 @@ public class Main extends Application {
 	private static String osArch = System.getProperty("os.arch");
 	private static String osVers = System.getProperty("os.version");
 	private static String javaVers = System.getProperty("java.version");
-	private static String javaVend= System.getProperty("java.vendor");
-	private String dirWin = userHome + "/Documents/HomeFlix";	//Windows: C:/Users/"User"/Documents/HomeFlix
-	private String dirLinux = userHome + "/HomeFlix";	//Linux: /home/"User"/HomeFlix
+	private static String javaVend = System.getProperty("java.vendor");
+	private String dirWin = userHome + "/Documents/HomeFlix"; // Windows: C:/Users/"User"/Documents/HomeFlix
+	private String dirLinux = userHome + "/HomeFlix"; // Linux: /home/"User"/HomeFlix
 	private File directory;
 	private File configFile;
 	private File posterCache;
-	
+
 	private String FONT_FAMILY = "System";
-	private String local = System.getProperty("user.language")+"_"+System.getProperty("user.country");
+	private String local = System.getProperty("user.language") + "_" + System.getProperty("user.country");
 	private double FONT_SIZE = 17;
 	private ResourceBundle bundle;
 	private static Logger LOGGER;
-	
+
 	@Override
 	public void start(Stage primaryStage) throws IOException {
 		LOGGER.info("OS: " + osName + " " + osVers + " " + osArch);
 		LOGGER.info("Java: " + javaVend + " " + javaVers);
 		LOGGER.info("User: " + userName + " " + userHome);
-		
-		this.primaryStage = primaryStage;	
+
+		this.primaryStage = primaryStage;
 		mainWindow();
 	}
-	
+
 	private void mainWindow(){
 		try {
 			FXMLLoader loader = new FXMLLoader();
@@ -133,12 +123,6 @@ public class Main extends Application {
 				posterCache.mkdir();
 			}
 			
-//			// generate window
-//			scene = new Scene(pane); // create new scene, append pane to scene
-//			scene.getStylesheets().add(getClass().getResource("/css/MainWindow.css").toExternalForm());
-//			primaryStage.setScene(scene); // append scene to stage
-//			primaryStage.show(); // show stage
-			
 			// init here as it loads the games to the mwc and the gui, therefore the window must exist
 			mainWindowController.init();
 			mainWindowController.getDbController().init();
@@ -146,11 +130,12 @@ public class Main extends Application {
 			LOGGER.error(e);
 		}
 	}
-	
-	/** TODO add option to add streaming as first source
-	 * when there i no config.xml we need to get the path for the first source from the user
+
+	/**
+	 * TODO add option to add streaming as first source when there i no config.xml
+	 * we need to get the path for the first source from the user
 	 */
-	private void getFirstSource(){
+	private void getFirstSource() {
 		switch (System.getProperty("user.language") + "_" + System.getProperty("user.country")) {
 		case "en_US":
 			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US); // us_english
@@ -163,85 +148,56 @@ public class Main extends Application {
 			break;
 		}
 		
-//		// directory action
-//		EventHandler<ActionEvent> btn1Action = new EventHandler<ActionEvent>() {
-//			@Override
-//			public void handle(ActionEvent event) {
-//				DirectoryChooser directoryChooser = new DirectoryChooser();
-//				directoryChooser.setTitle(bundle.getString("addDirectory"));
-//				File selectedFolder = directoryChooser.showDialog(primaryStage);
-//				if (selectedFolder != null && selectedFolder.exists()) {
-//					mainWindowController.addSource(selectedFolder.getPath(), "local");
-//				} else {
-//					LOGGER.error("The selected folder dosen't exist!");
-//				}
-//			}
-//		};
-//		
-//		// streaming action
-//		EventHandler<ActionEvent> btn2Action = new EventHandler<ActionEvent>() {
-//			@Override
-//			public void handle(ActionEvent event) {
-//				FileChooser fileChooser = new FileChooser();
-//				fileChooser.setTitle("addStreamSource");
-//				File selectedFile = fileChooser.showOpenDialog(getPrimaryStage());
-//				if (selectedFile != null && selectedFile.exists()) {
-//					mainWindowController.addSource(selectedFile.getPath(), "stream");
-//				} else {
-//					LOGGER.error("The selected file dosen't exist!");
-//				}
-//			}
-//		};
-//		
-//		JFXDirStrmCancelDialog selectFirstSource = new JFXDirStrmCancelDialog(bundle.getString("addSourceHeader"),
-//				bundle.getString("addSourceBody"), "", 200, 100, btn1Action, btn2Action, pane, bundle);
-//		selectFirstSource.show();
-		
-		Alert alert = new Alert(AlertType.CONFIRMATION);	//new alert with DirectoryChooser
-		alert.setTitle("Project HomeFlix");
-		alert.setHeaderText(bundle.getString("addSourceHeader"));
-		alert.setContentText(bundle.getString("addSourceBody"));
-		alert.setResizable(true);
-		
-		ButtonType buttonDirectory = new ButtonType(bundle.getString("addDirectory"));
-		ButtonType buttonStreaming = new ButtonType(bundle.getString("addStreamSource"));
-		ButtonType buttonCancel = new ButtonType("Cancel", ButtonData.CANCEL_CLOSE);
+		JFX2BtnCancelAlert selectFirstSource = new JFX2BtnCancelAlert(bundle.getString("addSourceHeader"),
+				bundle.getString("addSourceBody"),
+				"-fx-button-type: RAISED; -fx-background-color: #ee3523; -fx-text-fill: BLACK;",
+				bundle.getString("addDirectory"), bundle.getString("addStreamSource"),
+				bundle.getString("cancelBtnText"), primaryStage);
 
-		alert.getButtonTypes().setAll(buttonDirectory, buttonStreaming, buttonCancel);
+		// directory action
+		EventHandler<ActionEvent> btn1Action = new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				DirectoryChooser directoryChooser = new DirectoryChooser();
+				directoryChooser.setTitle(bundle.getString("addDirectory"));
+				File selectedFolder = directoryChooser.showDialog(primaryStage);
+				if (selectedFolder != null && selectedFolder.exists()) {
+					mainWindowController.addSource(selectedFolder.getPath(), "local");
+					selectFirstSource.getAlert().close();
+				} else {
+					LOGGER.error("The selected folder dosen't exist!");
+					System.exit(1);
+				}
+			}
+		};
 
-		Optional<ButtonType> result = alert.showAndWait();
-		if (result.get() == buttonDirectory) {
-			DirectoryChooser directoryChooser = new DirectoryChooser();
-			directoryChooser.setTitle(bundle.getString("addDirectory"));
-			File selectedFolder = directoryChooser.showDialog(primaryStage);
-			if (selectedFolder != null && selectedFolder.exists()) {
-				mainWindowController.addSource(selectedFolder.getPath(), "local");
-			} else {
-				LOGGER.error("The selected folder dosen't exist!");
-				System.exit(1);
+		// streaming action
+		EventHandler<ActionEvent> btn2Action = new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setTitle("addStreamSource");
+				File selectedFile = fileChooser.showOpenDialog(getPrimaryStage());
+				if (selectedFile != null && selectedFile.exists()) {
+					mainWindowController.addSource(selectedFile.getPath(), "stream");
+					selectFirstSource.getAlert().close();
+				} else {
+					LOGGER.error("The selected file dosen't exist!");
+					System.exit(1);
+				}
 			}
-		} else if (result.get() == buttonStreaming) {
-			FileChooser fileChooser = new FileChooser();
-			fileChooser.setTitle("addStreamSource");
-			File selectedFile = fileChooser.showOpenDialog(getPrimaryStage());
-			if (selectedFile != null && selectedFile.exists()) {
-				mainWindowController.addSource(selectedFile.getPath(), "stream");
-			} else {
-				LOGGER.error("The selected file dosen't exist!");
-				System.exit(1);
-			}
-		} else {
-			LOGGER.warn("No source selected!");
-			System.exit(1);
-		}
+		};
+		selectFirstSource.setBtn1Action(btn1Action);
+		selectFirstSource.setBtn2Action(btn2Action);
+		selectFirstSource.showAndWait();
 	}
 
 	public static void main(String[] args) {
-		if(System.getProperty("os.name").equals("Windows")){
+		if (System.getProperty("os.name").equals("Windows")) {
 			System.setProperty("logFilename", userHome + "/Documents/HomeFlix/app.log");
 			File logFile = new File(userHome + "/Documents/HomeFlix/app.log");
 			logFile.delete();
-		}else{
+		} else {
 			System.setProperty("logFilename", userHome + "/HomeFlix/app.log");
 			File logFile = new File(userHome + "/HomeFlix/app.log");
 			logFile.delete();
@@ -257,8 +213,8 @@ public class Main extends Application {
 	public void setPrimaryStage(Stage primaryStage) {
 		this.primaryStage = primaryStage;
 	}
-	
-	public AnchorPane getPane( ) {
+
+	public AnchorPane getPane() {
 		return pane;
 	}
 
@@ -269,7 +225,7 @@ public class Main extends Application {
 	public void setFONT_FAMILY(String FONT_FAMILY) {
 		this.FONT_FAMILY = FONT_FAMILY;
 	}
-	
+
 	public File getDirectory() {
 		return directory;
 	}
