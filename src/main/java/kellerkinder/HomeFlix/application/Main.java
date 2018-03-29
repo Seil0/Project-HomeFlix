@@ -31,7 +31,13 @@ import java.util.ResourceBundle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.jfoenix.controls.JFXAlert;
+import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXDialogLayout;
+
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -40,8 +46,10 @@ import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class Main extends Application {
@@ -104,6 +112,12 @@ public class Main extends Application {
 				posterCache = new File(dirLinux + "/posterCache");
 			}
 			
+			// generate window
+			scene = new Scene(pane); // create new scene, append pane to scene
+			scene.getStylesheets().add(getClass().getResource("/css/MainWindow.css").toExternalForm());
+			primaryStage.setScene(scene); // append scene to stage
+			primaryStage.show(); // show stage
+			
 			// startup checks
 			if (!configFile.exists()) {
 				directory.mkdir();		
@@ -119,11 +133,11 @@ public class Main extends Application {
 				posterCache.mkdir();
 			}
 			
-			// generate window
-			scene = new Scene(pane); // create new scene, append pane to scene
-			scene.getStylesheets().add(getClass().getResource("/css/MainWindow.css").toExternalForm());
-			primaryStage.setScene(scene); // append scene to stage
-			primaryStage.show(); // show stage
+//			// generate window
+//			scene = new Scene(pane); // create new scene, append pane to scene
+//			scene.getStylesheets().add(getClass().getResource("/css/MainWindow.css").toExternalForm());
+//			primaryStage.setScene(scene); // append scene to stage
+//			primaryStage.show(); // show stage
 			
 			// init here as it loads the games to the mwc and the gui, therefore the window must exist
 			mainWindowController.init();
@@ -182,7 +196,6 @@ public class Main extends Application {
 //		JFXDirStrmCancelDialog selectFirstSource = new JFXDirStrmCancelDialog(bundle.getString("addSourceHeader"),
 //				bundle.getString("addSourceBody"), "", 200, 100, btn1Action, btn2Action, pane, bundle);
 //		selectFirstSource.show();
-
 		
 		Alert alert = new Alert(AlertType.CONFIRMATION);	//new alert with DirectoryChooser
 		alert.setTitle("Project HomeFlix");
