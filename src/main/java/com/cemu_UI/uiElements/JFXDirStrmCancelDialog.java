@@ -1,24 +1,3 @@
-/**
- * cemu_UI
- * 
- * Copyright 2017-2018  <@Seil0>
- * 
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- * MA 02110-1301, USA.
- */
-
 package com.cemu_UI.uiElements;
 
 import java.util.ResourceBundle;
@@ -34,49 +13,54 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 
-public class JFXOkayCancelDialog {
-	
+public class JFXDirStrmCancelDialog {
 	private String headingText;
 	private String bodyText;
 	private String dialogBtnStyle;
-	private String okayText;
+	private String btn1Text;
+	private String btn2Text;
 	private String cancelText;
 	private int dialogWidth;
 	private int dialogHeight;
-	private EventHandler<ActionEvent> okayAction;
-	private EventHandler<ActionEvent> cancelAction;
+	private EventHandler<ActionEvent> btn1Action;
+	private EventHandler<ActionEvent> btn2Action;
 	private Pane pane;
-	
+
 	/**
-	 * Creates a new JFoenix Dialog to show some information with okay and cancel option
-	 * @param headingText		Heading Text, just the heading
+	 * Creates a new JFoenix Dialog to show some information with okay and cancel
+	 * option
+	 * 
+	 * @param headingText 		Heading Text, just the heading
 	 * @param bodyText			body Text, all other text belongs here
 	 * @param dialogBtnStyle	Style of the okay button
 	 * @param dialogWidth		dialog width
 	 * @param dialogHeight		dialog height
-	 * @param okayAction		action which is performed if the okay button is clicked
+	 * @param btn1Action		action which is performed if btn1 is clicked
+	 * @param btn2Action		action which is performed if btn2 is clicked
 	 * @param cancelAction		action which is performed if the cancel button is clicked
 	 * @param pane				pane to which the dialog belongs
 	 */
-	public JFXOkayCancelDialog(String headingText, String bodyText, String dialogBtnStyle, int dialogWidth,
-			int dialogHeight, EventHandler<ActionEvent> okayAction, EventHandler<ActionEvent> cancelAction, Pane pane,
-			ResourceBundle bundle) {
-		this.headingText = headingText;
-		this.bodyText = bodyText;
-		this.dialogBtnStyle = dialogBtnStyle;
-		this.dialogWidth = dialogWidth;
-		this.dialogHeight = dialogHeight;
-		this.okayAction = okayAction;
-		this.cancelAction = cancelAction;
-		this.pane = pane;
-		okayText = bundle.getString("okayBtnText");
+	public JFXDirStrmCancelDialog(String headingText, String bodyText, String dialogBtnStyle, int dialogWidth,
+			int dialogHeight, EventHandler<ActionEvent> btn1Action, EventHandler<ActionEvent> btn2Action,
+			Pane pane, ResourceBundle bundle) {
+		setHeadingText(headingText);
+		setBodyText(bodyText);
+		setDialogBtnStyle(dialogBtnStyle);
+		setDialogWidth(dialogWidth);
+		setDialogHeight(dialogHeight);
+		setBtn1Action(btn1Action);
+		setBtn2Action(btn2Action);
+		setPane(pane);
+
+		btn1Text = bundle.getString("addDirectory");
+		btn2Text = bundle.getString("addStreamSource");
 		cancelText = bundle.getString("cancelBtnText");
 	}
-	
-	public JFXOkayCancelDialog() {
+
+	public JFXDirStrmCancelDialog() {
 		// Auto-generated constructor stub
 	}
-	
+
 	public void show() {
 		JFXDialogLayout content = new JFXDialogLayout();
 		content.setHeading(new Text(headingText));
@@ -84,23 +68,34 @@ public class JFXOkayCancelDialog {
 		StackPane stackPane = new StackPane();
 		stackPane.autosize();
 		JFXDialog dialog = new JFXDialog(stackPane, content, JFXDialog.DialogTransition.LEFT, true);
-		JFXButton okayBtn = new JFXButton(okayText);
-		okayBtn.addEventHandler(ActionEvent.ACTION, (e) -> {
+		
+		JFXButton btn1 = new JFXButton(btn1Text);
+		btn1.addEventHandler(ActionEvent.ACTION, (e) -> {
 			dialog.close();
 		});
-		okayBtn.addEventHandler(ActionEvent.ACTION, okayAction);
-		okayBtn.setButtonType(com.jfoenix.controls.JFXButton.ButtonType.RAISED);
-		okayBtn.setPrefHeight(32);
-		okayBtn.setStyle(dialogBtnStyle);
+		btn1.addEventHandler(ActionEvent.ACTION, btn1Action);
+		btn1.setButtonType(com.jfoenix.controls.JFXButton.ButtonType.RAISED);
+		btn1.setPrefHeight(32);
+		btn1.setStyle(dialogBtnStyle);
+		
+		JFXButton btn2 = new JFXButton(btn2Text);
+		btn2.addEventHandler(ActionEvent.ACTION, (e) -> {
+			dialog.close();
+		});
+		btn2.addEventHandler(ActionEvent.ACTION, btn2Action);
+		btn2.setButtonType(com.jfoenix.controls.JFXButton.ButtonType.RAISED);
+		btn2.setPrefHeight(32);
+		btn2.setStyle(dialogBtnStyle);
+		
 		JFXButton cancelBtn = new JFXButton(cancelText);
 		cancelBtn.addEventHandler(ActionEvent.ACTION, (e) -> {
 			dialog.close();
 		});
-		cancelBtn.addEventHandler(ActionEvent.ACTION, cancelAction);
 		cancelBtn.setButtonType(com.jfoenix.controls.JFXButton.ButtonType.RAISED);
 		cancelBtn.setPrefHeight(32);
 		cancelBtn.setStyle(dialogBtnStyle);
-		content.setActions(cancelBtn, okayBtn);
+		
+		content.setActions(cancelBtn, btn1, btn2);
 		content.setPrefSize(dialogWidth, dialogHeight);
 		pane.getChildren().add(stackPane);
 		AnchorPane.setTopAnchor(stackPane, (pane.getHeight() - content.getPrefHeight()) / 2);
@@ -132,12 +127,20 @@ public class JFXOkayCancelDialog {
 		this.dialogBtnStyle = dialogBtnStyle;
 	}
 
-	public String getOkayText() {
-		return okayText;
+	public String getBtn1Text() {
+		return btn1Text;
 	}
 
-	public void setOkayText(String okayText) {
-		this.okayText = okayText;
+	public void setBtn1Text(String btn1Text) {
+		this.btn1Text = btn1Text;
+	}
+
+	public String getBtn2Text() {
+		return btn2Text;
+	}
+
+	public void setBtn2Text(String btn2Text) {
+		this.btn2Text = btn2Text;
 	}
 
 	public String getCancelText() {
@@ -164,20 +167,20 @@ public class JFXOkayCancelDialog {
 		this.dialogHeight = dialogHeight;
 	}
 
-	public EventHandler<ActionEvent> getOkayAction() {
-		return okayAction;
+	public EventHandler<ActionEvent> getBtn1Action() {
+		return btn1Action;
 	}
 
-	public void setOkayAction(EventHandler<ActionEvent> okayAction) {
-		this.okayAction = okayAction;
+	public void setBtn1Action(EventHandler<ActionEvent> btn1Action) {
+		this.btn1Action = btn1Action;
 	}
 
-	public EventHandler<ActionEvent> getCancelAction() {
-		return cancelAction;
+	public EventHandler<ActionEvent> getBtn2Action() {
+		return btn2Action;
 	}
 
-	public void setCancelAction(EventHandler<ActionEvent> cancelAction) {
-		this.cancelAction = cancelAction;
+	public void setBtn2Action(EventHandler<ActionEvent> btn2Action) {
+		this.btn2Action = btn2Action;
 	}
 
 	public Pane getPane() {
@@ -189,4 +192,3 @@ public class JFXOkayCancelDialog {
 	}
 
 }
-

@@ -1,7 +1,7 @@
 /**
  * cemu_UI
  * 
- * Copyright 2017  <@Seil0>
+ * Copyright 2017-2018  <@Seil0>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,12 +43,12 @@ public class JFXInfoDialog {
 
 	/**
 	 * Creates a new JFoenix Dialog to show some information
-	 * @param headingText Heading Text, just the heading
-	 * @param bodyText body Text, all other text belongs here
-	 * @param dialogBtnStyle Style of the okay button
-	 * @param dialogWidth dialog width
-	 * @param dialogHeight dialog height
-	 * @param pane pane to which the dialog belongs
+	 * @param headingText		Heading Text, just the heading
+	 * @param bodyText body		Text, all other text belongs here
+	 * @param dialogBtnStyle	Style of the okay button
+	 * @param dialogWidth		dialog width
+	 * @param dialogHeight		dialog height
+	 * @param pane				pane to which the dialog belongs
 	 */
 	public JFXInfoDialog(String headingText, String bodyText, String dialogBtnStyle, int dialogWidth, int dialogHeight, Pane pane) {
 		this.headingText = headingText;
@@ -57,6 +57,10 @@ public class JFXInfoDialog {
 		this.dialogWidth = dialogWidth;
 		this.dialogHeight = dialogHeight;
 		this.pane = pane;
+	}
+	
+	public JFXInfoDialog() {
+		// Auto-generated constructor stub
 	}
 
 	public void show() {
@@ -82,5 +86,53 @@ public class JFXInfoDialog {
 		AnchorPane.setTopAnchor(stackPane, (pane.getHeight() - content.getPrefHeight()) / 2);
 		AnchorPane.setLeftAnchor(stackPane, (pane.getWidth() - content.getPrefWidth()) / 2);
 		dialog.show();
+	}
+
+	public String getHeadingText() {
+		return headingText;
+	}
+
+	public void setHeadingText(String headingText) {
+		this.headingText = headingText;
+	}
+
+	public String getBodyText() {
+		return bodyText;
+	}
+
+	public void setBodyText(String bodyText) {
+		this.bodyText = bodyText;
+	}
+
+	public String getDialogBtnStyle() {
+		return dialogBtnStyle;
+	}
+
+	public void setDialogBtnStyle(String dialogBtnStyle) {
+		this.dialogBtnStyle = dialogBtnStyle;
+	}
+
+	public int getDialogWidth() {
+		return dialogWidth;
+	}
+
+	public void setDialogWidth(int dialogWidth) {
+		this.dialogWidth = dialogWidth;
+	}
+
+	public int getDialogHeight() {
+		return dialogHeight;
+	}
+
+	public void setDialogHeight(int dialogHeight) {
+		this.dialogHeight = dialogHeight;
+	}
+
+	public Pane getPane() {
+		return pane;
+	}
+
+	public void setPane(Pane pane) {
+		this.pane = pane;
 	}
 }

@@ -267,7 +267,6 @@ public class MainWindowController {
 	private ImageView skip_next_black = new ImageView(new Image("icons/ic_skip_next_black_18dp_1x.png"));
 	private ImageView play_arrow_white = new ImageView(new Image("icons/ic_play_arrow_white_18dp_1x.png"));
 	private ImageView play_arrow_black = new ImageView(new Image("icons/ic_play_arrow_black_18dp_1x.png"));
-	private DirectoryChooser directoryChooser = new DirectoryChooser();
     private MenuItem like = new MenuItem("like");
     private MenuItem dislike = new MenuItem("dislike");	//TODO one option (like or dislike)
 	private ContextMenu menu = new ContextMenu(like, dislike);
@@ -290,6 +289,7 @@ public class MainWindowController {
 		omdbAPIController = new OMDbAPIController(this, dbController, this.main);
 	}
 	
+	// call all init methods
 	void init() {
 		loadSettings();
 		checkAutoUpdate();
@@ -632,10 +632,11 @@ public class MainWindowController {
 	
 	@FXML
 	private void addDirectoryBtnAction(){
-		File selectedFolder = directoryChooser.showDialog(null);
+		DirectoryChooser directoryChooser = new DirectoryChooser();
+		directoryChooser.setTitle(bundle.getString("addDirectory"));
+		File selectedFolder = directoryChooser.showDialog(main.getPrimaryStage());
 		if (selectedFolder != null && selectedFolder.exists()) {
-			addSource(selectedFolder.getPath(), "local");
-			dbController.refreshDataBase();
+			mainWindowController.addSource(selectedFolder.getPath(), "local");
 		} else {
 			LOGGER.error("The selected folder dosen't exist!");
 		}
@@ -644,7 +645,7 @@ public class MainWindowController {
 	@FXML
 	private void addStreamSourceBtnAction(){
 		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle("Open Resource File");
+		fileChooser.setTitle("addStreamSource");
 		File selectedFile = fileChooser.showOpenDialog(main.getPrimaryStage());
 		if (selectedFile != null && selectedFile.exists()) {
 			addSource(selectedFile.getPath(), "stream");

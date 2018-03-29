@@ -36,10 +36,12 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public class Main extends Application {
@@ -61,7 +63,6 @@ public class Main extends Application {
 	private File configFile;
 	private File posterCache;
 	
-	private String path;
 	private String FONT_FAMILY = "System";
 	private String local = System.getProperty("user.language")+"_"+System.getProperty("user.country");
 	private double FONT_SIZE = 17;
@@ -105,8 +106,8 @@ public class Main extends Application {
 			
 			// startup checks
 			if (!configFile.exists()) {
-				directory.mkdir();
-				mainWindowController.addSource(firstStart(), "local");
+				directory.mkdir();		
+				getFirstSource();
 				mainWindowController.setColor("ee3523");
 				mainWindowController.setSize(FONT_SIZE);
 				mainWindowController.setAutoUpdate(false);
@@ -132,8 +133,10 @@ public class Main extends Application {
 		}
 	}
 	
-	// Method for first Start
-	private String firstStart(){
+	/** TODO add option to add streaming as first source
+	 * when there i no config.xml we need to get the path for the first source from the user
+	 */
+	private void getFirstSource(){
 		switch (System.getProperty("user.language") + "_" + System.getProperty("user.country")) {
 		case "en_US":
 			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US); // us_english
@@ -146,26 +149,78 @@ public class Main extends Application {
 			break;
 		}
 		
+//		// directory action
+//		EventHandler<ActionEvent> btn1Action = new EventHandler<ActionEvent>() {
+//			@Override
+//			public void handle(ActionEvent event) {
+//				DirectoryChooser directoryChooser = new DirectoryChooser();
+//				directoryChooser.setTitle(bundle.getString("addDirectory"));
+//				File selectedFolder = directoryChooser.showDialog(primaryStage);
+//				if (selectedFolder != null && selectedFolder.exists()) {
+//					mainWindowController.addSource(selectedFolder.getPath(), "local");
+//				} else {
+//					LOGGER.error("The selected folder dosen't exist!");
+//				}
+//			}
+//		};
+//		
+//		// streaming action
+//		EventHandler<ActionEvent> btn2Action = new EventHandler<ActionEvent>() {
+//			@Override
+//			public void handle(ActionEvent event) {
+//				FileChooser fileChooser = new FileChooser();
+//				fileChooser.setTitle("addStreamSource");
+//				File selectedFile = fileChooser.showOpenDialog(getPrimaryStage());
+//				if (selectedFile != null && selectedFile.exists()) {
+//					mainWindowController.addSource(selectedFile.getPath(), "stream");
+//				} else {
+//					LOGGER.error("The selected file dosen't exist!");
+//				}
+//			}
+//		};
+//		
+//		JFXDirStrmCancelDialog selectFirstSource = new JFXDirStrmCancelDialog(bundle.getString("addSourceHeader"),
+//				bundle.getString("addSourceBody"), "", 200, 100, btn1Action, btn2Action, pane, bundle);
+//		selectFirstSource.show();
+
+		
 		Alert alert = new Alert(AlertType.CONFIRMATION);	//new alert with DirectoryChooser
 		alert.setTitle("Project HomeFlix");
-		alert.setHeaderText(bundle.getString("firstStartHeader"));
-		alert.setContentText(bundle.getString("firstStartContent"));
+		alert.setHeaderText(bundle.getString("addSourceHeader"));
+		alert.setContentText(bundle.getString("addSourceBody"));
 		alert.setResizable(true);
+		
+		ButtonType buttonDirectory = new ButtonType(bundle.getString("addDirectory"));
+		ButtonType buttonStreaming = new ButtonType(bundle.getString("addStreamSource"));
+		ButtonType buttonCancel = new ButtonType("Cancel", ButtonData.CANCEL_CLOSE);
+
+		alert.getButtonTypes().setAll(buttonDirectory, buttonStreaming, buttonCancel);
 
 		Optional<ButtonType> result = alert.showAndWait();
-		if (result.get() == ButtonType.OK){
+		if (result.get() == buttonDirectory) {
 			DirectoryChooser directoryChooser = new DirectoryChooser();
-            File selectedDirectory = 
-                directoryChooser.showDialog(primaryStage);
-                path = selectedDirectory.getAbsolutePath();
-            
+			directoryChooser.setTitle(bundle.getString("addDirectory"));
+			File selectedFolder = directoryChooser.showDialog(primaryStage);
+			if (selectedFolder != null && selectedFolder.exists()) {
+				mainWindowController.addSource(selectedFolder.getPath(), "local");
+			} else {
+				LOGGER.error("The selected folder dosen't exist!");
+				System.exit(1);
+			}
+		} else if (result.get() == buttonStreaming) {
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.setTitle("addStreamSource");
+			File selectedFile = fileChooser.showOpenDialog(getPrimaryStage());
+			if (selectedFile != null && selectedFile.exists()) {
+				mainWindowController.addSource(selectedFile.getPath(), "stream");
+			} else {
+				LOGGER.error("The selected file dosen't exist!");
+				System.exit(1);
+			}
 		} else {
-			LOGGER.warn("No directory selected!");
+			LOGGER.warn("No source selected!");
 			System.exit(1);
 		}
-		
-		return path;
-		
 	}
 
 	public static void main(String[] args) {
