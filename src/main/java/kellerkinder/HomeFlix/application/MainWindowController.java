@@ -46,7 +46,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kellerkinder.Alerts.JFXInfoAlert;
 
-import com.cemu_UI.uiElements.JFXInfoDialog;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
@@ -563,8 +562,8 @@ public class MainWindowController {
 				e1.printStackTrace();
 			}
 			if (output.contains("which: no vlc") || output == "") {
-				JFXInfoDialog vlcInfoDialog = new JFXInfoDialog("Info", vlcNotInstalled, dialogBtnStyle, 350, 200, main.getPane());
-				vlcInfoDialog.show();
+				JFXInfoAlert vlcInfoAlert = new JFXInfoAlert("Info", vlcNotInstalled, dialogBtnStyle, main.getPrimaryStage());
+				vlcInfoAlert.showAndWait();
 			} else {
 				try {
 					Runtime.getRuntime().exec(new String[] { "vlc", streamUrl }); // TODO switch to ProcessBuilder
