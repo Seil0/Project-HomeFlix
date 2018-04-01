@@ -97,6 +97,7 @@ import kellerkinder.HomeFlix.controller.DBController;
 import kellerkinder.HomeFlix.controller.OMDbAPIController;
 import kellerkinder.HomeFlix.controller.UpdateController;
 import kellerkinder.HomeFlix.datatypes.SourceDataType;
+import kellerkinder.HomeFlix.player.Player;
 import kellerkinder.HomeFlix.datatypes.FilmTabelDataType;
 
 public class MainWindowController {	
@@ -228,6 +229,7 @@ public class MainWindowController {
 	private boolean settingsTrue = false;
 	private boolean autoUpdate = false;
 	private boolean useBeta = false;
+	private boolean betaPlayer = false;
     private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	private int hashA = -647380320;
 	
@@ -545,42 +547,47 @@ public class MainWindowController {
 	@FXML
 	private void playbtnclicked() {
 		// TODO rework when #19 is coming
-
-		if (System.getProperty("os.name").contains("Linux")) {
-			String line;
-			String output = "";
-			Process p;
-			try {
-				p = Runtime.getRuntime().exec("which vlc");
-				BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-				while ((line = input.readLine()) != null) {
-					output = line;
-				}
-				LOGGER.info(output);
-				input.close();
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-			if (output.contains("which: no vlc") || output == "") {
-				JFXInfoAlert vlcInfoAlert = new JFXInfoAlert("Info", vlcNotInstalled, dialogBtnStyle, main.getPrimaryStage());
-				vlcInfoAlert.showAndWait();
-			} else {
+		
+		if (betaPlayer) {
+			new Player(streamUrl);
+		} else {
+			if (System.getProperty("os.name").contains("Linux")) {
+				String line;
+				String output = "";
+				Process p;
 				try {
-					Runtime.getRuntime().exec(new String[] { "vlc", streamUrl }); // TODO switch to ProcessBuilder
+					p = Runtime.getRuntime().exec("which vlc");
+					BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+					while ((line = input.readLine()) != null) {
+						output = line;
+					}
+					LOGGER.info(output);
+					input.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				if (output.contains("which: no vlc") || output == "") {
+					JFXInfoAlert vlcInfoAlert = new JFXInfoAlert("Info", vlcNotInstalled, dialogBtnStyle, main.getPrimaryStage());
+					vlcInfoAlert.showAndWait();
+				} else {
+					try {
+						Runtime.getRuntime().exec(new String[] { "vlc", streamUrl }); // TODO switch to ProcessBuilder
+					} catch (IOException e) {
+						showErrorMsg(errorPlay, e);
+					}
+				}
+				
+			} else if (System.getProperty("os.name").contains("Windows") || System.getProperty("os.name").contains("Mac OS X")) {
+				try {
+					Desktop.getDesktop().open(new File(streamUrl));
 				} catch (IOException e) {
 					showErrorMsg(errorPlay, e);
 				}
+			} else {
+				LOGGER.error(System.getProperty("os.name") + ", OS is not supported, please contact a developer! ");
 			}
-			
-		} else if (System.getProperty("os.name").contains("Windows") || System.getProperty("os.name").contains("Mac OS X")) {
-			try {
-				Desktop.getDesktop().open(new File(streamUrl));
-			} catch (IOException e) {
-				showErrorMsg(errorPlay, e);
-			}
-		} else {
-			LOGGER.error(System.getProperty("os.name") + ", OS is not supported, please contact a developer! ");
 		}
+		
 	}
 	
 	@FXML
