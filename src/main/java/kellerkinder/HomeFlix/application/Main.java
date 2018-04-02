@@ -19,7 +19,6 @@
  * MA 02110-1301, USA.
  * 
  */
-
 package kellerkinder.HomeFlix.application;
 
 import java.io.File;
@@ -77,6 +76,10 @@ public class Main extends Application {
 		mainWindow();
 	}
 
+	/**
+	 * initialize the mainWindowController, GUI and load the saved settings or call addFirstSource
+	 * initialize the primaryStage and set the file/directory paths
+	 */
 	private void mainWindow(){
 		try {
 			FXMLLoader loader = new FXMLLoader();
@@ -111,7 +114,7 @@ public class Main extends Application {
 			// startup checks
 			if (!configFile.exists()) {
 				directory.mkdir();		
-				getFirstSource();
+				addFirstSource();
 				mainWindowController.setColor("ee3523");
 				mainWindowController.setSize(FONT_SIZE);
 				mainWindowController.setAutoUpdate(false);
@@ -132,10 +135,10 @@ public class Main extends Application {
 	}
 
 	/**
-	 * TODO add option to add streaming as first source when there i no config.xml
-	 * we need to get the path for the first source from the user
+	 * we need to get the path for the first source from the user and add it to 
+	 * sources.json, if the user ends the file-/directory-chooser the program will exit
 	 */
-	private void getFirstSource() {
+	private void addFirstSource() {
 		switch (System.getProperty("user.language") + "_" + System.getProperty("user.country")) {
 		case "en_US":
 			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US); // us_english
@@ -192,6 +195,11 @@ public class Main extends Application {
 		selectFirstSource.showAndWait();
 	}
 
+	/**
+	 * set the log file location and initialize the logger
+	 * launch the GUI
+	 * @param args arguments given at the start
+	 */
 	public static void main(String[] args) {
 		if (System.getProperty("os.name").equals("Windows")) {
 			System.setProperty("logFilename", userHome + "/Documents/HomeFlix/app.log");
@@ -208,10 +216,6 @@ public class Main extends Application {
 
 	public Stage getPrimaryStage() {
 		return primaryStage;
-	}
-
-	public void setPrimaryStage(Stage primaryStage) {
-		this.primaryStage = primaryStage;
 	}
 
 	public AnchorPane getPane() {

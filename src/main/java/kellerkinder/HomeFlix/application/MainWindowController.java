@@ -19,7 +19,6 @@
  * MA 02110-1301, USA.
  * 
  */
-
 package kellerkinder.HomeFlix.application;
 
 import java.awt.Desktop;
@@ -759,18 +758,22 @@ public class MainWindowController {
 	}
 	
 	//set color of UI-Elements
+	/**
+	 * set the color of the GUI-Elements
+	 * if usedColor is less than checkColor set text fill white, else black
+	 */
 	private void applyColor() {
 		String style = "-fx-background-color: #" + getColor() + ";";
 		String btnStyleBlack = "-fx-button-type: RAISED; -fx-background-color: #" + getColor() + "; -fx-text-fill: BLACK;";
 		String btnStyleWhite = "-fx-button-type: RAISED; -fx-background-color: #" + getColor() + "; -fx-text-fill: WHITE;";
-		BigInteger icolor = new BigInteger(getColor(), 16);
-		BigInteger ccolor = new BigInteger("78909cff", 16);
+		BigInteger usedColor = new BigInteger(getColor(), 16);
+		BigInteger checkColor = new BigInteger("78909cff", 16);
 
 		sideMenuVBox.setStyle(style);
 		topHBox.setStyle(style);
 		searchTextField.setFocusColor(Color.valueOf(getColor()));
 
-		if (icolor.compareTo(ccolor) == -1) {
+		if (usedColor.compareTo(checkColor) == -1) {
 			dialogBtnStyle = btnStyleWhite;
 			settingsBtn.setStyle("-fx-text-fill: WHITE;");
 			aboutBtn.setStyle("-fx-text-fill: WHITE;");
@@ -822,6 +825,9 @@ public class MainWindowController {
 		translateTransition.play();
 	}
 	
+	/**
+	 * set the local based on the languageChoisBox selection
+	 */
 	void setLocalUI() {
 		switch (getLocal()) {
 		case "en_US":
@@ -895,7 +901,9 @@ public class MainWindowController {
 		LOGGER.error("An error occurred", exception);
 	}
 	
-	// save settings
+	/**
+	 * save the configuration to the config.xml file
+	 */
 	public void saveSettings() {
 		LOGGER.info("saving settings ...");
 		try {
@@ -907,14 +915,17 @@ public class MainWindowController {
 			props.setProperty("ratingSortType", columnFavorite.getSortType().toString());
 
 			OutputStream outputStream = new FileOutputStream(main.getConfigFile()); // new output-stream
-			props.storeToXML(outputStream, "Project HomeFlix settings"); // writes new .xml
+			props.storeToXML(outputStream, "Project HomeFlix settings"); // write new .xml
 			outputStream.close();
 		} catch (IOException e) {
 			LOGGER.error(errorLoad, e);
 		}
 	}
 	
-	// load settings
+	/**
+	 * load the configuration from the config.xml file
+	 * and try to load the API keys from apiKeys.json
+	 */
 	public void loadSettings() {
 		LOGGER.info("loading settings ...");
 		

@@ -19,7 +19,6 @@
  * MA 02110-1301, USA.
  * 
  */
-
 package kellerkinder.HomeFlix.controller;
 
 import java.awt.image.BufferedImage;

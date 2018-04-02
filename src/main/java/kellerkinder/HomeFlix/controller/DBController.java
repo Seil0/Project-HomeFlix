@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301, USA.
  */
-
 package kellerkinder.HomeFlix.controller;
 
 import java.io.File;
@@ -53,12 +52,7 @@ import kellerkinder.HomeFlix.datatypes.SourceDataType;
 import kellerkinder.HomeFlix.datatypes.FilmTabelDataType;
 
 public class DBController {
-
-	public DBController(Main main, MainWindowController mainWindowController) {
-		this.main = main;
-		this.mainWindowController = mainWindowController;
-	}
-
+	
 	private MainWindowController mainWindowController;
 	private Main main;
 	private String DB_PATH = System.getProperty("user.home") + "\\Documents\\HomeFlix" + "\\" + "Homeflix.db"; //path to database file
@@ -71,6 +65,22 @@ public class DBController {
 	private Connection connection = null;
 	private static final Logger LOGGER = LogManager.getLogger(DBController.class.getName());
 	
+	/**
+	 * constructor for DBController
+	 * @param main					the main object
+	 * @param mainWindowController	the mainWindowController object
+	 */
+	public DBController(Main main, MainWindowController mainWindowController) {
+		this.main = main;
+		this.mainWindowController = mainWindowController;
+	}
+	
+	/**
+	 * initialize the {@link DBController}
+	 * initialize the database connection
+	 * check if there is a need to create a new database
+	 * refresh the database
+	 */
 	public void init() {
 		LOGGER.info("<========== starting loading sql ==========>");
 		initDatabaseConnection();
@@ -79,12 +89,16 @@ public class DBController {
 		LOGGER.info("<========== finished loading sql ==========>");
 	}
 
+	/**
+	 * create a new connection to the HomeFlix.db database
+	 * AutoCommit is set to false to prevent some issues, so manual commit is active!
+	 */
 	private void initDatabaseConnection() {
 		DB_PATH = main.getDirectory() + "/Homeflix.db";
 		try {
 			// create a database connection
 			connection = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
-			connection.setAutoCommit(false);	//AutoCommit to false -> manual commit is active
+			connection.setAutoCommit(false);
 		} catch (SQLException e) {
 			// if the error message is "out of memory", it probably means no database file is found
 			LOGGER.error("error while loading the ROM database", e);
@@ -94,6 +108,7 @@ public class DBController {
 	
 	/**
 	 * if tables don't exist create them
+	 * films table: streamUrl is primary key
 	 * cache table: streamUrl is primary key
 	 */
 	private void createDatabase() {	
@@ -110,6 +125,9 @@ public class DBController {
 		}
 	}
 	
+	/**
+	 * get all database entries
+	 */
 	private void loadDatabase() {
 		// get all entries from the table
 		try {
@@ -131,7 +149,11 @@ public class DBController {
 		LOGGER.info("filme in db: " + filmsdbStreamURL.size());
 	}
 	
-	// load the sources from sources.json
+	/**
+	 * load sources from sources.json
+	 * if mode == local, get all files and series-folder from the directory
+	 * else mode must be streaming, read all entries from the streaming file 
+	 */
 	private void loadSources() {
 		// remove sources from table
 		mainWindowController.getSourcesList().removeAll(mainWindowController.getSourcesList());
@@ -181,7 +203,10 @@ public class DBController {
 		}
 	}
 	
-	// loading data from database to mainWindowController 
+	/**
+	 * load the data to the mainWindowController
+	 * order entries by title
+	 */
 	private void loadDataToMWC() {
 		LOGGER.info("loading data to mwc ...");
 		try {
@@ -381,7 +406,10 @@ public class DBController {
 		}
 	}
 	
-	// prints all entries from the database to the console
+	/**
+	 * DEBUG
+	 * prints all entries from the database to the console
+	 */
 	public void printAllDBEntriesDEBUG() {
 		System.out.println("Outputting all entries ... \n");
 		try {
@@ -581,6 +609,11 @@ public class DBController {
 		}
 	}
 	
+	/**
+	 * return the currentTime in ms saved in the database
+	 * @param streamUrl URL of the film
+	 * @return {@link Double} currentTime in ms
+	 */
 	public double getCurrentTime(String streamUrl) {
 		LOGGER.info("currentTime: " + streamUrl);
 		double currentTime = 0;
@@ -597,6 +630,11 @@ public class DBController {
 		return currentTime;
 	}
 	
+	/**
+	 * save the currentTime to the database
+	 * @param streamUrl		URL of the film
+	 * @param currentTime	currentTime in ms of the film
+	 */
 	public void setCurrentTime(String streamUrl, double currentTime) {
 		LOGGER.info("currentTime: " + streamUrl);
 		try {
@@ -609,12 +647,18 @@ public class DBController {
 		}
 	}
 	
-	public String getNextEpisode(String streamUrl, int nextEp) {
+	/**
+	 * get the next episode of a 
+	 * @param title	URL of the film
+	 * @param nextEp	number of the next episode
+	 * @return {@link String} the streamUrl of the next episode
+	 */
+	public String getNextEpisode(String title, int nextEp) {
 		String nextStreamUrl = "";
 		try {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery(
-					"SELECT * FROM films WHERE streamUrl = \"" + streamUrl + "\" AND episode = " + nextEp + ";");
+					"SELECT * FROM films WHERE title = \"" + title + "\" AND episode = " + nextEp + ";");
 			nextStreamUrl = rs.getString("streamUrl");
 			rs.close();
 			stmt.close();
@@ -623,7 +667,6 @@ public class DBController {
 		} 
 		return nextStreamUrl;
 	}
-	
 	
 	// removes the ending
 	private String cutOffEnd(String str) {

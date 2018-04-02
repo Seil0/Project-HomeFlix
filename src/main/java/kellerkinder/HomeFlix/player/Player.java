@@ -1,5 +1,25 @@
+/**
+ * Project-HomeFlix
+ *
+ * Copyright 2016-2018  <@Seil0>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
+ * 
+ */
 package kellerkinder.HomeFlix.player;
-
 
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -19,6 +39,12 @@ public class Player {
 	private AnchorPane pane;
 	private Scene scene;
 	
+	/**
+	 * generate a new PlayerWindow
+	 * @param file 			the file you want to play
+	 * @param currentEp		the current episode (needed for autoplay)
+	 * @param dbController	the dbController object
+	 */
 	public Player(String file, String currentEp, DBController dbController) {
 		try {
 			FXMLLoader fxmlLoader = new FXMLLoader(ClassLoader.getSystemResource("fxml/PlayerWindow.fxml"));

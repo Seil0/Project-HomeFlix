@@ -1,3 +1,24 @@
+/**
+ * Project-HomeFlix
+ *
+ * Copyright 2016-2018  <@Seil0>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
+ * 
+ */
 package kellerkinder.HomeFlix.player;
 
 import java.io.File;
@@ -69,6 +90,13 @@ public class PlayerController {
 	private ImageView fullscreen_black = new ImageView(new Image("icons/ic_fullscreen_black_24dp_1x.png"));
 	private ImageView fullscreen_exit_black = new ImageView(new Image("icons/ic_fullscreen_exit_black_24dp_1x.png"));
 
+	/**
+	 * initialize the new PlayerWindow
+	 * @param file 			the file you want to play
+	 * @param currentEp		the current episode (needed for autoplay)
+	 * @param player		the player object (needed for closing action)
+	 * @param dbController	the dbController object
+	 */
 	public void init(String file, String currentEp, Player player, DBController dbController) {
 		this.file = file;
 		this.player = player;
@@ -113,7 +141,7 @@ public class PlayerController {
 		    	
 		    	if (duration - currentTime < 10000) {
 		    		if (nextEp != 0) {
-		    			dbController.getNextEpisode(file, nextEp);
+		    			dbController.getNextEpisode(new File(file).getName(), nextEp);
 		    			System.out.println("next episode is: " + dbController.getNextEpisode(file, nextEp));
 					} else {
 						if (duration - currentTime < 100) {
@@ -135,6 +163,9 @@ public class PlayerController {
 		fullscreenBtn.setGraphic(fullscreen_exit_black);
 	}
 	
+	/**
+	 * initialize some PlayerWindow GUI-Elements actions
+	 */
 	private void initActions() {
 		
 		player.getScene().addEventFilter(MouseEvent.MOUSE_MOVED, new EventHandler<MouseEvent>() {
