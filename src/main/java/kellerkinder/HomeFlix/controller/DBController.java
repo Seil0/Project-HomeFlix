@@ -99,7 +99,7 @@ public class DBController {
 	private void createDatabase() {	
 		try {
 			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("create table if not exists films (streamUrl, title, season, episode, favorite, cached)");
+			stmt.executeUpdate("create table if not exists films (streamUrl, title, season, episode, favorite, cached, currentTime)");
 			stmt.executeUpdate("create table if not exists cache ("
 					+ "streamUrl, Title, Year, Rated, Released, Runtime, Genre, Director, Writer,"
 					+ " Actors, Plot, Language, Country, Awards, Metascore, imdbRating, imdbVotes,"
@@ -303,7 +303,7 @@ public class DBController {
 	 */
 	private void checkAddEntry() throws SQLException, FileNotFoundException, IOException {
 		Statement stmt = connection.createStatement();
-		PreparedStatement ps = connection.prepareStatement("insert into films values (?, ?, ?, ?, ?, ?)");
+		PreparedStatement ps = connection.prepareStatement("insert into films values (?, ?, ?, ?, ?, ?, ?)");
 		LOGGER.info("checking for entrys to add to DB ...");
 		
 		// source is a single source of the sources list
@@ -317,7 +317,7 @@ public class DBController {
 						if (!filmsdbStreamURL.contains(file.getPath())) {
 							stmt.executeUpdate("insert into films values ("
 									+ "'" + file.getPath() + "',"
-									+ "'" + cutOffEnd(file.getName()) + "', '', '', 0, 0)");
+									+ "'" + cutOffEnd(file.getName()) + "', '', '', 0, 0, 0.0)");
 							connection.commit();
 							stmt.close();
 							LOGGER.info("Added \"" + file.getName() + "\" to database");
@@ -334,7 +334,7 @@ public class DBController {
 										LOGGER.info("Added \"" + file.getName() + "\", Episode: " + episode.getName() + " to database");
 										stmt.executeUpdate("insert into films values ("
 										+ "'" + episode.getPath().replace("'", "''") + "',"
-										+ "'" + cutOffEnd(file.getName()) + "','" + sn + "','" + ep + "', 0, 0)");
+										+ "'" + cutOffEnd(file.getName()) + "','" + sn + "','" + ep + "', 0, 0, 0.0)");
 										connection.commit();
 										stmt.close();
 										filmsStreamURL.add(episode.getPath());
@@ -366,6 +366,7 @@ public class DBController {
 								ps.setString(4, item.asObject().getString("episode", ""));
 								ps.setInt(5, 0);
 								ps.setBoolean(6, false);
+								ps.setDouble(7, 0);
 								ps.addBatch(); // adds the entry
 								LOGGER.info("Added \"" + title + "\" to database");
 								filmsdbStreamURL.add(streamUrl);
@@ -392,7 +393,8 @@ public class DBController {
 				System.out.println(rs.getString("season"));
 				System.out.println(rs.getString("episode"));
 				System.out.println(rs.getString("rating"));
-				System.out.println(rs.getString("cached") + "\n");
+				System.out.println(rs.getString("cached"));
+				System.out.println(rs.getString("currentTime") + "\n");
 			}
 			stmt.close();
 			rs.close();
@@ -578,6 +580,50 @@ public class DBController {
 			LOGGER.error("Ups! an error occured!", e);
 		}
 	}
+	
+	public double getCurrentTime(String streamUrl) {
+		LOGGER.info("currentTime: " + streamUrl);
+		double currentTime = 0;
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE streamUrl = \"" + streamUrl + "\";");
+			currentTime = rs.getDouble("currentTime");
+			rs.close();
+			stmt.close();
+		} catch (Exception e) {
+			LOGGER.error("Ups! error while refreshing mwc!", e);
+		} 
+		
+		return currentTime;
+	}
+	
+	public void setCurrentTime(String streamUrl, double currentTime) {
+		LOGGER.info("currentTime: " + streamUrl);
+		try {
+			Statement stmt = connection.createStatement();
+			stmt.executeUpdate("UPDATE films SET currentTime=" + currentTime + " WHERE streamUrl=\"" + streamUrl + "\";");
+			connection.commit();
+			stmt.close();
+		} catch (SQLException e) {
+			LOGGER.error("Ups! an error occured!", e);
+		}
+	}
+	
+	public String getNextEpisode(String streamUrl, int nextEp) {
+		String nextStreamUrl = "";
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet rs = stmt.executeQuery(
+					"SELECT * FROM films WHERE streamUrl = \"" + streamUrl + "\" AND episode = " + nextEp + ";");
+			nextStreamUrl = rs.getString("streamUrl");
+			rs.close();
+			stmt.close();
+		} catch (Exception e) {
+			LOGGER.error("Ups! error while refreshing mwc!", e);
+		} 
+		return nextStreamUrl;
+	}
+	
 	
 	// removes the ending
 	private String cutOffEnd(String str) {

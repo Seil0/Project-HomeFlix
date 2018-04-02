@@ -229,7 +229,6 @@ public class MainWindowController {
 	private boolean settingsTrue = false;
 	private boolean autoUpdate = false;
 	private boolean useBeta = false;
-	private boolean betaPlayer = false;
     private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	private int hashA = -647380320;
 	
@@ -240,6 +239,7 @@ public class MainWindowController {
 	private String color;
 	private String title;
 	private String streamUrl;
+	private String currentEp;
 	private String ratingSortType;
 	private String local;
 	private String omdbAPIKey;
@@ -500,6 +500,7 @@ public class MainWindowController {
 				next = indexTable + 1;
 				title = columnTitle.getCellData(indexTable); // get name of selected item
 				streamUrl = columnStreamUrl.getCellData(indexTable); // get file path of selected item
+				currentEp = columnEpisode.getCellData(indexTable); // get the current episode of a series
 				
 				for (FilmTabelDataType helpData : filmsList) {
 					if (helpData.getStreamUrl().equals(streamUrl)) {
@@ -548,9 +549,12 @@ public class MainWindowController {
 	private void playbtnclicked() {
 		// TODO rework when #19 is coming
 		
-		if (betaPlayer) {
-			new Player(streamUrl);
-		} else {
+		try {
+			System.out.println();
+			new Player(streamUrl, currentEp, dbController);
+		} catch (Exception e) {
+			LOGGER.error("using fallback player!", e); // FIXME doesn't work!
+			
 			if (System.getProperty("os.name").contains("Linux")) {
 				String line;
 				String output = "";
@@ -572,22 +576,21 @@ public class MainWindowController {
 				} else {
 					try {
 						Runtime.getRuntime().exec(new String[] { "vlc", streamUrl }); // TODO switch to ProcessBuilder
-					} catch (IOException e) {
-						showErrorMsg(errorPlay, e);
+					} catch (IOException e1) {
+						showErrorMsg(errorPlay, e1);
 					}
 				}
 				
 			} else if (System.getProperty("os.name").contains("Windows") || System.getProperty("os.name").contains("Mac OS X")) {
 				try {
 					Desktop.getDesktop().open(new File(streamUrl));
-				} catch (IOException e) {
-					showErrorMsg(errorPlay, e);
+				} catch (IOException e1) {
+					showErrorMsg(errorPlay, e1);
 				}
 			} else {
 				LOGGER.error(System.getProperty("os.name") + ", OS is not supported, please contact a developer! ");
 			}
-		}
-		
+		}		
 	}
 	
 	@FXML

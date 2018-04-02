@@ -62,7 +62,7 @@ public class OMDbAPIController implements Runnable {
     	String output = null;
     	String posterPath = null;
 		
-		// get by title, TODO implement search
+		// get by title, TODO implement search FIXME set correct info if film dosen't exist
 		try {
 			URL apiUrl = new URL(URL + mainWindowController.getOmdbAPIKey() + "&t="
 					+ mainWindowController.getTitle().replace(" ", "%20"));
