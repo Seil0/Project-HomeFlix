@@ -236,7 +236,7 @@ public class DBController {
 	}
 	
 	/**
-	 * refresh data in mainWindowController localFilms and streamingFilms
+	 * refresh data in mainWindowController for one element
 	 * @param streamUrl of the film
 	 * @param index of the film in LocalFilms list
 	 */

@@ -717,6 +717,7 @@ public class MainWindowController {
 				// check if there is a series node to add the item
 				for (int i = 0; i < filmRoot.getChildren().size(); i++) {
 					if (filmRoot.getChildren().get(i).getValue().getTitle().equals(element.getTitle())) {
+						// if a root node exists, add element as child
 //						System.out.println("Found a root node to add child");
 //						System.out.println("Adding: " + element.getStreamUrl());
 						TreeItem<FilmTabelDataType> episodeNode = new TreeItem<>(new FilmTabelDataType(element.getStreamUrl(),
@@ -724,8 +725,10 @@ public class MainWindowController {
 								element.getCached(), element.getImage()));
 						filmRoot.getChildren().get(i).getChildren().add(episodeNode);
 					} else if (i == filmRoot.getChildren().size() - 1) {
+						// if no root node exists, create one and add element as child
 //						System.out.println("Create a root node to add child");
 //						System.out.println("Adding: " + element.getStreamUrl());
+						// TODO get the last watched episode, the first one with currentTime != 0
 						TreeItem<FilmTabelDataType> seriesRootNode = new TreeItem<>(new FilmTabelDataType(element.getStreamUrl(),
 								element.getTitle(), "", "", element.getFavorite(), element.getCached(), element.getImage()));
 						filmRoot.getChildren().add(seriesRootNode);

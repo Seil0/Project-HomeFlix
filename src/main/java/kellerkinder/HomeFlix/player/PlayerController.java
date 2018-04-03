@@ -144,13 +144,15 @@ public class PlayerController {
 		    		dbController.setCurrentTime(film.getStreamUrl(), 0); // reset old video start time
 		    		
 		    		//start the new film
-		    		System.out.println("next episode is: " + dbController.getNextEpisode(film.getTitle(), episode + 1));
-		    		mediaPlayer.stop();
-		    		player.playNewFilm(dbController.getNextEpisode(film.getTitle(), episode + 1));		
+		    		FilmTabelDataType nextFilm = dbController.getNextEpisode(film.getTitle(), episode + 1);
+		    		if (nextFilm != null) {
+//		    			System.out.println("next episode is: " + nextFilm.getStreamUrl());
+			    		mediaPlayer.stop();
+			    		player.playNewFilm(nextFilm);
+			    		autoplay = true;
+					}
 				} else if ((duration - currentTime) < 100) {
-					dbController.setCurrentTime(film.getStreamUrl(), 0);
 					mediaPlayer.stop();
-					player.getStage().close();
 				}
 
 		    	if (!mousePressed) {
