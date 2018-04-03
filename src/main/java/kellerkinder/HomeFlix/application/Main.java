@@ -40,6 +40,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class Main extends Application {
 
@@ -90,6 +91,12 @@ public class Main extends Application {
 			primaryStage.setResizable(false);
 			primaryStage.setTitle("Project HomeFlix");
 			primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/icons/Homeflix_Icon_64x64.png"))); //adds application icon	
+			primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+				public void handle(WindowEvent we) {
+					System.exit(1);
+				}
+			});
+			
 			mainWindowController = loader.getController();	//Link of FXMLController and controller class
 			mainWindowController.setMain(this);	//call setMain
 

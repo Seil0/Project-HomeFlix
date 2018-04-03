@@ -231,14 +231,13 @@ public class MainWindowController {
     private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	private int hashA = -647380320;
 	
-	private String version = "0.6.1";
-	private String buildNumber = "145";
+	private String version = "0.6.99";
+	private String buildNumber = "147";
 	private String versionName = "glowing vampire";
 	private String dialogBtnStyle;
 	private String color;
 	private String title;
 	private String streamUrl;
-	private String currentEp;
 	private String ratingSortType;
 	private String local;
 	private String omdbAPIKey;
@@ -256,7 +255,8 @@ public class MainWindowController {
 	private int indexList;
 	private int next;
 	private ResourceBundle bundle;
-
+	private FilmTabelDataType currentFilm;
+	
 	private ObservableList<String> languages = FXCollections.observableArrayList("English (en_US)", "Deutsch (de_DE)");
 	private ObservableList<String> branches = FXCollections.observableArrayList("stable", "beta");
 	private ObservableList<FilmTabelDataType> filterData = FXCollections.observableArrayList();
@@ -499,13 +499,14 @@ public class MainWindowController {
 				next = indexTable + 1;
 				title = columnTitle.getCellData(indexTable); // get name of selected item
 				streamUrl = columnStreamUrl.getCellData(indexTable); // get file path of selected item
-				currentEp = columnEpisode.getCellData(indexTable); // get the current episode of a series
 				
 				for (FilmTabelDataType helpData : filmsList) {
 					if (helpData.getStreamUrl().equals(streamUrl)) {
 						indexList = filmsList.indexOf(helpData);
 					}
 				}
+				
+				currentFilm = filmsList.get(indexList);
 				
 				if (filmsList.get(indexList).getCached()) {
 					LOGGER.info("loading from cache: " + title);
@@ -545,14 +546,11 @@ public class MainWindowController {
 	}
 	
 	@FXML
-	private void playbtnclicked() {
-		// TODO rework when #19 is coming
-		
-		try {
-			System.out.println();
-			new Player(streamUrl, currentEp, dbController);
-		} catch (Exception e) {
-			LOGGER.error("using fallback player!", e); // FIXME doesn't work!
+	private void playbtnclicked() {	
+		if (isSupportedFormat(currentFilm)) {
+			new Player(currentFilm, dbController);
+		} else {
+			LOGGER.error("using fallback player!");
 			
 			if (System.getProperty("os.name").contains("Linux")) {
 				String line;
@@ -574,7 +572,7 @@ public class MainWindowController {
 					vlcInfoAlert.showAndWait();
 				} else {
 					try {
-						Runtime.getRuntime().exec(new String[] { "vlc", streamUrl }); // TODO switch to ProcessBuilder
+						new ProcessBuilder("vlc", streamUrl).start();
 					} catch (IOException e1) {
 						showErrorMsg(errorPlay, e1);
 					}
@@ -589,7 +587,20 @@ public class MainWindowController {
 			} else {
 				LOGGER.error(System.getProperty("os.name") + ", OS is not supported, please contact a developer! ");
 			}
-		}		
+		}
+	}
+	
+	/** TODO improve function
+	 * check if a film is supported by the HomeFlixPlayer or not
+	 * @param entry the film you want to check
+	 * @return true if so, false if not
+	 */
+	private boolean isSupportedFormat(FilmTabelDataType film) {
+		if (film.getStreamUrl().endsWith(".mp4")) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 	@FXML
@@ -868,7 +879,7 @@ public class MainWindowController {
 		vlcNotInstalled = getBundle().getString("vlcNotInstalled");
 	}
 	
-	// TODO remove after #19 has landed
+	// TODO rework after #19 has landed
 	public void showErrorMsg(String msg, Exception exception) {
 		Alert alert = new Alert(AlertType.ERROR);
 		alert.setTitle("Error");

@@ -651,21 +651,30 @@ public class DBController {
 	 * get the next episode of a 
 	 * @param title	URL of the film
 	 * @param nextEp	number of the next episode
-	 * @return {@link String} the streamUrl of the next episode
+	 * @return {@link FilmTabelDataType} the next episode as object
 	 */
-	public String getNextEpisode(String title, int nextEp) {
-		String nextStreamUrl = "";
+	public FilmTabelDataType getNextEpisode(String title, int nextEp) {
+		FilmTabelDataType nextFilm = null;
 		try {
 			Statement stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery(
-					"SELECT * FROM films WHERE title = \"" + title + "\" AND episode = " + nextEp + ";");
-			nextStreamUrl = rs.getString("streamUrl");
+			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\" AND episode = \"" + nextEp + "\";");
+			while (rs.next()) {
+				if (rs.getBoolean("favorite") == true) {
+					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getString("season"), rs.getString("episode") ,rs.getBoolean("favorite"),
+							rs.getBoolean("cached"), new ImageView(favorite_black));
+				} else {
+					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+							rs.getBoolean("cached"), new ImageView(favorite_border_black));
+				}
+			}
 			rs.close();
 			stmt.close();
 		} catch (Exception e) {
-			LOGGER.error("Ups! error while refreshing mwc!", e);
+			LOGGER.error("Ups! error while getting next episode!", e);
 		} 
-		return nextStreamUrl;
+		return nextFilm;
 	}
 	
 	// removes the ending

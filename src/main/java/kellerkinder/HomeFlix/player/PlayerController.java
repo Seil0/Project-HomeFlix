@@ -47,6 +47,7 @@ import javafx.scene.media.MediaPlayer.Status;
 import javafx.scene.media.MediaView;
 import javafx.util.Duration;
 import kellerkinder.HomeFlix.controller.DBController;
+import kellerkinder.HomeFlix.datatypes.FilmTabelDataType;
 
 public class PlayerController {
 
@@ -76,13 +77,14 @@ public class PlayerController {
 	private Media media;
 	private MediaPlayer mediaPlayer;
 	
+	private FilmTabelDataType film;
 	private double currentTime = 0;
-	private double futureTime= 0;
+	private double seekTime = 0;
+	private double startTime = 0;
 	private double duration = 0;
 	private boolean mousePressed = false;
 	private boolean showControls = true;
-	private String file;
-	private int nextEp;
+	private boolean autoplay = true;
 	
 	private ImageView stop_black = new ImageView(new Image("icons/ic_stop_black_24dp_1x.png"));
 	private ImageView play_arrow_black = new ImageView(new Image("icons/ic_play_arrow_black_24dp_1x.png"));
@@ -92,24 +94,23 @@ public class PlayerController {
 
 	/**
 	 * initialize the new PlayerWindow
-	 * @param file 			the file you want to play
-	 * @param currentEp		the current episode (needed for autoplay)
+	 * @param entry 		the film object
 	 * @param player		the player object (needed for closing action)
 	 * @param dbController	the dbController object
 	 */
-	public void init(String file, String currentEp, Player player, DBController dbController) {
-		this.file = file;
+	public void init(FilmTabelDataType film, Player player, DBController dbController) {
+		this.film = film;
 		this.player = player;
 		this.dbController = dbController;
 		initActions();
 		
-		if (currentEp.length() > 0) {
-			nextEp = Integer.parseInt(currentEp) + 1;
+		if (film.getStreamUrl().startsWith("http")) {
+			media = new Media(film.getStreamUrl());
 		} else {
-			nextEp = 0;
+			media = new Media(new File(film.getStreamUrl()).toURI().toString());
 		}
+		startTime = dbController.getCurrentTime(film.getStreamUrl());
 		
-		media = new Media(new File(file).toURI().toString());
 		mediaPlayer = new MediaPlayer(media);
 		mediaView.setPreserveRatio(true);
 		mediaView.setMediaPlayer(mediaPlayer);
@@ -119,7 +120,7 @@ public class PlayerController {
 
 		width.bind(Bindings.selectDouble(mediaView.sceneProperty(), "width"));
 		height.bind(Bindings.selectDouble(mediaView.sceneProperty(), "height"));
-		
+
 		mediaPlayer.setOnReady(new Runnable() {
 	        @Override
 	        public void run() {
@@ -127,29 +128,29 @@ public class PlayerController {
 	        	
 	        	timeSlider.setMax((duration/1000)/60);
 
-	        	mediaPlayer.setStartTime(Duration.millis(dbController.getCurrentTime(file)));
-	            mediaPlayer.play();
+	            mediaPlayer.play();     
+	            mediaPlayer.seek(Duration.millis(startTime));
 	        }
 	    });
 		
 		mediaPlayer.currentTimeProperty().addListener(new ChangeListener<Duration>() {
 		    @Override
 		        public void changed(ObservableValue<? extends Duration> observable, Duration oldValue, Duration newValue) {
-		    	
-		    	
 		    	currentTime = newValue.toMillis();
+		    	int episode = Integer.parseInt(film.getEpisode());
 		    	
-		    	if (duration - currentTime < 10000) {
-		    		if (nextEp != 0) {
-		    			dbController.getNextEpisode(new File(file).getName(), nextEp);
-		    			System.out.println("next episode is: " + dbController.getNextEpisode(file, nextEp));
-					} else {
-						if (duration - currentTime < 100) {
-							dbController.setCurrentTime(file, 0);
-							mediaPlayer.stop();
-							player.getStage().close();
-						}
-					}
+		    	if ((duration - currentTime) < 10000 && episode != 0 && autoplay) {
+		    		autoplay = false;
+		    		dbController.setCurrentTime(film.getStreamUrl(), 0); // reset old video start time
+		    		
+		    		//start the new film
+		    		System.out.println("next episode is: " + dbController.getNextEpisode(film.getTitle(), episode + 1));
+		    		mediaPlayer.stop();
+		    		player.playNewFilm(dbController.getNextEpisode(film.getTitle(), episode + 1));		
+				} else if ((duration - currentTime) < 100) {
+					dbController.setCurrentTime(film.getStreamUrl(), 0);
+					mediaPlayer.stop();
+					player.getStage().close();
 				}
 
 		    	if (!mousePressed) {
@@ -159,8 +160,9 @@ public class PlayerController {
 		});
 		
 		stopBtn.setGraphic(stop_black);
-		playBtn.setGraphic(play_arrow_black);
+		playBtn.setGraphic(pause_black);
 		fullscreenBtn.setGraphic(fullscreen_exit_black);
+		timeSlider.setValue(0);
 	}
 	
 	/**
@@ -202,7 +204,7 @@ public class PlayerController {
 		timeSlider.setOnMouseReleased(new EventHandler<MouseEvent>() {
 		    @Override
 		    public void handle(MouseEvent event) {
-		    	mediaPlayer.seek(new Duration(futureTime));
+		    	mediaPlayer.seek(new Duration(seekTime));
 		    	mousePressed = false;
 		    } 
 		});
@@ -217,7 +219,7 @@ public class PlayerController {
 		timeSlider.valueProperty().addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
-				futureTime = (double) new_val*1000*60;
+				seekTime = (double) new_val*1000*60;
 			}
 		});
 	}
@@ -225,7 +227,7 @@ public class PlayerController {
 	@FXML
 	void stopBtnAction(ActionEvent event) {
 		
-		dbController.setCurrentTime(file, currentTime);
+		dbController.setCurrentTime(film.getStreamUrl(), currentTime);
 		
 		mediaPlayer.stop();
 		player.getStage().close();
