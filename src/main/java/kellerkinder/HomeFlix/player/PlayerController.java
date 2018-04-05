@@ -137,7 +137,8 @@ public class PlayerController {
 		    @Override
 		        public void changed(ObservableValue<? extends Duration> observable, Duration oldValue, Duration newValue) {
 		    	currentTime = newValue.toMillis();
-		    	int episode = Integer.parseInt(film.getEpisode());
+		    	int episode = 0;
+		    	if (film.getEpisode().length() != 0) episode = Integer.parseInt(film.getEpisode());
 		    	
 		    	if ((duration - currentTime) < 10000 && episode != 0 && autoplay) {
 		    		autoplay = false;

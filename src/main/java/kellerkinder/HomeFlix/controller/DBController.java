@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URLConnection;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -167,10 +168,9 @@ public class DBController {
 				mainWindowController.addSourceToTable(path, mode); // add source to source-table
 				if (mode.equals("local")) {
 					for (File file : new File(path).listFiles()) {
-						if (file.isFile()) {
-							// get all files (films)
+						if (file.isFile() && isVideoFile(file.getPath())) {
 							filmsStreamURL.add(file.getPath());
-						} else {
+						} else if(file.isDirectory()) {
 							// get all folders (series)
 							for (File season : file.listFiles()) {
 								if (season.isDirectory()) {
@@ -272,14 +272,13 @@ public class DBController {
 		LOGGER.info("refreshing the Database ...");
 		
 		// clean all ArraLists
-		filmsdbAll.removeAll(filmsdbAll);
-		filmsdbDir.removeAll(filmsdbDir);
-		filmsdbStreamURL.removeAll(filmsdbStreamURL);
-		filmsStreamURL.removeAll(filmsStreamURL);
+		filmsdbAll.clear();
+		filmsdbDir.clear();
+		filmsdbStreamURL.clear();
+		filmsStreamURL.clear();
 		
 		loadSources(); // reload all sources
 		loadDatabase(); // reload all films saved in the DB
-		
 		
 		try {
 			checkAddEntry();
@@ -306,8 +305,6 @@ public class DBController {
 			
 			for (String entry : filmsdbStreamURL) {
 				if (!filmsStreamURL.contains(entry)) {
-					System.out.println(filmsdbStreamURL + "\n");
-					System.out.println(filmsStreamURL);
 					stmt.executeUpdate("delete from films where streamUrl = \"" + entry + "\"");
 					connection.commit();
 					LOGGER.info("removed \"" + entry + "\" from database");
@@ -683,6 +680,16 @@ public class DBController {
 		int pos = str.lastIndexOf(".");
 		if (pos == -1) return str;
 		return str.substring(0, pos);
+	}
+	
+	/**
+	 * check if a file is a video
+	 * @param path the path to the file
+	 * @return true if the file is a video, else false
+	 */
+	public static boolean isVideoFile(String path) {
+	    String mimeType = URLConnection.guessContentTypeFromName(path);    
+	    return mimeType != null && mimeType.startsWith("video");
 	}
 	
 }

@@ -36,6 +36,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.math.BigInteger;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Properties;
@@ -596,11 +597,8 @@ public class MainWindowController {
 	 * @return true if so, false if not
 	 */
 	private boolean isSupportedFormat(FilmTabelDataType film) {
-		if (film.getStreamUrl().endsWith(".mp4")) {
-			return true;
-		} else {
-			return false;
-		}
+		 String mimeType = URLConnection.guessContentTypeFromName(film.getStreamUrl());    
+		 return mimeType != null && mimeType.contains("mp4");
 	}
 	
 	@FXML
@@ -997,9 +995,15 @@ public class MainWindowController {
 		// try loading the omdbAPI key
 		try {
 			InputStream in = getClass().getClassLoader().getResourceAsStream("apiKeys.json");
-			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-			JsonObject apiKeys = Json.parse(reader).asObject();
-			omdbAPIKey = apiKeys.getString("omdbAPIKey", "");
+			if (in != null) {
+				BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+				JsonObject apiKeys = Json.parse(reader).asObject();
+				omdbAPIKey = apiKeys.getString("omdbAPIKey", "");
+				reader.close();
+				in.close();
+			} else {
+				LOGGER.warn("Cloud not load apiKeys.json. No such file");
+			}
 		} catch (Exception e) {
 			LOGGER.error("Cloud not load the omdbAPI key. Please contact the developer!", e);
 		}
