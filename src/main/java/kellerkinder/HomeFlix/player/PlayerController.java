@@ -137,8 +137,7 @@ public class PlayerController {
 		    @Override
 		        public void changed(ObservableValue<? extends Duration> observable, Duration oldValue, Duration newValue) {
 		    	currentTime = newValue.toMillis();
-		    	int episode = 0;
-		    	if (film.getEpisode().length() != 0) episode = Integer.parseInt(film.getEpisode());
+		    	int episode = !film.getEpisode().isEmpty() ? Integer.parseInt(film.getEpisode()) : 0;
 		    	
 		    	if ((duration - currentTime) < 10000 && episode != 0 && autoplay) {
 		    		autoplay = false;
@@ -147,7 +146,6 @@ public class PlayerController {
 		    		//start the new film
 		    		FilmTabelDataType nextFilm = dbController.getNextEpisode(film.getTitle(), episode + 1);
 		    		if (nextFilm != null) {
-//		    			System.out.println("next episode is: " + nextFilm.getStreamUrl());
 			    		mediaPlayer.stop();
 			    		player.playNewFilm(nextFilm);
 			    		autoplay = true;

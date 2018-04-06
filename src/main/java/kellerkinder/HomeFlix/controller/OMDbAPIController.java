@@ -64,7 +64,7 @@ public class OMDbAPIController implements Runnable {
 		// get by title, TODO implement search FIXME set correct info if film dosen't exist
 		try {
 			URL apiUrl = new URL(URL + mainWindowController.getOmdbAPIKey() + "&t="
-					+ mainWindowController.getTitle().replace(" ", "%20"));
+					+ mainWindowController.getCurrentTitle().replace(" ", "%20"));
 			BufferedReader ina = new BufferedReader(new InputStreamReader(apiUrl.openStream()));
 			output = ina.readLine();
 			ina.close();
@@ -102,7 +102,7 @@ public class OMDbAPIController implements Runnable {
 		//resize the image to fit in the posterImageView and add it to the cache
 	    try {
 			BufferedImage originalImage = ImageIO.read(new URL(responseString[18])); //change path to where file is located
-		    posterPath = main.getPosterCache() + "/" + mainWindowController.getTitle() + ".png";
+		    posterPath = main.getPosterCache() + "/" + mainWindowController.getCurrentTitle() + ".png";
 			ImageIO.write(originalImage, "png", new File(posterPath));
 			LOGGER.info("adding poster to cache: "+posterPath);
 		} catch (Exception e) {
@@ -110,16 +110,16 @@ public class OMDbAPIController implements Runnable {
 		}
 	    
 		// adding strings to the cache
-		dbController.addCache(mainWindowController.getStreamUrl(), responseString[0], responseString[1],
+		dbController.addCache(mainWindowController.getCurrentStreamUrl(), responseString[0], responseString[1],
 				responseString[2], responseString[3], responseString[4], responseString[5], responseString[6],
 				responseString[7], responseString[8], responseString[9], responseString[10], responseString[11],
 				responseString[12], responseString[13], responseString[14], responseString[15], responseString[16],
 				responseString[17], posterPath, responseString[19]);
-		dbController.setCached(mainWindowController.getStreamUrl());
+		dbController.setCached(mainWindowController.getCurrentStreamUrl());
 		
 		// load data to the MainWindowController
 		Platform.runLater(() -> {
-			dbController.readCache(mainWindowController.getStreamUrl());
+			dbController.readCache(mainWindowController.getCurrentStreamUrl());
 		});
 	}
 }

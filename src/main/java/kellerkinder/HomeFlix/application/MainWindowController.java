@@ -1,6 +1,6 @@
 /**
  * Project-HomeFlix
- * 
+ *
  * Copyright 2016-2018  <@Seil0>
  * 
  * This program is free software; you can redistribute it and/or modify
@@ -37,7 +37,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.math.BigInteger;
 import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -237,8 +236,6 @@ public class MainWindowController {
 	private String versionName = "glowing vampire";
 	private String dialogBtnStyle;
 	private String color;
-	private String title;
-	private String streamUrl;
 	private String ratingSortType;
 	private String local;
 	private String omdbAPIKey;
@@ -256,7 +253,7 @@ public class MainWindowController {
 	private int indexList;
 	private int next;
 	private ResourceBundle bundle;
-	private FilmTabelDataType currentFilm;
+	private FilmTabelDataType currentTableFilm = new FilmTabelDataType("", "", "", "", false, false, null);
 	
 	private ObservableList<String> languages = FXCollections.observableArrayList("English (en_US)", "Deutsch (de_DE)");
 	private ObservableList<String> branches = FXCollections.observableArrayList("stable", "beta");
@@ -296,8 +293,8 @@ public class MainWindowController {
 		loadSettings();
 		checkAutoUpdate();
 		initTabel();
-		initActions();
 		initUI();
+		initActions();
 	}
 	
 	// Initialize the tables (treeTableViewfilm and sourcesTable)
@@ -415,8 +412,8 @@ public class MainWindowController {
 			@Override
 			public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
 				setSize(fontsizeSlider.getValue());
-				if (title != null) {
-					dbController.readCache(streamUrl);
+				if (!getCurrentTitle().isEmpty()) {
+					dbController.readCache(getCurrentStreamUrl());
 				}
 				// ta1.setFont(Font.font("System", size));
 				saveSettings();
@@ -426,8 +423,8 @@ public class MainWindowController {
 		like.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				dbController.like(streamUrl);
-				dbController.refresh(streamUrl, indexList);
+				dbController.like(getCurrentStreamUrl());
+				dbController.refresh(getCurrentStreamUrl(), indexList);
 				refreshTable();
 			}
 		});
@@ -435,8 +432,8 @@ public class MainWindowController {
 		dislike.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				dbController.dislike(streamUrl);
-				dbController.refresh(streamUrl, indexList);
+				dbController.dislike(getCurrentStreamUrl());
+				dbController.refresh(getCurrentStreamUrl(), indexList);
 				refreshTable();
 			}
 		});
@@ -448,45 +445,25 @@ public class MainWindowController {
 		columnFavorite.sortTypeProperty().addListener(new ChangeListener<SortType>() {
 			@Override
 			public void changed(ObservableValue<? extends SortType> paramObservableValue, SortType paramT1, SortType paramT2) {
-				LOGGER.info("NAME Clicked -- sortType = " + paramT1 + ", SortType=" + paramT2);
-				ArrayList<Integer> fav_true = new ArrayList<Integer>();
-				ArrayList<Integer> fav_false = new ArrayList<Integer>();
-				ObservableList<FilmTabelDataType> helpData;
-				filterData.removeAll(filterData);
-//				treeTableViewfilm.getSelectionModel().clearSelection(selected);
-				filmRoot.getChildren().removeAll(filmRoot.getChildren());
-
-				helpData = filmsList;
-
-				for (int i = 0; i < helpData.size(); i++) {
-					if (helpData.get(i).getFavorite() == true) {
-						fav_true.add(i);
-					} else {
-						fav_false.add(i);
-					}
-				}
-				if (paramT2.toString().equals("DESCENDING")) {
-					LOGGER.info("Absteigend"); // Debug, delete?
-					for (int i = 0; i < fav_true.size(); i++) {
-						filterData.add(helpData.get(fav_true.get(i)));
-					}
-					for (int i = 0; i < fav_false.size(); i++) {
-						filterData.add(helpData.get(fav_false.get(i)));
+				filmRoot.getChildren().clear();
+				
+				if (paramT2.equals(SortType.DESCENDING)) {
+					for (FilmTabelDataType film : filmsList) {
+						if (film.getFavorite()) {
+							filmRoot.getChildren().add(0, new TreeItem<FilmTabelDataType>(film));
+						} else {
+							filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(film));
+						}
 					}
 				} else {
-					for (int i = 0; i < fav_false.size(); i++) {
-						filterData.add(helpData.get(fav_false.get(i)));
+					System.out.println("ascending");
+					for (FilmTabelDataType film : filmsList) {
+						if (!film.getFavorite()) {
+							filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(film));
+						} else {
+							filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(film));
+						}
 					}
-					for (int i = 0; i < fav_true.size(); i++) {
-						filterData.add(helpData.get(fav_true.get(i)));
-					}
-				}
-
-				LOGGER.info(filterData.size()); // Debug, delete?
-				for (int i = 0; i < filterData.size(); i++) {
-//					LOGGER.info(filterData.get(i).getTitle()+"; "+filterData.get(i).getRating()); // Debugging
-					// add filtered data to root node after search
-					filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(filterData.get(i))); 				
 				}
 			}
 		});
@@ -495,23 +472,16 @@ public class MainWindowController {
 		filmsTreeTable.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {
 			@Override
 			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal) {
-				indexTable = filmsTreeTable.getSelectionModel().getSelectedIndex(); // get selected item
+				currentTableFilm = filmsTreeTable.getSelectionModel().getSelectedItem().getValue(); // set the current film object
+				indexList = filmsList.indexOf(currentTableFilm); // get selected items list index
+				indexTable = filmsTreeTable.getSelectionModel().getSelectedIndex(); // get selected items table index
+				
 				last = indexTable - 1;
 				next = indexTable + 1;
-				title = columnTitle.getCellData(indexTable); // get name of selected item
-				streamUrl = columnStreamUrl.getCellData(indexTable); // get file path of selected item
 				
-				for (FilmTabelDataType helpData : filmsList) {
-					if (helpData.getStreamUrl().equals(streamUrl)) {
-						indexList = filmsList.indexOf(helpData);
-					}
-				}
-				
-				currentFilm = filmsList.get(indexList);
-				
-				if (filmsList.get(indexList).getCached()) {
-					LOGGER.info("loading from cache: " + title);
-					dbController.readCache(streamUrl);
+				if (currentTableFilm.getCached()) {
+					LOGGER.info("loading from cache: " + getCurrentTitle());
+					dbController.readCache(getCurrentStreamUrl());
 				} else {
 					omdbAPIController = new OMDbAPIController(mainWindowController, dbController, main);
 					Thread omdbAPIThread = new Thread(omdbAPIController);
@@ -548,8 +518,8 @@ public class MainWindowController {
 	
 	@FXML
 	private void playbtnclicked() {	
-		if (isSupportedFormat(currentFilm)) {
-			new Player(currentFilm, dbController);
+		if (isSupportedFormat(currentTableFilm)) {
+			new Player(currentTableFilm, dbController);
 		} else {
 			LOGGER.error("using fallback player!");
 			
@@ -573,7 +543,7 @@ public class MainWindowController {
 					vlcInfoAlert.showAndWait();
 				} else {
 					try {
-						new ProcessBuilder("vlc", streamUrl).start();
+						new ProcessBuilder("vlc", getCurrentStreamUrl()).start();
 					} catch (IOException e1) {
 						showErrorMsg(errorPlay, e1);
 					}
@@ -581,7 +551,7 @@ public class MainWindowController {
 				
 			} else if (System.getProperty("os.name").contains("Windows") || System.getProperty("os.name").contains("Mac OS X")) {
 				try {
-					Desktop.getDesktop().open(new File(streamUrl));
+					Desktop.getDesktop().open(new File(getCurrentStreamUrl()));
 				} catch (IOException e1) {
 					showErrorMsg(errorPlay, e1);
 				}
@@ -603,7 +573,7 @@ public class MainWindowController {
 	
 	@FXML
 	private void openfolderbtnclicked() {
-		String dest = new File(streamUrl).getParentFile().getAbsolutePath();
+		String dest = new File(getCurrentStreamUrl()).getParentFile().getAbsolutePath();
 		if (!System.getProperty("os.name").contains("Linux")) {
 			try {
 				Desktop.getDesktop().open(new File(dest));
@@ -699,6 +669,12 @@ public class MainWindowController {
 	
 	// refresh the selected child of the root node
 	private void refreshTable() {
+		System.out.println("refresh");
+		System.out.println(filmRoot.getChildren().get(indexTable).getValue());
+		System.out.println(currentTableFilm);
+		
+//		filmRoot.getChildren().get()
+		
 		filmRoot.getChildren().get(indexTable).setValue(filmsList.get(indexList));
 	}
 	
@@ -1047,12 +1023,12 @@ public class MainWindowController {
 		return color;
 	}
 
-	public String getTitle() {
-		return title;
+	public String getCurrentTitle() {
+		return currentTableFilm.getTitle();
 	}
 
-	public String getStreamUrl() {
-		return streamUrl;
+	public String getCurrentStreamUrl() {
+		return currentTableFilm.getStreamUrl();
 	}
 
 	public void setSize(Double input) {
