@@ -105,6 +105,9 @@ public class MainWindowController {
 	private AnchorPane mainAnchorPane;
 	
 	@FXML
+	private AnchorPane tableModeAnchorPane;
+	
+	@FXML
 	private ScrollPane settingsScrollPane;
 	
 	@FXML
@@ -147,7 +150,7 @@ public class MainWindowController {
     private JFXButton debugBtn;
     
     @FXML
-    public JFXButton updateBtn;
+    private JFXButton updateBtn;
     
     @FXML
     private JFXButton addDirectoryBtn;
@@ -160,6 +163,9 @@ public class MainWindowController {
     
     @FXML
     private JFXToggleButton autoUpdateToggleBtn;
+    
+    @FXML
+    private JFXToggleButton autoplayToggleBtn;
     
     @FXML
     private JFXTextField searchTextField;
@@ -228,6 +234,7 @@ public class MainWindowController {
 	private boolean settingsTrue = false;
 	private boolean autoUpdate = false;
 	private boolean useBeta = false;
+	private boolean autoplay = false;
     private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	private int hashA = -647380320;
 	
@@ -513,6 +520,7 @@ public class MainWindowController {
 
 		updateBtn.setFont(Font.font("System", 12));
 		autoUpdateToggleBtn.setSelected(isAutoUpdate());
+		autoplayToggleBtn.setSelected(isAutoplay());
 		languageChoisBox.setItems(languages);
 		branchChoisBox.setItems(branches);
 		
@@ -529,7 +537,7 @@ public class MainWindowController {
 	@FXML
 	private void playbtnclicked() {	
 		if (isSupportedFormat(currentTableFilm)) {
-			new Player(currentTableFilm, dbController);
+			new Player(mainWindowController);
 		} else {
 			LOGGER.error("using fallback player!");
 			
@@ -669,7 +677,7 @@ public class MainWindowController {
 	
 	@FXML
 	private void autoUpdateToggleBtnAction(){
-		if (autoUpdate) {
+		if (isAutoUpdate()) {
 			setAutoUpdate(false);
 		} else {
 			setAutoUpdate(true);
@@ -677,14 +685,18 @@ public class MainWindowController {
 		saveSettings();
 	}
 	
+	@FXML
+	private void autoplayToggleBtnAction(){
+		if (isAutoplay()) {
+			setAutoplay(false);
+		} else {
+			setAutoplay(true);
+		}
+		saveSettings();
+	}
+	
 	// refresh the selected child of the root node
 	private void refreshTable() {
-		System.out.println("refresh");
-		System.out.println(filmRoot.getChildren().get(indexTable).getValue());
-		System.out.println(currentTableFilm);
-		
-//		filmRoot.getChildren().get()
-		
 		filmRoot.getChildren().get(indexTable).setValue(filmsList.get(indexList));
 	}
 	
@@ -755,7 +767,6 @@ public class MainWindowController {
 		}
 	}
 	
-	//set color of UI-Elements
 	/**
 	 * set the color of the GUI-Elements
 	 * if usedColor is less than checkColor set text fill white, else black
@@ -853,6 +864,7 @@ public class MainWindowController {
 		fontsizeLbl.setText(getBundle().getString("fontsizeLbl"));
 		languageLbl.setText(getBundle().getString("languageLbl"));
 		autoUpdateToggleBtn.setText(getBundle().getString("autoUpdate"));
+		autoplayToggleBtn.setText(getBundle().getString("autoplay"));
 		branchLbl.setText(getBundle().getString("branchLbl"));
 		columnStreamUrl.setText(getBundle().getString("columnStreamUrl"));
 		columnTitle.setText(getBundle().getString("columnName"));
@@ -908,6 +920,7 @@ public class MainWindowController {
 			props.setProperty("color", getColor());
 			props.setProperty("autoUpdate", String.valueOf(isAutoUpdate()));
 			props.setProperty("useBeta", String.valueOf(isUseBeta()));
+			props.setProperty("autoplay", String.valueOf(isAutoplay()));
 			props.setProperty("size", getSize().toString());
 			props.setProperty("local", getLocal());
 			props.setProperty("ratingSortType", columnFavorite.getSortType().toString());
@@ -957,6 +970,13 @@ public class MainWindowController {
 			} catch (Exception e) {
 				LOGGER.error("cloud not load autoUpdate", e);
 				setUseBeta(false);
+			}
+			
+			try {
+				setAutoplay(Boolean.parseBoolean(props.getProperty("autoplay")));
+			} catch (Exception e) {
+				LOGGER.error("cloud not load autoplay", e);
+				setAutoplay(false);
 			}
 
 			try {
@@ -1032,6 +1052,10 @@ public class MainWindowController {
 	public String getColor() {
 		return color;
 	}
+	
+	public FilmTabelDataType getCurrentTableFilm() {
+		return currentTableFilm;
+	}
 
 	public String getCurrentTitle() {
 		return currentTableFilm.getTitle();
@@ -1071,6 +1095,14 @@ public class MainWindowController {
 
 	public void setUseBeta(boolean useBeta) {
 		this.useBeta = useBeta;
+	}
+	
+	public boolean isAutoplay() {
+		return autoplay;
+	}
+
+	public void setAutoplay(boolean autoplay) {
+		this.autoplay = autoplay;
 	}
 
 	public void setLocal(String input) {

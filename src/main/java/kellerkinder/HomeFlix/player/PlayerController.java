@@ -46,14 +46,14 @@ import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaPlayer.Status;
 import javafx.scene.media.MediaView;
 import javafx.util.Duration;
-import kellerkinder.HomeFlix.controller.DBController;
+import kellerkinder.HomeFlix.application.MainWindowController;
 import kellerkinder.HomeFlix.datatypes.FilmTabelDataType;
 
 public class PlayerController {
 
 	@FXML
 	private MediaView mediaView;
-	
+
 	@FXML
 	private VBox bottomVBox;
 
@@ -62,10 +62,10 @@ public class PlayerController {
 
 	@FXML
 	private JFXSlider timeSlider;
-	
+
 	@FXML
 	private JFXButton stopBtn;
-	
+
 	@FXML
 	private JFXButton playBtn;
 
@@ -73,10 +73,10 @@ public class PlayerController {
 	private JFXButton fullscreenBtn;
 
 	private Player player;
-	private DBController dbController;
+	private MainWindowController mainWCon;
 	private Media media;
 	private MediaPlayer mediaPlayer;
-	
+
 	private FilmTabelDataType film;
 	private double currentTime = 0;
 	private double seekTime = 0;
@@ -84,8 +84,8 @@ public class PlayerController {
 	private double duration = 0;
 	private boolean mousePressed = false;
 	private boolean showControls = true;
-	private boolean autoplay = true;
-	
+	private boolean autoplay;
+
 	private ImageView stop_black = new ImageView(new Image("icons/ic_stop_black_24dp_1x.png"));
 	private ImageView play_arrow_black = new ImageView(new Image("icons/ic_play_arrow_black_24dp_1x.png"));
 	private ImageView pause_black = new ImageView(new Image("icons/ic_pause_black_24dp_1x.png"));
@@ -94,23 +94,26 @@ public class PlayerController {
 
 	/**
 	 * initialize the new PlayerWindow
-	 * @param entry 		the film object
+	 * @param entry			the film object
 	 * @param player		the player object (needed for closing action)
 	 * @param dbController	the dbController object
 	 */
-	public void init(FilmTabelDataType film, Player player, DBController dbController) {
-		this.film = film;
+	public void init(MainWindowController mainWCon, Player player, FilmTabelDataType film) {
+		this.mainWCon = mainWCon;
 		this.player = player;
-		this.dbController = dbController;
+		this.film = film;
+		startTime = mainWCon.getDbController().getCurrentTime(film.getStreamUrl());
+		autoplay = mainWCon.isAutoplay();
 		initActions();
-		
+
 		if (film.getStreamUrl().startsWith("http")) {
 			media = new Media(film.getStreamUrl());
 		} else {
 			media = new Media(new File(film.getStreamUrl()).toURI().toString());
 		}
-		startTime = dbController.getCurrentTime(film.getStreamUrl());
-		
+		startTime = mainWCon.getDbController().getCurrentTime(film.getStreamUrl());
+		autoplay = mainWCon.isAutoplay();
+
 		mediaPlayer = new MediaPlayer(media);
 		mediaView.setPreserveRatio(true);
 		mediaView.setMediaPlayer(mediaPlayer);
@@ -121,56 +124,59 @@ public class PlayerController {
 		width.bind(Bindings.selectDouble(mediaView.sceneProperty(), "width"));
 		height.bind(Bindings.selectDouble(mediaView.sceneProperty(), "height"));
 
+		// start the media if the player is ready
 		mediaPlayer.setOnReady(new Runnable() {
-	        @Override
-	        public void run() {
-	        	duration = media.getDuration().toMillis();
-	        	
-	        	timeSlider.setMax((duration/1000)/60);
+			@Override
+			public void run() {
+				duration = media.getDuration().toMillis();
 
-	            mediaPlayer.play();     
-	            mediaPlayer.seek(Duration.millis(startTime));
-	        }
-	    });
-		
+				timeSlider.setMax((duration / 1000) / 60);
+
+				mediaPlayer.play();
+				mediaPlayer.seek(Duration.millis(startTime));
+			}
+		});
+
+		// every time the play time changes execute this
+		// TODO rework autoplay
 		mediaPlayer.currentTimeProperty().addListener(new ChangeListener<Duration>() {
-		    @Override
-		        public void changed(ObservableValue<? extends Duration> observable, Duration oldValue, Duration newValue) {
-		    	currentTime = newValue.toMillis();
-		    	int episode = !film.getEpisode().isEmpty() ? Integer.parseInt(film.getEpisode()) : 0;
-		    	
-		    	if ((duration - currentTime) < 10000 && episode != 0 && autoplay) {
-		    		autoplay = false;
-		    		dbController.setCurrentTime(film.getStreamUrl(), 0); // reset old video start time
-		    		
-		    		//start the new film
-		    		FilmTabelDataType nextFilm = dbController.getNextEpisode(film.getTitle(), episode + 1);
-		    		if (nextFilm != null) {
-			    		mediaPlayer.stop();
-			    		player.playNewFilm(nextFilm);
-			    		autoplay = true;
+			@Override
+			public void changed(ObservableValue<? extends Duration> observable, Duration oldValue, Duration newValue) {
+				currentTime = newValue.toMillis(); // set the current time
+				int episode = !film.getEpisode().isEmpty() ? Integer.parseInt(film.getEpisode()) : 0;
+
+				// if we are end time -10 seconds, do autoplay, if activated
+				if ((duration - currentTime) < 10000 && episode != 0 && autoplay) {
+					autoplay = false;
+					mainWCon.getDbController().setCurrentTime(film.getStreamUrl(), 0); // reset old video start time
+					FilmTabelDataType nextFilm = mainWCon.getDbController().getNextEpisode(film.getTitle(), (episode + 1));
+					if (nextFilm != null) {
+						mediaPlayer.stop();
+						player.playNewFilm(nextFilm);
+						autoplay = true;
 					}
 				} else if ((duration - currentTime) < 100) {
 					mediaPlayer.stop();
 				}
 
-		    	if (!mousePressed) {
-		    		timeSlider.setValue((currentTime/1000)/60);
+				if (!mousePressed) {
+					timeSlider.setValue((currentTime / 1000) / 60);
 				}
-		    }
+			}
 		});
-		
+
+		// set the control elements to the correct value
 		stopBtn.setGraphic(stop_black);
 		playBtn.setGraphic(pause_black);
 		fullscreenBtn.setGraphic(fullscreen_exit_black);
 		timeSlider.setValue(0);
 	}
-	
+
 	/**
 	 * initialize some PlayerWindow GUI-Elements actions
 	 */
 	private void initActions() {
-		
+
 		player.getScene().addEventFilter(MouseEvent.MOUSE_MOVED, new EventHandler<MouseEvent>() {
 			// hide controls timer init
 			final Timer timer = new Timer();
@@ -179,13 +185,13 @@ public class PlayerController {
 
 			@Override
 			public void handle(MouseEvent mouseEvent) {
-				
+
 				// show controls
 				if (!showControls) {
 					player.getScene().setCursor(Cursor.DEFAULT);
 					bottomVBox.setVisible(true);
 				}
-				
+
 				// hide controls
 				if (controlAnimationTask != null)
 					controlAnimationTask.cancel();
@@ -202,40 +208,40 @@ public class PlayerController {
 			}
 		});
 
+		// if the mouse on the timeSlider is released seek to the new position
 		timeSlider.setOnMouseReleased(new EventHandler<MouseEvent>() {
-		    @Override
-		    public void handle(MouseEvent event) {
-		    	mediaPlayer.seek(new Duration(seekTime));
-		    	mousePressed = false;
-		    } 
+			@Override
+			public void handle(MouseEvent event) {
+				mediaPlayer.seek(new Duration(seekTime));
+				mousePressed = false;
+			}
 		});
-		
+
 		timeSlider.setOnMousePressed(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent event) {
 				mousePressed = true;
-			} 
+			}
 		});
-		
+
+		// get the new seek time
 		timeSlider.valueProperty().addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
-				seekTime = (double) new_val*1000*60;
+				seekTime = (double) new_val * 1000 * 60;
 			}
 		});
 	}
-	
+
 	@FXML
 	void stopBtnAction(ActionEvent event) {
-		
-		dbController.setCurrentTime(film.getStreamUrl(), currentTime);
-		
+		mainWCon.getDbController().setCurrentTime(film.getStreamUrl(), currentTime);
 		mediaPlayer.stop();
 		player.getStage().close();
 	}
 
 	@FXML
-	void fullscreenBtnAction(ActionEvent event) {	
+	void fullscreenBtnAction(ActionEvent event) {
 		if (player.getStage().isFullScreen()) {
 			player.getStage().setFullScreen(false);
 			fullscreenBtn.setGraphic(fullscreen_black);

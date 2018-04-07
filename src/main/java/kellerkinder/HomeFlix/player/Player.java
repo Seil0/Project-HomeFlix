@@ -30,24 +30,23 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import kellerkinder.HomeFlix.application.Main;
-import kellerkinder.HomeFlix.controller.DBController;
+import kellerkinder.HomeFlix.application.MainWindowController;
 import kellerkinder.HomeFlix.datatypes.FilmTabelDataType;
 
 public class Player {
 	
+	private MainWindowController mainWindowController;
 	private PlayerController playerController;
-	private DBController dbController;
 	private Stage stage;
 	private AnchorPane pane;
 	private Scene scene;
 	
 	/**
 	 * generate a new PlayerWindow
-	 * @param entry 		the film object
-	 * @param dbController	the dbController object
+	 * @param mainWindowController the MainWindowController
 	 */
-	public Player(FilmTabelDataType film, DBController dbController) {
-		this.dbController = dbController;
+	public Player(MainWindowController mainWindowController) {
+		this.mainWindowController = mainWindowController;
 		try {
 			FXMLLoader fxmlLoader = new FXMLLoader(ClassLoader.getSystemResource("fxml/PlayerWindow.fxml"));
 			pane = (AnchorPane) fxmlLoader.load();
@@ -58,14 +57,15 @@ public class Player {
 			stage.getIcons().add(new Image(Main.class.getResourceAsStream("/icons/Homeflix_Icon_64x64.png")));
 			stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 				public void handle(WindowEvent we) {
-					dbController.setCurrentTime(film.getStreamUrl(), playerController.getCurrentTime());
+					mainWindowController.getDbController().setCurrentTime(mainWindowController.getCurrentStreamUrl(),
+							playerController.getCurrentTime());
 					playerController.getMediaPlayer().stop();
 					stage.close();
 				}
 			});
 			
 			playerController = fxmlLoader.getController();
-			playerController.init(film, this, dbController);
+			playerController.init(mainWindowController, this, mainWindowController.getCurrentTableFilm());
 			
 			stage.setFullScreen(true);
 			stage.show();
@@ -75,7 +75,7 @@ public class Player {
 	}
 	
 	public void playNewFilm(FilmTabelDataType film) {
-		playerController.init(film, this, dbController);
+		playerController.init(mainWindowController, this, film);
 	}
 
 	public Stage getStage() {
