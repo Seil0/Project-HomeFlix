@@ -232,7 +232,7 @@ public class DBController {
 		}
 		
 		LOGGER.info("loading data to the GUI ...");
-		mainWindowController.addDataUI();
+		mainWindowController.addDataUI(mainWindowController.getFilmsList());
 	}
 	
 	/**

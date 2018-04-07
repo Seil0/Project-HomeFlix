@@ -363,7 +363,7 @@ public class MainWindowController {
 			@Override
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
 				ObservableList<FilmTabelDataType> helpData;
-				filterData.removeAll(filterData);
+				filterData.clear();
 				filmRoot.getChildren().removeAll(filmRoot.getChildren());
 
 				helpData = filmsList;
@@ -440,31 +440,33 @@ public class MainWindowController {
         
 		/**
 		 * FIXME fix bug when sort by ASCENDING, wrong order
-		 * FIXME when sorting, series are expanded
 		 */
 		columnFavorite.sortTypeProperty().addListener(new ChangeListener<SortType>() {
 			@Override
 			public void changed(ObservableValue<? extends SortType> paramObservableValue, SortType paramT1, SortType paramT2) {
 				filmRoot.getChildren().clear();
+				filterData.clear();
 				
 				if (paramT2.equals(SortType.DESCENDING)) {
 					for (FilmTabelDataType film : filmsList) {
 						if (film.getFavorite()) {
-							filmRoot.getChildren().add(0, new TreeItem<FilmTabelDataType>(film));
+							filterData.add(0, film);
 						} else {
-							filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(film));
+							filterData.add(film);
 						}
 					}
 				} else {
 					System.out.println("ascending");
 					for (FilmTabelDataType film : filmsList) {
 						if (!film.getFavorite()) {
-							filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(film));
+							filterData.add(0, film);
 						} else {
-							filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(film));
+							filterData.add(film);
 						}
 					}
 				}
+				
+				addDataUI(filterData);
 			}
 		});
         
@@ -472,9 +474,17 @@ public class MainWindowController {
 		filmsTreeTable.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {
 			@Override
 			public void changed(ObservableValue<?> observable, Object oldVal, Object newVal) {
+				if (filmsTreeTable.getSelectionModel().getSelectedItem() == null) {
+					return;
+				}
+				
 				currentTableFilm = filmsTreeTable.getSelectionModel().getSelectedItem().getValue(); // set the current film object
-				indexList = filmsList.indexOf(currentTableFilm); // get selected items list index
 				indexTable = filmsTreeTable.getSelectionModel().getSelectedIndex(); // get selected items table index
+				for (FilmTabelDataType film : filmsList) {
+					if (film.equals(currentTableFilm)) {
+						indexList = filmsList.indexOf(film); // get selected items list index
+					}
+				}
 				
 				last = indexTable - 1;
 				next = indexTable + 1;
@@ -681,9 +691,9 @@ public class MainWindowController {
 	/**
 	 * add data from films-list to films-table
 	 */
-	public void addDataUI() {
+	public void addDataUI(ObservableList<FilmTabelDataType> elementsList) {
 
-		for (FilmTabelDataType element : filmsList) {
+		for (FilmTabelDataType element : elementsList) {
 			
 			// only if the entry contains a season and a episode it's a valid series
 			if (!element.getSeason().isEmpty() && !element.getEpisode().isEmpty()) {
