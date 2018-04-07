@@ -175,7 +175,7 @@ public class PlayerController {
 			// hide controls timer init
 			final Timer timer = new Timer();
 			TimerTask controlAnimationTask = null; // task to execute save operation
-			final long delayTime = 5000;
+			final long delayTime = 1000;
 
 			@Override
 			public void handle(MouseEvent mouseEvent) {
