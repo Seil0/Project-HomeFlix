@@ -243,7 +243,6 @@ public class MainWindowController {
 	private String versionName = "glowing vampire";
 	private String dialogBtnStyle;
 	private String color;
-	private String ratingSortType;
 	private String local;
 	private String omdbAPIKey;
 	
@@ -254,7 +253,7 @@ public class MainWindowController {
 	private String infoText;
 	private String vlcNotInstalled;
 	
-	public double size;
+	private double fontSize;
 	private int last;
 	private int indexTable;
 	private int indexList;
@@ -273,8 +272,8 @@ public class MainWindowController {
 	private ImageView skip_next_black = new ImageView(new Image("icons/ic_skip_next_black_18dp_1x.png"));
 	private ImageView play_arrow_white = new ImageView(new Image("icons/ic_play_arrow_white_18dp_1x.png"));
 	private ImageView play_arrow_black = new ImageView(new Image("icons/ic_play_arrow_black_18dp_1x.png"));
-    private MenuItem like = new MenuItem("like");
-    private MenuItem dislike = new MenuItem("dislike");	//TODO one option (like or dislike)
+	private MenuItem like = new MenuItem("like");
+	private MenuItem dislike = new MenuItem("dislike"); // TODO one option (like or dislike)
 	private ContextMenu menu = new ContextMenu(like, dislike);
 	private Properties props = new Properties();
 	
@@ -418,7 +417,7 @@ public class MainWindowController {
 		fontsizeSlider.valueProperty().addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
-				setSize(fontsizeSlider.getValue());
+				setFontSize(fontsizeSlider.getValue());
 				if (!getCurrentTitle().isEmpty()) {
 					dbController.readCache(getCurrentStreamUrl());
 				}
@@ -515,7 +514,7 @@ public class MainWindowController {
 		debugBtn.setVisible(false);
 
 		versionLbl.setText("Version: " + version + " (Build: " + buildNumber + ")");
-		fontsizeSlider.setValue(getSize());
+		fontsizeSlider.setValue(getFontSize());
 		colorPicker.setValue(Color.valueOf(getColor()));
 
 		updateBtn.setFont(Font.font("System", 12));
@@ -921,7 +920,7 @@ public class MainWindowController {
 			props.setProperty("autoUpdate", String.valueOf(isAutoUpdate()));
 			props.setProperty("useBeta", String.valueOf(isUseBeta()));
 			props.setProperty("autoplay", String.valueOf(isAutoplay()));
-			props.setProperty("size", getSize().toString());
+			props.setProperty("size", getFontSize().toString());
 			props.setProperty("local", getLocal());
 			props.setProperty("ratingSortType", columnFavorite.getSortType().toString());
 
@@ -952,10 +951,10 @@ public class MainWindowController {
 			}
 
 			try {
-				setSize(Double.parseDouble(props.getProperty("size")));
+				setFontSize(Double.parseDouble(props.getProperty("size")));
 			} catch (Exception e) {
 				LOGGER.error("cloud not load fontsize", e);
-				setSize(17.0);
+				setFontSize(17.0);
 			}
 
 			try {
@@ -984,13 +983,6 @@ public class MainWindowController {
 			} catch (Exception e) {
 				LOGGER.error("cloud not load local", e);
 				setLocal(System.getProperty("user.language") + "_" + System.getProperty("user.country"));
-			}
-
-			try {
-				setRatingSortType(props.getProperty("ratingSortType"));
-			} catch (Exception e) {
-				LOGGER.error("cloud not load autoUpdate", e);
-				setRatingSortType("");
 			}
 
 			inputStream.close();
@@ -1065,12 +1057,12 @@ public class MainWindowController {
 		return currentTableFilm.getStreamUrl();
 	}
 
-	public void setSize(Double input) {
-		this.size = input;
+	public void setFontSize(Double input) {
+		this.fontSize = input;
 	}
 
-	public Double getSize() {
-		return size;
+	public Double getFontSize() {
+		return fontSize;
 	}
 
 	public int getIndexTable() {
@@ -1123,14 +1115,6 @@ public class MainWindowController {
 
 	public ObservableList<SourceDataType> getSourcesList() {
 		return sourcesList;
-	}
-
-	public String getRatingSortType() {
-		return ratingSortType;
-	}
-
-	public void setRatingSortType(String ratingSortType) {
-		this.ratingSortType = ratingSortType;
 	}
 
 	public ResourceBundle getBundle() {

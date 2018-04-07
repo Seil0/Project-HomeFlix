@@ -550,9 +550,8 @@ public class DBController {
 			ResultSet rs = stmt.executeQuery("SELECT * FROM cache WHERE streamUrl=\"" + streamUrl + "\";");
 			ArrayList<Text> nameText = new ArrayList<Text>();
 			ArrayList<Text> responseText = new ArrayList<Text>();
-			String fontFamily = main.getFONT_FAMILY();
 			Image im;
-			int fontSize = (int) Math.round(mainWindowController.size);
+			int fontSize = (int) Math.round(mainWindowController.getFontSize());
 			int j = 2;
 
 			nameText.add(0, new Text(mainWindowController.getBundle().getString("title") + ": "));
@@ -583,8 +582,8 @@ public class DBController {
 			rs.close();
 
 			for (int i = 0; i < nameText.size(); i++) {
-				nameText.get(i).setFont(Font.font(fontFamily, FontWeight.BOLD, fontSize));
-				responseText.get(i).setFont(Font.font(fontFamily, fontSize));
+				nameText.get(i).setFont(Font.font("System", FontWeight.BOLD, fontSize));
+				responseText.get(i).setFont(Font.font("System", fontSize));
 			}
 
 			mainWindowController.getTextFlow().getChildren().remove(0,

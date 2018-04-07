@@ -55,15 +55,12 @@ public class Main extends Application {
 	private static String osVers = System.getProperty("os.version");
 	private static String javaVers = System.getProperty("java.version");
 	private static String javaVend = System.getProperty("java.vendor");
+	private static String local = System.getProperty("user.language") + "_" + System.getProperty("user.country");
 	private String dirWin = userHome + "/Documents/HomeFlix"; // Windows: C:/Users/"User"/Documents/HomeFlix
 	private String dirLinux = userHome + "/HomeFlix"; // Linux: /home/"User"/HomeFlix
 	private File directory;
 	private File configFile;
 	private File posterCache;
-
-	private String FONT_FAMILY = "System";
-	private String local = System.getProperty("user.language") + "_" + System.getProperty("user.country");
-	private double FONT_SIZE = 17;
 	private ResourceBundle bundle;
 	private static Logger LOGGER;
 
@@ -123,7 +120,7 @@ public class Main extends Application {
 				directory.mkdir();		
 				addFirstSource();
 				mainWindowController.setColor("ee3523");
-				mainWindowController.setSize(FONT_SIZE);
+				mainWindowController.setFontSize(17.0);
 				mainWindowController.setAutoUpdate(false);
 				mainWindowController.setLocal(local);
 				mainWindowController.saveSettings();
@@ -146,7 +143,7 @@ public class Main extends Application {
 	 * sources.json, if the user ends the file-/directory-chooser the program will exit
 	 */
 	private void addFirstSource() {
-		switch (System.getProperty("user.language") + "_" + System.getProperty("user.country")) {
+		switch (local) {
 		case "en_US":
 			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US); // us_english
 			break;
@@ -227,14 +224,6 @@ public class Main extends Application {
 
 	public AnchorPane getPane() {
 		return pane;
-	}
-
-	public String getFONT_FAMILY() {
-		return FONT_FAMILY;
-	}
-
-	public void setFONT_FAMILY(String FONT_FAMILY) {
-		this.FONT_FAMILY = FONT_FAMILY;
 	}
 
 	public File getDirectory() {
