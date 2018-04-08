@@ -103,7 +103,7 @@ public class MainWindowController {
 	
 	@FXML
 	private AnchorPane mainAnchorPane;
-	
+
 	@FXML
 	private AnchorPane tableModeAnchorPane;
 	

@@ -138,7 +138,6 @@ public class PlayerController {
 		});
 
 		// every time the play time changes execute this
-		// TODO rework autoplay
 		mediaPlayer.currentTimeProperty().addListener(new ChangeListener<Duration>() {
 			@Override
 			public void changed(ObservableValue<? extends Duration> observable, Duration oldValue, Duration newValue) {
@@ -152,7 +151,7 @@ public class PlayerController {
 					FilmTabelDataType nextFilm = mainWCon.getDbController().getNextEpisode(film.getTitle(), (episode + 1));
 					if (nextFilm != null) {
 						mediaPlayer.stop();
-						player.playNewFilm(nextFilm);
+						init(mainWCon, player, nextFilm);
 						autoplay = true;
 					}
 				} else if ((duration - currentTime) < 100) {
@@ -178,7 +177,7 @@ public class PlayerController {
 	private void initActions() {
 
 		player.getScene().addEventFilter(MouseEvent.MOUSE_MOVED, new EventHandler<MouseEvent>() {
-			// hide controls timer init
+			// hide controls timer initialization
 			final Timer timer = new Timer();
 			TimerTask controlAnimationTask = null; // task to execute save operation
 			final long delayTime = 1000;

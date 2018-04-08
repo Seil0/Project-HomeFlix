@@ -31,11 +31,9 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import kellerkinder.HomeFlix.application.Main;
 import kellerkinder.HomeFlix.application.MainWindowController;
-import kellerkinder.HomeFlix.datatypes.FilmTabelDataType;
 
 public class Player {
 	
-	private MainWindowController mainWindowController;
 	private PlayerController playerController;
 	private Stage stage;
 	private AnchorPane pane;
@@ -46,7 +44,6 @@ public class Player {
 	 * @param mainWindowController the MainWindowController
 	 */
 	public Player(MainWindowController mainWindowController) {
-		this.mainWindowController = mainWindowController;
 		try {
 			FXMLLoader fxmlLoader = new FXMLLoader(ClassLoader.getSystemResource("fxml/PlayerWindow.fxml"));
 			pane = (AnchorPane) fxmlLoader.load();
@@ -72,10 +69,6 @@ public class Player {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public void playNewFilm(FilmTabelDataType film) {
-		playerController.init(mainWindowController, this, film);
 	}
 
 	public Stage getStage() {
