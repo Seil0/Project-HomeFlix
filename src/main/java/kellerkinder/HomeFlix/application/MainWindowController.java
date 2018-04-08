@@ -181,34 +181,34 @@ public class MainWindowController {
 
 	@FXML
 	public JFXSlider fontsizeSlider;
-	
-    @FXML
-    private Label homeflixSettingsLbl;
-	
-    @FXML
-    private Label mainColorLbl;
-	
+
+	@FXML
+	private Label homeflixSettingsLbl;
+
+	@FXML
+	private Label mainColorLbl;
+
 	@FXML
 	private Label fontsizeLbl;
-	
-    @FXML
-    private Label languageLbl;
-	
+
+	@FXML
+	private Label languageLbl;
+
 	@FXML
 	private Label updateLbl;
-	
+
 	@FXML
 	private Label branchLbl;
-	
+
 	@FXML
 	private Label sourcesLbl;
 
 	@FXML
 	private Label versionLbl;
 
-    @FXML
+	@FXML
 	private ImageView posterImageView;
-    private ImageView imv1;
+	private ImageView imv1;
     
 	@FXML
 	private TreeItem<FilmTabelDataType> filmRoot = new TreeItem<>(new FilmTabelDataType("", "", "", "", false, false, imv1));
@@ -222,22 +222,22 @@ public class MainWindowController {
 	private TreeTableColumn<FilmTabelDataType, String> columnEpisode = new TreeTableColumn<>("Episode");
 	@FXML
 	private TreeTableColumn<FilmTabelDataType, ImageView> columnFavorite = new TreeTableColumn<>("Favorite");
-    
-    @FXML
-    private TreeItem<SourceDataType> sourceRoot =new TreeItem<>(new SourceDataType("", ""));
-    @FXML
-    private TableColumn<SourceDataType, String> sourceColumn;
-    @FXML
-    private TableColumn<SourceDataType, String> modeColumn;
-	
+
+	@FXML
+	private TreeItem<SourceDataType> sourceRoot = new TreeItem<>(new SourceDataType("", ""));
+	@FXML
+	private TableColumn<SourceDataType, String> sourceColumn;
+	@FXML
+	private TableColumn<SourceDataType, String> modeColumn;
+
 	private boolean menuTrue = false;
 	private boolean settingsTrue = false;
 	private boolean autoUpdate = false;
 	private boolean useBeta = false;
 	private boolean autoplay = false;
-    private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
+	private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	private int hashA = -647380320;
-	
+
 	private String version = "0.6.99";
 	private String buildNumber = "147";
 	private String versionName = "glowing vampire";
@@ -331,18 +331,18 @@ public class MainWindowController {
 		filmsTreeTable.getColumns().add(columnFavorite);
 		filmsTreeTable.getColumns().add(columnSeason);
 		filmsTreeTable.getColumns().add(columnEpisode);
-		filmsTreeTable.getColumns().get(0).setVisible(false); //hide columnStreamUrl (important)
-	    
-	    // context menu for treeTableViewfilm  
+		filmsTreeTable.getColumns().get(0).setVisible(false); // hide columnStreamUrl (important)
+
+		// context menu for treeTableViewfilm
 		filmsTreeTable.setContextMenu(menu);
-	    
-	    // sourcesTreeTable
-	    sourceColumn.setCellValueFactory(cellData -> cellData.getValue().pathProperty());
-	    modeColumn.setCellValueFactory(cellData -> cellData.getValue().modeProperty());
-	    sourcesTable.setItems(sourcesList);
+
+		// sourcesTreeTable
+		sourceColumn.setCellValueFactory(cellData -> cellData.getValue().pathProperty());
+		modeColumn.setCellValueFactory(cellData -> cellData.getValue().modeProperty());
+		sourcesTable.setItems(sourcesList);
 	}
-	
-	//Initializing the actions
+
+	// Initializing the actions
 	private void initActions() {
 
 		HamburgerBackArrowBasicTransition burgerTask = new HamburgerBackArrowBasicTransition(menuHam);
