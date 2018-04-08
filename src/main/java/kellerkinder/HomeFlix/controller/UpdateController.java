@@ -148,8 +148,8 @@ public class UpdateController implements Runnable {
 				FileUtils.copyInputStreamToFile(pmis, new File("ProjectHomeFlix_update.jar")); // download update
 				org.apache.commons.io.FileUtils.copyFile(new File("ProjectHomeFlix_update.jar"), new File("ProjectHomeFlix.jar"));
 				org.apache.commons.io.FileUtils.deleteQuietly(new File("ProjectHomeFlix_update.jar")); // delete update
-				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar"); // start again TODO consider ProcessBuilder to execute
-				System.exit(0); // finishes itself
+				new ProcessBuilder("java", "-jar", "ProjectHomeFlix.jar").start(); // start the new application
+				System.exit(0); // close the current application
 			} catch (IOException e) {
 				Platform.runLater(() -> {
 					LOGGER.info("could not download update files", e);
