@@ -139,40 +139,40 @@ public class MainWindowController {
 	
 	@FXML
 	private JFXButton forwardBtn;
-	
-    @FXML
-    private JFXButton aboutBtn;
-    
-    @FXML
-    private JFXButton settingsBtn;
-    
-    @FXML
-    private JFXButton debugBtn;
-    
-    @FXML
-    private JFXButton updateBtn;
-    
-    @FXML
-    private JFXButton addDirectoryBtn;
-    
-    @FXML
-    private JFXButton addStreamSourceBtn;
-    
-    @FXML
-    private JFXHamburger menuHam;
-    
-    @FXML
-    private JFXToggleButton autoUpdateToggleBtn;
-    
-    @FXML
-    private JFXToggleButton autoplayToggleBtn;
-    
-    @FXML
-    private JFXTextField searchTextField;
-    
-    @FXML
-    public JFXColorPicker colorPicker;
-    
+
+	@FXML
+	private JFXButton aboutBtn;
+
+	@FXML
+	private JFXButton settingsBtn;
+
+	@FXML
+	private JFXButton debugBtn;
+
+	@FXML
+	private JFXButton updateBtn;
+
+	@FXML
+	private JFXButton addDirectoryBtn;
+
+	@FXML
+	private JFXButton addStreamSourceBtn;
+
+	@FXML
+	private JFXHamburger menuHam;
+
+	@FXML
+	private JFXToggleButton autoUpdateToggleBtn;
+
+	@FXML
+	private JFXToggleButton autoplayToggleBtn;
+
+	@FXML
+	private JFXTextField searchTextField;
+
+	@FXML
+	public JFXColorPicker colorPicker;
+
 	@FXML
 	public ChoiceBox<String> languageChoisBox = new ChoiceBox<>();
 
