@@ -103,13 +103,11 @@ public class MainWindowController {
 	
 	@FXML
 	private AnchorPane mainAnchorPane;
-
 	@FXML
 	private AnchorPane tableModeAnchorPane;
 	
 	@FXML
 	private ScrollPane settingsScrollPane;
-	
 	@FXML
 	private ScrollPane textScrollPane;
 	
@@ -130,40 +128,30 @@ public class MainWindowController {
 
 	@FXML
 	private JFXButton playbtn;
-	
 	@FXML
 	private JFXButton openfolderbtn;
-	
 	@FXML
 	private JFXButton returnBtn;
-	
 	@FXML
 	private JFXButton forwardBtn;
-
 	@FXML
 	private JFXButton aboutBtn;
-
 	@FXML
 	private JFXButton settingsBtn;
-
 	@FXML
 	private JFXButton debugBtn;
-
 	@FXML
 	private JFXButton updateBtn;
-
 	@FXML
 	private JFXButton addDirectoryBtn;
-
 	@FXML
 	private JFXButton addStreamSourceBtn;
-
+	
 	@FXML
 	private JFXHamburger menuHam;
 
 	@FXML
 	private JFXToggleButton autoUpdateToggleBtn;
-
 	@FXML
 	private JFXToggleButton autoplayToggleBtn;
 
@@ -171,38 +159,30 @@ public class MainWindowController {
 	private JFXTextField searchTextField;
 
 	@FXML
-	public JFXColorPicker colorPicker;
+	private JFXColorPicker colorPicker;
 
 	@FXML
-	public ChoiceBox<String> languageChoisBox = new ChoiceBox<>();
+	private ChoiceBox<String> languageChoisBox = new ChoiceBox<>();
+	@FXML
+	private ChoiceBox<String> branchChoisBox = new ChoiceBox<>();
 
 	@FXML
-	public ChoiceBox<String> branchChoisBox = new ChoiceBox<>();
-
-	@FXML
-	public JFXSlider fontsizeSlider;
+	private JFXSlider fontsizeSlider;
 
 	@FXML
 	private Label homeflixSettingsLbl;
-
 	@FXML
 	private Label mainColorLbl;
-
 	@FXML
 	private Label fontsizeLbl;
-
 	@FXML
 	private Label languageLbl;
-
 	@FXML
 	private Label updateLbl;
-
 	@FXML
 	private Label branchLbl;
-
 	@FXML
 	private Label sourcesLbl;
-
 	@FXML
 	private Label versionLbl;
 
@@ -578,8 +558,9 @@ public class MainWindowController {
 		}
 	}
 	
-	/** TODO improve function
+	/** TODO add all other supported mime types
 	 * check if a film is supported by the HomeFlixPlayer or not
+	 * this is the case if the mime type is mp4
 	 * @param entry the film you want to check
 	 * @return true if so, false if not
 	 */
@@ -708,29 +689,32 @@ public class MainWindowController {
 			
 			// only if the entry contains a season and a episode it's a valid series
 			if (!element.getSeason().isEmpty() && !element.getEpisode().isEmpty()) {
-//				System.out.println("Found Series: " + element.getTitle());
-				// check if there is a series node to add the item
+
+				// check if there is a series node to add the item		
 				for (int i = 0; i < filmRoot.getChildren().size(); i++) {
 					if (filmRoot.getChildren().get(i).getValue().getTitle().equals(element.getTitle())) {
 						// if a root node exists, add element as child
 //						System.out.println("Found a root node to add child");
 //						System.out.println("Adding: " + element.getStreamUrl());
-						TreeItem<FilmTabelDataType> episodeNode = new TreeItem<>(new FilmTabelDataType(element.getStreamUrl(),
-								element.getTitle(), element.getSeason(), element.getEpisode(), element.getFavorite(),
-								element.getCached(), element.getImage()));
+						TreeItem<FilmTabelDataType> episodeNode = new TreeItem<>(new FilmTabelDataType(
+								element.getStreamUrl(), element.getTitle(), element.getSeason(), element.getEpisode(),
+								element.getFavorite(), element.getCached(), element.getImage()));
 						filmRoot.getChildren().get(i).getChildren().add(episodeNode);
-					} else if (i == filmRoot.getChildren().size() - 1) {
+					} else if (filmRoot.getChildren().get(i).nextSibling() == null) {
 						// if no root node exists, create one and add element as child
 //						System.out.println("Create a root node to add child");
 //						System.out.println("Adding: " + element.getStreamUrl());
-						// TODO get the last watched episode, the first one with currentTime != 0
-						TreeItem<FilmTabelDataType> seriesRootNode = new TreeItem<>(new FilmTabelDataType(element.getStreamUrl(),
+						// TODO set episode and season		
+						// FIXME if the streamUrl hasen't been cached we get an exception
+						TreeItem<FilmTabelDataType> seriesRootNode = new TreeItem<>(new FilmTabelDataType(
+								dbController.getLastWatchedEpisode(element.getTitle()),
 								element.getTitle(), "", "", element.getFavorite(), element.getCached(), element.getImage()));
 						filmRoot.getChildren().add(seriesRootNode);
 					}
 				}
 			} else {
-				filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(element)); // add data to root-node
+				// if season and episode are empty, we can assume the object is a film
+				filmRoot.getChildren().add(new TreeItem<FilmTabelDataType>(element));
 			}
 		}
 	}

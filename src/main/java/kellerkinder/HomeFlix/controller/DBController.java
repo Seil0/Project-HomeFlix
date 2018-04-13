@@ -546,6 +546,7 @@ public class DBController {
 	 */
 	public void readCache(String streamUrl) {
 		try {
+			
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM cache WHERE streamUrl=\"" + streamUrl + "\";");
 			ArrayList<Text> nameText = new ArrayList<Text>();
@@ -575,6 +576,7 @@ public class DBController {
 				responseText.add(new Text(rs.getString(j) + "\n"));
 				j++;
 			}
+			
 			responseText.add(new Text(rs.getString(19) + "\n"));
 			im = new Image(new File(rs.getString(20)).toURI().toString());
 
@@ -620,7 +622,7 @@ public class DBController {
 			rs.close();
 			stmt.close();
 		} catch (Exception e) {
-			LOGGER.error("Ups! error while refreshing mwc!", e);
+			LOGGER.error("Ups! error while getting the current time!", e);
 		} 
 		
 		return currentTime;
@@ -671,6 +673,28 @@ public class DBController {
 			LOGGER.error("Ups! error while getting next episode!", e);
 		} 
 		return nextFilm;
+	}
+	
+	
+	public String getLastWatchedEpisode(String title) {
+		LOGGER.info("last watched episode of: " + title);
+		String lastEpisodeStreamUrl = "";
+		double lastCurrentTime = -1;
+		
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\";");
+			while (rs.next()) {
+				if (rs.getDouble("currentTime") > lastCurrentTime) {
+					lastCurrentTime = rs.getDouble("currentTime");
+					lastEpisodeStreamUrl = rs.getString("streamUrl");
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.error("Ups! error while getting the last watched episode!", e);
+		} 
+		
+		return lastEpisodeStreamUrl;
 	}
 	
 	// removes the ending
