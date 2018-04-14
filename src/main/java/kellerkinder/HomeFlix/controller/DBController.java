@@ -246,16 +246,17 @@ public class DBController {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE streamUrl = \"" + streamUrl + "\";");
 			
-			if (rs.getBoolean("favorite") == true) {
-				mainWindowController.getFilmsList().set(indexList, new FilmTabelDataType(rs.getString("streamUrl"),
-						rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
-						rs.getBoolean("cached"), new ImageView(favorite_black)));
-			} else {
-				mainWindowController.getFilmsList().set(indexList, new FilmTabelDataType(rs.getString("streamUrl"),
-						rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
-						rs.getBoolean("cached"), new ImageView(favorite_border_black)));
+			while (rs.next()) {
+				if (rs.getBoolean("favorite") == true) {
+					mainWindowController.getFilmsList().set(indexList, new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+							rs.getBoolean("cached"), new ImageView(favorite_black)));
+				} else {
+					mainWindowController.getFilmsList().set(indexList, new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+							rs.getBoolean("cached"), new ImageView(favorite_border_black)));
+				}
 			}
-			
 			rs.close();
 			stmt.close();
 		} catch (Exception e) {
@@ -540,6 +541,21 @@ public class DBController {
 		}
 	}
 	
+	public boolean searchCache(String streamUrl) {
+		boolean retValue = false;
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM cache WHERE streamUrl = \"" + streamUrl + "\";");
+			retValue = rs.next();
+			rs.close();
+			stmt.close();
+		} catch (Exception e) {
+			LOGGER.error("Ups! error while getting the current time!", e);
+		}
+		
+		return retValue;
+	}
+	
 	/**
 	 * sets the cached data to mwc's TextFlow
 	 * @param streamUrl URL of the film
@@ -675,26 +691,50 @@ public class DBController {
 		return nextFilm;
 	}
 	
-	
-	public String getLastWatchedEpisode(String title) {
+	/**
+	 * get the last watched episode
+	 * @param title the title of the series
+	 * @return the last watched episode as {@link FilmTabelDataType} object
+	 */
+	public FilmTabelDataType getLastWatchedEpisode(String title) {
 		LOGGER.info("last watched episode of: " + title);
-		String lastEpisodeStreamUrl = "";
-		double lastCurrentTime = -1;
+		FilmTabelDataType nextFilm = null;
+		double lastCurrentTime = 0;
 		
 		try {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\";");
 			while (rs.next()) {
+				if (rs.getBoolean("favorite") == true) {
+					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getString("season"), rs.getString("episode") ,rs.getBoolean("favorite"),
+							rs.getBoolean("cached"), new ImageView(favorite_black));
+				} else {
+					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+							rs.getBoolean("cached"), new ImageView(favorite_border_black));
+				}
 				if (rs.getDouble("currentTime") > lastCurrentTime) {
 					lastCurrentTime = rs.getDouble("currentTime");
-					lastEpisodeStreamUrl = rs.getString("streamUrl");
+					if (rs.getBoolean("favorite") == true) {
+						nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
+								rs.getString("title"), rs.getString("season"), rs.getString("episode") ,rs.getBoolean("favorite"),
+								rs.getBoolean("cached"), new ImageView(favorite_black));
+					} else {
+						nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
+								rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+								rs.getBoolean("cached"), new ImageView(favorite_border_black));
+					}
+					break;
 				}
 			}
+			rs.close();
+			stmt.close();
 		} catch (Exception e) {
 			LOGGER.error("Ups! error while getting the last watched episode!", e);
 		} 
 		
-		return lastEpisodeStreamUrl;
+		return nextFilm;
 	}
 	
 	// removes the ending

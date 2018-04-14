@@ -475,10 +475,10 @@ public class MainWindowController {
 				last = indexTable - 1;
 				next = indexTable + 1;
 				
-				if (currentTableFilm.getCached()) {
+				if (currentTableFilm.getCached() || dbController.searchCache(getCurrentStreamUrl())) {
 					LOGGER.info("loading from cache: " + getCurrentTitle());
 					dbController.readCache(getCurrentStreamUrl());
-				} else {
+				} else {			
 					omdbAPIController = new OMDbAPIController(mainWindowController, dbController, main);
 					Thread omdbAPIThread = new Thread(omdbAPIController);
 					omdbAPIThread.setName("OMDbAPI");
@@ -514,12 +514,16 @@ public class MainWindowController {
 	}
 	
 	@FXML
-	private void playbtnclicked() {	
+	private void playbtnclicked() {
+		if (currentTableFilm.getStreamUrl().contains("_rootNode")) {
+			LOGGER.info("rootNode found, getting last watched episode");
+			currentTableFilm = dbController.getLastWatchedEpisode(currentTableFilm.getTitle());
+		}
+		
 		if (isSupportedFormat(currentTableFilm)) {
 			new Player(mainWindowController);
 		} else {
 			LOGGER.error("using fallback player!");
-			
 			if (System.getProperty("os.name").contains("Linux")) {
 				String line;
 				String output = "";
@@ -558,15 +562,15 @@ public class MainWindowController {
 		}
 	}
 	
-	/** TODO add all other supported mime types
+	/**
 	 * check if a film is supported by the HomeFlixPlayer or not
 	 * this is the case if the mime type is mp4
 	 * @param entry the film you want to check
 	 * @return true if so, false if not
 	 */
 	private boolean isSupportedFormat(FilmTabelDataType film) {
-		 String mimeType = URLConnection.guessContentTypeFromName(film.getStreamUrl());    
-		 return mimeType != null && mimeType.contains("mp4");
+		 String mimeType = URLConnection.guessContentTypeFromName(film.getStreamUrl());
+		 return mimeType != null && (mimeType.contains("mp4") || mimeType.contains("vp6"));
 	}
 	
 	@FXML
@@ -694,21 +698,15 @@ public class MainWindowController {
 				for (int i = 0; i < filmRoot.getChildren().size(); i++) {
 					if (filmRoot.getChildren().get(i).getValue().getTitle().equals(element.getTitle())) {
 						// if a root node exists, add element as child
-//						System.out.println("Found a root node to add child");
-//						System.out.println("Adding: " + element.getStreamUrl());
 						TreeItem<FilmTabelDataType> episodeNode = new TreeItem<>(new FilmTabelDataType(
 								element.getStreamUrl(), element.getTitle(), element.getSeason(), element.getEpisode(),
 								element.getFavorite(), element.getCached(), element.getImage()));
 						filmRoot.getChildren().get(i).getChildren().add(episodeNode);
 					} else if (filmRoot.getChildren().get(i).nextSibling() == null) {
 						// if no root node exists, create one and add element as child
-//						System.out.println("Create a root node to add child");
-//						System.out.println("Adding: " + element.getStreamUrl());
-						// TODO set episode and season		
-						// FIXME if the streamUrl hasen't been cached we get an exception
 						TreeItem<FilmTabelDataType> seriesRootNode = new TreeItem<>(new FilmTabelDataType(
-								dbController.getLastWatchedEpisode(element.getTitle()),
-								element.getTitle(), "", "", element.getFavorite(), element.getCached(), element.getImage()));
+								element.getTitle() + "_rootNode", element.getTitle(), "", "", element.getFavorite(),
+								false, element.getImage()));
 						filmRoot.getChildren().add(seriesRootNode);
 					}
 				}
