@@ -143,12 +143,13 @@ public class PlayerController {
 			public void changed(ObservableValue<? extends Duration> observable, Duration oldValue, Duration newValue) {
 				currentTime = newValue.toMillis(); // set the current time
 				int episode = !film.getEpisode().isEmpty() ? Integer.parseInt(film.getEpisode()) : 0;
+				int season = !film.getSeason().isEmpty() ? Integer.parseInt(film.getSeason()) : 0;
 
 				// if we are end time -10 seconds, do autoplay, if activated
 				if ((duration - currentTime) < 10000 && episode != 0 && autoplay) {
 					autoplay = false;
 					mainWCon.getDbController().setCurrentTime(film.getStreamUrl(), 0); // reset old video start time
-					FilmTabelDataType nextFilm = mainWCon.getDbController().getNextEpisode(film.getTitle(), (episode + 1));
+					FilmTabelDataType nextFilm = mainWCon.getDbController().getNextEpisode(film.getTitle(), (episode + 1), season);
 					if (nextFilm != null) {
 						mediaPlayer.stop();
 						init(mainWCon, player, nextFilm);

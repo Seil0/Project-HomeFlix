@@ -541,6 +541,11 @@ public class DBController {
 		}
 	}
 	
+	/**
+	 * checks if there is already a entry with the given streamUrl in the cache
+	 * @param streamUrl URL of the element
+	 * @return true if the element is already cached, else false
+	 */
 	public boolean searchCache(String streamUrl) {
 		boolean retValue = false;
 		try {
@@ -661,37 +666,52 @@ public class DBController {
 		}
 	}
 	
-	/**
+	/** TODO check if we relay need to separate between favorites and none favorites
 	 * get the next episode of a 
 	 * @param title	URL of the film
 	 * @param nextEp	number of the next episode
 	 * @return {@link FilmTabelDataType} the next episode as object
 	 */
-	public FilmTabelDataType getNextEpisode(String title, int nextEp) {
+	public FilmTabelDataType getNextEpisode(String title, int nextEp, int season) {
 		FilmTabelDataType nextFilm = null;
 		try {
 			Statement stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\" AND episode = \"" + nextEp + "\";");
-			while (rs.next()) {
+			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\" AND episode = \""
+					+ nextEp + "\" AND season = \"" + season + "\";");
+			if (rs.next()) {
 				if (rs.getBoolean("favorite") == true) {
-					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
-							rs.getString("title"), rs.getString("season"), rs.getString("episode") ,rs.getBoolean("favorite"),
+					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
+							rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
 							rs.getBoolean("cached"), new ImageView(favorite_black));
 				} else {
-					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
-							rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
+							rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
 							rs.getBoolean("cached"), new ImageView(favorite_border_black));
+				}
+			} else {
+				rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title
+						+ "\" AND episode = \"1\" AND season = \"" + (season + 1) + "\";");
+				while (rs.next()) {
+					if (rs.getBoolean("favorite") == true) {
+						nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
+								rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+								rs.getBoolean("cached"), new ImageView(favorite_black));
+					} else {
+						nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
+								rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+								rs.getBoolean("cached"), new ImageView(favorite_border_black));
+					}
 				}
 			}
 			rs.close();
 			stmt.close();
 		} catch (Exception e) {
 			LOGGER.error("Ups! error while getting next episode!", e);
-		} 
+		}
 		return nextFilm;
 	}
 	
-	/**
+	/** TODO check if we relay need to separate between favorites and none favorites
 	 * get the last watched episode
 	 * @param title the title of the series
 	 * @return the last watched episode as {@link FilmTabelDataType} object
