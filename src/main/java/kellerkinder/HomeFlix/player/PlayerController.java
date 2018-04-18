@@ -92,7 +92,7 @@ public class PlayerController {
 	private ImageView fullscreen_black = new ImageView(new Image("icons/ic_fullscreen_black_24dp_1x.png"));
 	private ImageView fullscreen_exit_black = new ImageView(new Image("icons/ic_fullscreen_exit_black_24dp_1x.png"));
 
-	/**
+	/** FIXME double set currentTime(
 	 * initialize the new PlayerWindow
 	 * @param entry			the film object
 	 * @param player		the player object (needed for closing action)
@@ -144,7 +144,7 @@ public class PlayerController {
 				currentTime = newValue.toMillis(); // set the current time
 				int episode = !film.getEpisode().isEmpty() ? Integer.parseInt(film.getEpisode()) : 0;
 				int season = !film.getSeason().isEmpty() ? Integer.parseInt(film.getSeason()) : 0;
-
+				
 				// if we are end time -10 seconds, do autoplay, if activated
 				if ((duration - currentTime) < 10000 && episode != 0 && autoplay) {
 					autoplay = false;
@@ -155,8 +155,10 @@ public class PlayerController {
 						init(mainWCon, player, nextFilm);
 						autoplay = true;
 					}
-				} else if ((duration - currentTime) < 100) {
+				} else if ((duration - currentTime) < 120) {
+					// if we are -20ms stop the media
 					mediaPlayer.stop();
+					mainWCon.getDbController().setCurrentTime(film.getStreamUrl(), 0); // reset old video start time
 				}
 
 				if (!mousePressed) {
@@ -181,7 +183,7 @@ public class PlayerController {
 			// hide controls timer initialization
 			final Timer timer = new Timer();
 			TimerTask controlAnimationTask = null; // task to execute save operation
-			final long delayTime = 1000;
+			final long delayTime = 2000; // hide the controls after 2 seconds
 
 			@Override
 			public void handle(MouseEvent mouseEvent) {

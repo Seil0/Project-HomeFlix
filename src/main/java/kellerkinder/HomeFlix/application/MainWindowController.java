@@ -218,9 +218,9 @@ public class MainWindowController {
 	private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	private int hashA = -647380320;
 
-	private String version = "0.6.100";
-	private String buildNumber = "149";
-	private String versionName = "toothless dragon RC";
+	private final String version = "0.6.100";
+	private final String buildNumber = "151";
+	private final String versionName = "toothless dragon RC";
 	private String dialogBtnStyle;
 	private String color;
 	private String local;
@@ -274,8 +274,9 @@ public class MainWindowController {
 		omdbAPIController = new OMDbAPIController(this, dbController, this.main);
 	}
 	
-	// call all init methods
+	// call all initialize methods
 	void init() {
+		LOGGER.info("Initializing Project-HomeFlix build " + buildNumber);
 		loadSettings();
 		checkAutoUpdate();
 		initTabel();
