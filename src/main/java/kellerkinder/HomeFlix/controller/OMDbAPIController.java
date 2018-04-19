@@ -61,7 +61,7 @@ public class OMDbAPIController implements Runnable {
     	String output = null;
     	String posterPath = null;
 		
-		// get by title, TODO implement search FIXME set correct info if film dosen't exist
+		// get information by title
 		try {
 			URL apiUrl = new URL(URL + mainWindowController.getOmdbAPIKey() + "&t="
 					+ mainWindowController.getCurrentTitle().replace(" ", "%20"));
@@ -77,6 +77,35 @@ public class OMDbAPIController implements Runnable {
 		}
 		
 		JsonObject object = Json.parse(output).asObject();
+		
+		if (object.getString("Error", "").equals("Movie not found!")) {
+			// if the movie was not found try to search it
+			// TODO split the name intelligent as it may contain the film title
+			// query the api
+			try {
+				URL apiUrl = new URL(URL + mainWindowController.getOmdbAPIKey() + "&s="
+						+ mainWindowController.getCurrentTitle().replace(" ", "%20"));
+				BufferedReader ina = new BufferedReader(new InputStreamReader(apiUrl.openStream()));
+				output = ina.readLine();
+				ina.close();
+				System.out.println(apiUrl);
+				LOGGER.info("response from search " + URL + " was valid");
+				LOGGER.info(output);
+			} catch (Exception e) {
+				LOGGER.error("error while making api request or reading response");
+				LOGGER.error("response from search" + URL + " was: \n" + output, e);
+				return;
+			}
+			
+			JsonObject searchObject = Json.parse(output).asObject();
+			// TODO new query with the actual title
+			if (object.getString("Response", "").equals("True")) {
+				System.out.println(searchObject.getString("Title", ""));
+			}
+			
+			System.out.println("Movie not found, not setting cache");
+			return;
+		}
 		
 		responseString[0] = object.getString("Title", "");
 		responseString[1] = object.getString("Year", "");
