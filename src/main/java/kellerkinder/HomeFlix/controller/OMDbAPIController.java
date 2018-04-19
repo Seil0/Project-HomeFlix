@@ -48,6 +48,12 @@ public class OMDbAPIController implements Runnable {
 	private String URL = "https://www.omdbapi.com/?apikey=";
 	private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	
+	/**
+	 * constructor for the OMDbAPIController
+	 * @param mainWindowController	the MainWindowController object
+	 * @param dbController			the DBController object
+	 * @param main					the Main object
+	 */
 	public OMDbAPIController(MainWindowController mainWindowController, DBController dbController, Main main){
 		this.mainWindowController = mainWindowController;
 		this.dbController = dbController;
@@ -107,6 +113,7 @@ public class OMDbAPIController implements Runnable {
 			return;
 		}
 		
+		// add the response to the responseString[]
 		responseString[0] = object.getString("Title", "");
 		responseString[1] = object.getString("Year", "");
 		responseString[2] = object.getString("Rated", "");

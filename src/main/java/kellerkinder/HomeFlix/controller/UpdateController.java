@@ -60,6 +60,9 @@ public class UpdateController implements Runnable {
 
 	/**
 	 * updater for Project HomeFlix based on cemu_UIs, checks for Updates and download it
+	 * @param mwc			the MainWindowController object
+	 * @param buildNumber	the buildNumber of the used HomeFlix version
+	 * @param useBeta		if the updater should query the beta channel
 	 */
 	public UpdateController(MainWindowController mwc, String buildNumber, boolean useBeta) {
 		mainWindowController = mwc;

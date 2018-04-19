@@ -22,7 +22,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.TextFlow?>
 
-<AnchorPane fx:id="mainAnchorPane" prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kellerkinder.HomeFlix.application.MainWindowController">
+<AnchorPane fx:id="mainAnchorPane" prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kellerkinder.HomeFlix.application.MainWindowController">
 	<children>
       <AnchorPane fx:id="tableModeAnchorPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="32.0">
          <children>
@@ -186,11 +186,6 @@
                </font>
             </JFXButton>
             <JFXButton fx:id="settingsBtn" onAction="#settingsBtnclicked" prefHeight="37.0" prefWidth="150.0" textAlignment="CENTER">
-               <font>
-                  <Font name="System Bold" size="15.0" />
-               </font>
-            </JFXButton>
-            <JFXButton fx:id="debugBtn" onAction="#debugBtnclicked" prefHeight="32.0" prefWidth="150.0" text="debugging" textAlignment="CENTER">
                <font>
                   <Font name="System Bold" size="15.0" />
                </font>

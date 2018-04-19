@@ -68,8 +68,8 @@ public class DBController {
 	
 	/**
 	 * constructor for DBController
-	 * @param main					the main object
-	 * @param mainWindowController	the mainWindowController object
+	 * @param main					the Main object
+	 * @param mainWindowController	the MainWindowController object
 	 */
 	public DBController(Main main, MainWindowController mainWindowController) {
 		this.main = main;
@@ -300,11 +300,11 @@ public class DBController {
 	 */
 	private void checkRemoveEntry() {
 		LOGGER.info("checking for entrys to remove to DB ...");
-		
 		try {
 			Statement stmt = connection.createStatement();
 			
 			for (String entry : filmsdbStreamURL) {
+				// if the directory doen't contain the entry form the db, remove it
 				if (!filmsStreamURL.contains(entry)) {
 					stmt.executeUpdate("delete from films where streamUrl = \"" + entry + "\"");
 					connection.commit();
@@ -334,8 +334,9 @@ public class DBController {
 			// if it's a local source check the folder for new film
 			if (source.getMode().equals("local")) {
 				for (File file : new File(source.getPath()).listFiles()) {
-					
-					if (file.isFile()) {
+					String mimeType = URLConnection.guessContentTypeFromName(file.getPath());
+					// if file is file and has mime type "video" TODO needs testing
+					if (file.isFile() && mimeType != null && mimeType.contains("video")) {
 						// get all files (films)
 						if (!filmsdbStreamURL.contains(file.getPath())) {
 							stmt.executeUpdate("insert into films values ("
@@ -346,7 +347,7 @@ public class DBController {
 							LOGGER.info("Added \"" + file.getName() + "\" to database");
 							filmsdbStreamURL.add(file.getPath());
 						}
-					} else {
+					} else if (file.isDirectory()) {
 						// get all folders (series)
 						int sn = 1;
 						for (File season : file.listFiles()) {

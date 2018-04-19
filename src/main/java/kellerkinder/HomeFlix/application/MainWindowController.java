@@ -32,8 +32,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.math.BigInteger;
 import java.net.URLConnection;
@@ -64,8 +62,6 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -73,7 +69,6 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableColumn.SortType;
@@ -82,9 +77,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -138,8 +131,6 @@ public class MainWindowController {
 	private JFXButton aboutBtn;
 	@FXML
 	private JFXButton settingsBtn;
-	@FXML
-	private JFXButton debugBtn;
 	@FXML
 	private JFXButton updateBtn;
 	@FXML
@@ -227,7 +218,6 @@ public class MainWindowController {
 	private String omdbAPIKey;
 	
 	// text strings
-	private String errorPlay;
 	private String errorLoad;
 	private String errorSave;
 	private String infoText;
@@ -443,7 +433,7 @@ public class MainWindowController {
 						}
 					}
 				} else {
-					System.out.println("ascending");
+//					System.out.println("ascending");
 					for (FilmTabelDataType film : filmsList) {
 						if (!film.getFavorite()) {
 							filterData.add(0, film);
@@ -491,9 +481,6 @@ public class MainWindowController {
 	
 	// initialize UI elements
 	private void initUI() {
-		debugBtn.setDisable(true); // debugging button for tests
-		debugBtn.setVisible(false);
-
 		versionLbl.setText("Version: " + version + " (Build: " + buildNumber + ")");
 		fontsizeSlider.setValue(getFontSize());
 		colorPicker.setValue(Color.valueOf(getColor()));
@@ -546,16 +533,16 @@ public class MainWindowController {
 				} else {
 					try {
 						new ProcessBuilder("vlc", getCurrentStreamUrl()).start();
-					} catch (IOException e1) {
-						showErrorMsg(errorPlay, e1);
+					} catch (IOException e) {
+						LOGGER.warn("An error has occurred while opening the file!", e);
 					}
 				}
 				
 			} else if (System.getProperty("os.name").contains("Windows") || System.getProperty("os.name").contains("Mac OS X")) {
 				try {
 					Desktop.getDesktop().open(new File(getCurrentStreamUrl()));
-				} catch (IOException e1) {
-					showErrorMsg(errorPlay, e1);
+				} catch (IOException e) {
+					LOGGER.warn("An error has occurred while opening the file!", e);
 				}
 			} else {
 				LOGGER.error(System.getProperty("os.name") + ", OS is not supported, please contact a developer! ");
@@ -614,11 +601,6 @@ public class MainWindowController {
 			saveSettings();
 			settingsTrue = false;
 		}
-	}
-	
-	@FXML
-	private void debugBtnclicked(){
-		//for testing
 	}
 	
 	@FXML
@@ -768,7 +750,6 @@ public class MainWindowController {
 			dialogBtnStyle = btnStyleWhite;
 			settingsBtn.setStyle("-fx-text-fill: WHITE;");
 			aboutBtn.setStyle("-fx-text-fill: WHITE;");
-			debugBtn.setStyle("-fx-text-fill: WHITE;");
 			addDirectoryBtn.setStyle(btnStyleWhite);
 			addStreamSourceBtn.setStyle(btnStyleWhite);
 			updateBtn.setStyle(btnStyleWhite);
@@ -784,7 +765,6 @@ public class MainWindowController {
 			dialogBtnStyle = btnStyleBlack;
 			settingsBtn.setStyle("-fx-text-fill: BLACK;");
 			aboutBtn.setStyle("-fx-text-fill: BLACK;");
-			debugBtn.setStyle("-fx-text-fill: BLACK;");
 			addDirectoryBtn.setStyle(btnStyleBlack);
 			addStreamSourceBtn.setStyle(btnStyleBlack);
 			updateBtn.setStyle(btnStyleBlack);
@@ -853,44 +833,10 @@ public class MainWindowController {
 		columnSeason.setText(getBundle().getString("columnSeason"));
 		columnEpisode.setText(getBundle().getString("columnEpisode"));
 		columnFavorite.setText(getBundle().getString("columnFavorite"));
-		errorPlay = getBundle().getString("errorPlay");
 		errorLoad = getBundle().getString("errorLoad");
 		errorSave = getBundle().getString("errorSave");
 		infoText = getBundle().getString("infoText");
 		vlcNotInstalled = getBundle().getString("vlcNotInstalled");
-	}
-	
-	// TODO rework after #19 has landed
-	public void showErrorMsg(String msg, Exception exception) {
-		Alert alert = new Alert(AlertType.ERROR);
-		alert.setTitle("Error");
-		alert.setHeaderText("");
-		alert.setContentText(msg);
-		alert.initOwner(main.getPrimaryStage());
-
-		// Create expandable Exception.
-		StringWriter sw = new StringWriter();
-		PrintWriter pw = new PrintWriter(sw);
-		exception.printStackTrace(pw);
-		String exceptionText = sw.toString();
-
-		TextArea textArea = new TextArea(exceptionText);
-		textArea.setEditable(false);
-		textArea.setWrapText(true);
-
-		textArea.setMaxWidth(Double.MAX_VALUE);
-		textArea.setMaxHeight(Double.MAX_VALUE);
-		GridPane.setVgrow(textArea, Priority.ALWAYS);
-		GridPane.setHgrow(textArea, Priority.ALWAYS);
-
-		GridPane expContent = new GridPane();
-		expContent.setMaxWidth(Double.MAX_VALUE);
-		expContent.add(textArea, 0, 1);
-
-		// Set expandable Exception into the dialog pane.
-		alert.getDialogPane().setExpandableContent(expContent);
-		alert.showAndWait();
-		LOGGER.error("An error occurred", exception);
 	}
 	
 	/**
