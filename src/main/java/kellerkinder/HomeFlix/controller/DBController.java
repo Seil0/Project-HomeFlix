@@ -335,7 +335,7 @@ public class DBController {
 			if (source.getMode().equals("local")) {
 				for (File file : new File(source.getPath()).listFiles()) {
 					String mimeType = URLConnection.guessContentTypeFromName(file.getPath());
-					// if file is file and has mime type "video" TODO needs testing
+					// if file is file and has mime type "video"
 					if (file.isFile() && mimeType != null && mimeType.contains("video")) {
 						// get all files (films)
 						if (!filmsdbStreamURL.contains(file.getPath())) {
@@ -667,40 +667,59 @@ public class DBController {
 		}
 	}
 	
-	/** TODO check if we relay need to separate between favorites and none favorites
+	/**
 	 * get the next episode of a 
 	 * @param title	URL of the film
 	 * @param nextEp	number of the next episode
 	 * @return {@link FilmTabelDataType} the next episode as object
 	 */
-	public FilmTabelDataType getNextEpisode(String title, int nextEp, int season) {
+	public FilmTabelDataType getNextEpisode(String title, int episode, int season) {
 		FilmTabelDataType nextFilm = null;
+		ResultSet rs;
+		int nextEpisode = 3000;
+		
 		try {
 			Statement stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\" AND episode = \""
-					+ nextEp + "\" AND season = \"" + season + "\";");
-			if (rs.next()) {
-				if (rs.getBoolean("favorite") == true) {
+			
+			rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\" AND season = \"" + season + "\";");
+			while(rs.next()) {
+				int rsEpisode = Integer.parseInt(rs.getString("episode"));
+				if (rsEpisode > episode && rsEpisode < nextEpisode) {
+					// fitting episode found in current season, if rsEpisode < nextEpisode -> nextEpisode = rsEpisode
+					nextEpisode = rsEpisode;
+					System.out.println("next episode is: " + nextEpisode);
+					// favorite image is black
 					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
 							rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
 							rs.getBoolean("cached"), new ImageView(favorite_black));
-				} else {
-					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
-							rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
-							rs.getBoolean("cached"), new ImageView(favorite_border_black));
 				}
-			} else {
-				rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title
-						+ "\" AND episode = \"1\" AND season = \"" + (season + 1) + "\";");
-				while (rs.next()) {
-					if (rs.getBoolean("favorite") == true) {
-						nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
-								rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
-								rs.getBoolean("cached"), new ImageView(favorite_black));
-					} else {
-						nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
-								rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
-								rs.getBoolean("cached"), new ImageView(favorite_border_black));
+			}
+			
+			if (nextFilm == null) {
+				int nextSeason = 3000;
+				System.out.println("searching next season");
+				rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\";");
+				while(rs.next()) {
+					int rsSeason = Integer.parseInt(rs.getString("season"));
+					if (rsSeason > season && rsSeason < nextSeason) {
+						nextSeason = rsSeason;
+					}
+				}
+				
+				if (nextSeason != 3000) {
+					System.out.println("next season is: " + nextSeason);
+					rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\" AND season = \"" + season + "\";");
+					while(rs.next()) {
+						int rsEpisode = Integer.parseInt(rs.getString("episode"));
+						if (rsEpisode > episode && rsEpisode < nextEpisode) {
+							// fitting episode found in current season, if rsEpisode < nextEpisode -> nextEpisode = rsEpisode
+							nextEpisode = rsEpisode;
+							System.out.println("next episode is: " + nextEpisode);
+							// favorite image is black
+							nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
+									rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+									rs.getBoolean("cached"), new ImageView(favorite_black));
+						}
 					}
 				}
 			}

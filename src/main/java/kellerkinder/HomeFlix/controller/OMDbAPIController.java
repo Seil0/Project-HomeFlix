@@ -34,6 +34,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonValue;
 
 import javafx.application.Platform;
 import kellerkinder.HomeFlix.application.Main;
@@ -75,6 +76,7 @@ public class OMDbAPIController implements Runnable {
 			output = ina.readLine();
 			ina.close();
 			LOGGER.info("response from " + URL + " was valid");
+			LOGGER.info("Title was: " + mainWindowController.getCurrentTitle());
 			LOGGER.info(output);
 		} catch (IOException e) {
 			LOGGER.error("error while making api request or reading response");
@@ -86,6 +88,7 @@ public class OMDbAPIController implements Runnable {
 		
 		if (object.getString("Error", "").equals("Movie not found!")) {
 			// if the movie was not found try to search it
+			LOGGER.warn("Movie was not found at first try, searching again!");
 			// TODO split the name intelligent as it may contain the film title
 			// query the api
 			try {
@@ -94,8 +97,8 @@ public class OMDbAPIController implements Runnable {
 				BufferedReader ina = new BufferedReader(new InputStreamReader(apiUrl.openStream()));
 				output = ina.readLine();
 				ina.close();
-				System.out.println(apiUrl);
 				LOGGER.info("response from search " + URL + " was valid");
+				LOGGER.info("Title was: " + mainWindowController.getCurrentTitle());
 				LOGGER.info(output);
 			} catch (Exception e) {
 				LOGGER.error("error while making api request or reading response");
@@ -104,13 +107,17 @@ public class OMDbAPIController implements Runnable {
 			}
 			
 			JsonObject searchObject = Json.parse(output).asObject();
-			// TODO new query with the actual title
-			if (object.getString("Response", "").equals("True")) {
-				System.out.println(searchObject.getString("Title", ""));
+			if (searchObject.getString("Response", "").equals("True")) {
+				for (JsonValue movie : searchObject.get("Search").asArray()) {
+					// get first entry from the array and set object = movie
+					// TODO probably we have a NullPointerException here!
+					object = (JsonObject) movie;
+					System.out.println(movie.toString());
+					break;
+
+				}
+				System.out.println(object.getString("Title", ""));
 			}
-			
-			System.out.println("Movie not found, not setting cache");
-			return;
 		}
 		
 		// add the response to the responseString[]

@@ -149,7 +149,7 @@ public class PlayerController {
 				if ((duration - currentTime) < 10000 && episode != 0 && autoplay) {
 					autoplay = false;
 					mainWCon.getDbController().setCurrentTime(film.getStreamUrl(), 0); // reset old video start time
-					FilmTabelDataType nextFilm = mainWCon.getDbController().getNextEpisode(film.getTitle(), (episode + 1), season);
+					FilmTabelDataType nextFilm = mainWCon.getDbController().getNextEpisode(film.getTitle(), episode, season);
 					if (nextFilm != null) {
 						mediaPlayer.stop();
 						init(mainWCon, player, nextFilm);
