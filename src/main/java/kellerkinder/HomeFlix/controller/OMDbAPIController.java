@@ -75,12 +75,11 @@ public class OMDbAPIController implements Runnable {
 			BufferedReader ina = new BufferedReader(new InputStreamReader(apiUrl.openStream()));
 			output = ina.readLine();
 			ina.close();
-			LOGGER.info("response from " + URL + " was valid");
-			LOGGER.info("Title was: " + mainWindowController.getCurrentTitle());
-			LOGGER.info(output);
+			System.out.println(apiUrl);
+			LOGGER.info("response from '" + URL + "&t=" + mainWindowController.getCurrentTitle() + "' was:" + output);
 		} catch (IOException e) {
 			LOGGER.error("error while making api request or reading response");
-			LOGGER.error("response from " + URL + " was: \n" + output, e);
+			LOGGER.error("response from '" + URL + "&t=" + mainWindowController.getCurrentTitle() + "' was:" + output, e);
 			return;
 		}
 		
@@ -89,20 +88,21 @@ public class OMDbAPIController implements Runnable {
 		if (object.getString("Error", "").equals("Movie not found!")) {
 			// if the movie was not found try to search it
 			LOGGER.warn("Movie was not found at first try, searching again!");
-			// TODO split the name intelligent as it may contain the film title
-			// query the api
+			/** TODO 
+			 * split the name intelligent as it may contain the film title
+			 * search for English name
+			 * use tmdb
+			 */
 			try {
 				URL apiUrl = new URL(URL + mainWindowController.getOmdbAPIKey() + "&s="
 						+ mainWindowController.getCurrentTitle().replace(" ", "%20"));
 				BufferedReader ina = new BufferedReader(new InputStreamReader(apiUrl.openStream()));
 				output = ina.readLine();
 				ina.close();
-				LOGGER.info("response from search " + URL + " was valid");
-				LOGGER.info("Title was: " + mainWindowController.getCurrentTitle());
-				LOGGER.info(output);
+				LOGGER.info("response from '" + URL + "&s=" + mainWindowController.getCurrentTitle() + "' was:" + output);
 			} catch (Exception e) {
 				LOGGER.error("error while making api request or reading response");
-				LOGGER.error("response from search" + URL + " was: \n" + output, e);
+				LOGGER.error("response from '" + URL + "&s=" + mainWindowController.getCurrentTitle() + "' was:" + output, e);
 				return;
 			}
 			
@@ -110,13 +110,15 @@ public class OMDbAPIController implements Runnable {
 			if (searchObject.getString("Response", "").equals("True")) {
 				for (JsonValue movie : searchObject.get("Search").asArray()) {
 					// get first entry from the array and set object = movie
-					// TODO probably we have a NullPointerException here!
 					object = (JsonObject) movie;
 					System.out.println(movie.toString());
 					break;
 
 				}
 				System.out.println(object.getString("Title", ""));
+			} else {
+				LOGGER.warn("Movie not found! Not adding cache!");
+				return;
 			}
 		}
 		

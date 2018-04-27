@@ -209,9 +209,9 @@ public class MainWindowController {
 	private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	private int hashA = -647380320;
 
-	private final String version = "0.6.100";
+	private final String version = "0.7.0";
 	private final String buildNumber = "151";
-	private final String versionName = "toothless dragon RC";
+	private final String versionName = "toothless dragon";
 	private String dialogBtnStyle;
 	private String color;
 	private String local;
