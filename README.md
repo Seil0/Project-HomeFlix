@@ -18,7 +18,7 @@ sqlite-jdbc: https://github.com/xerial/sqlite-jdbc
 apache commons io : https://commons.apache.org/proper/commons-io/
 
 ## screenshots
-![Screenshot](https://github.com/Seil0/Seil0.github.io/blob/master/pictures/Project-HomeFlix_MainWindow.png)
+![Screenshot](https://github.com/Seil0/Seil0.github.io/blob/master/images/Project-HomeFlix_MainWindow.png)
 
 Project-HomeFlix © 2016-2018 Kellerkinder ([Seil0](https://github.com/Seil0), [Windoofs](https://github.com/Windoofs))    
 www.kellerkinder.xyz

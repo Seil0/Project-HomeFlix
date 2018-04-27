@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301, USA.
  */
-
 package kellerkinder.HomeFlix.datatypes;
 
 import javafx.beans.property.BooleanProperty;
@@ -36,7 +35,6 @@ public class FilmTabelDataType {
 	private final BooleanProperty favorite = new SimpleBooleanProperty();
 	private final BooleanProperty cached = new SimpleBooleanProperty();
 	private final SimpleObjectProperty<ImageView> image = new SimpleObjectProperty<>();
-
 	
 	/**
 	 * tableData is the data-type of tree-table-view

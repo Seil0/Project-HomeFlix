@@ -19,31 +19,31 @@
  * MA 02110-1301, USA.
  * 
  */
-
 package kellerkinder.HomeFlix.application;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.kellerkinder.Alerts.JFX2BtnCancelAlert;
 
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class Main extends Application {
-	
+
 	private Stage primaryStage;
 	private Scene scene;
 	private AnchorPane pane;
@@ -54,30 +54,30 @@ public class Main extends Application {
 	private static String osArch = System.getProperty("os.arch");
 	private static String osVers = System.getProperty("os.version");
 	private static String javaVers = System.getProperty("java.version");
-	private static String javaVend= System.getProperty("java.vendor");
-	private String dirWin = userHome + "/Documents/HomeFlix";	//Windows: C:/Users/"User"/Documents/HomeFlix
-	private String dirLinux = userHome + "/HomeFlix";	//Linux: /home/"User"/HomeFlix
+	private static String javaVend = System.getProperty("java.vendor");
+	private static String local = System.getProperty("user.language") + "_" + System.getProperty("user.country");
+	private String dirWin = userHome + "/Documents/HomeFlix"; // Windows: C:/Users/"User"/Documents/HomeFlix
+	private String dirLinux = userHome + "/HomeFlix"; // Linux: /home/"User"/HomeFlix
 	private File directory;
 	private File configFile;
 	private File posterCache;
-	
-	private String path;
-	private String FONT_FAMILY = "System";
-	private String local = System.getProperty("user.language")+"_"+System.getProperty("user.country");
-	private double FONT_SIZE = 17;
 	private ResourceBundle bundle;
 	private static Logger LOGGER;
-	
+
 	@Override
 	public void start(Stage primaryStage) throws IOException {
 		LOGGER.info("OS: " + osName + " " + osVers + " " + osArch);
 		LOGGER.info("Java: " + javaVend + " " + javaVers);
 		LOGGER.info("User: " + userName + " " + userHome);
-		
-		this.primaryStage = primaryStage;	
+
+		this.primaryStage = primaryStage;
 		mainWindow();
 	}
-	
+
+	/**
+	 * initialize the mainWindowController, GUI and load the saved settings or call addFirstSource
+	 * initialize the primaryStage and set the file/directory paths
+	 */
 	private void mainWindow(){
 		try {
 			FXMLLoader loader = new FXMLLoader();
@@ -88,12 +88,18 @@ public class Main extends Application {
 			primaryStage.setResizable(false);
 			primaryStage.setTitle("Project HomeFlix");
 			primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/icons/Homeflix_Icon_64x64.png"))); //adds application icon	
+			primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+				public void handle(WindowEvent we) {
+					System.exit(1);
+				}
+			});
+			
 			mainWindowController = loader.getController();	//Link of FXMLController and controller class
 			mainWindowController.setMain(this);	//call setMain
 
 			
 			// get OS and the specific paths
-			if (osName.equals("Windows")) {
+			if (osName.contains("Windows")) {
 				directory = new File(dirWin);
 				configFile = new File(dirWin + "/config.xml");
 				posterCache = new File(dirWin + "/posterCache");
@@ -103,32 +109,26 @@ public class Main extends Application {
 				posterCache = new File(dirLinux + "/posterCache");
 			}
 			
-			// startup checks
-			if (!configFile.exists()) {
-				directory.mkdir();
-				mainWindowController.addSource(firstStart(), "local");
-				mainWindowController.setColor("ee3523");
-				mainWindowController.setSize(FONT_SIZE);
-				mainWindowController.setAutoUpdate(false);
-				mainWindowController.setLocal(local);
-				mainWindowController.saveSettings();
-				try {
-					Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar"); // start again (preventing Bugs) TODO is this really needed
-					System.exit(0); // finishes it self
-				} catch (Exception e) {
-					LOGGER.error("error while restarting HomeFlix", e);
-				}
-			}
-
-			if (!posterCache.exists()) {
-				posterCache.mkdir();
-			}
-			
 			// generate window
 			scene = new Scene(pane); // create new scene, append pane to scene
 			scene.getStylesheets().add(getClass().getResource("/css/MainWindow.css").toExternalForm());
 			primaryStage.setScene(scene); // append scene to stage
 			primaryStage.show(); // show stage
+			
+			// startup checks
+			if (!configFile.exists()) {
+				directory.mkdir();		
+				addFirstSource();
+				mainWindowController.setColor("ee3523");
+				mainWindowController.setFontSize(17.0);
+				mainWindowController.setAutoUpdate(false);
+				mainWindowController.setLocal(local);
+				mainWindowController.saveSettings();
+			}
+
+			if (!posterCache.exists()) {
+				posterCache.mkdir();
+			}
 			
 			// init here as it loads the games to the mwc and the gui, therefore the window must exist
 			mainWindowController.init();
@@ -137,10 +137,13 @@ public class Main extends Application {
 			LOGGER.error(e);
 		}
 	}
-	
-	// Method for first Start
-	private String firstStart(){
-		switch (System.getProperty("user.language") + "_" + System.getProperty("user.country")) {
+
+	/**
+	 * we need to get the path for the first source from the user and add it to 
+	 * sources.json, if the user ends the file-/directory-chooser the program will exit
+	 */
+	private void addFirstSource() {
+		switch (local) {
 		case "en_US":
 			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US); // us_english
 			break;
@@ -152,30 +155,61 @@ public class Main extends Application {
 			break;
 		}
 		
-		Alert alert = new Alert(AlertType.CONFIRMATION);	//new alert with file-chooser
-		alert.setTitle("Project HomeFlix");
-		alert.setHeaderText(bundle.getString("firstStartHeader"));
-		alert.setContentText(bundle.getString("firstStartContent"));
+		JFX2BtnCancelAlert selectFirstSource = new JFX2BtnCancelAlert(bundle.getString("addSourceHeader"),
+				bundle.getString("addSourceBody"),
+				"-fx-button-type: RAISED; -fx-background-color: #ee3523; -fx-text-fill: BLACK;",
+				bundle.getString("addDirectory"), bundle.getString("addStreamSource"),
+				bundle.getString("cancelBtnText"), primaryStage);
 
-		Optional<ButtonType> result = alert.showAndWait();
-		if (result.get() == ButtonType.OK){
-			DirectoryChooser directoryChooser = new DirectoryChooser();
-            File selectedDirectory = 
-                directoryChooser.showDialog(primaryStage);
-                path = selectedDirectory.getAbsolutePath();
-            
-		} else {
-		    path = "";
-		}
-		return path;
+		// directory action
+		EventHandler<ActionEvent> btn1Action = new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				DirectoryChooser directoryChooser = new DirectoryChooser();
+				directoryChooser.setTitle(bundle.getString("addDirectory"));
+				File selectedFolder = directoryChooser.showDialog(primaryStage);
+				if (selectedFolder != null && selectedFolder.exists()) {
+					mainWindowController.addSource(selectedFolder.getPath(), "local");
+					selectFirstSource.getAlert().close();
+				} else {
+					LOGGER.error("The selected folder dosen't exist!");
+					System.exit(1);
+				}
+			}
+		};
+
+		// streaming action
+		EventHandler<ActionEvent> btn2Action = new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setTitle("addStreamSource");
+				File selectedFile = fileChooser.showOpenDialog(getPrimaryStage());
+				if (selectedFile != null && selectedFile.exists()) {
+					mainWindowController.addSource(selectedFile.getPath(), "stream");
+					selectFirstSource.getAlert().close();
+				} else {
+					LOGGER.error("The selected file dosen't exist!");
+					System.exit(1);
+				}
+			}
+		};
+		selectFirstSource.setBtn1Action(btn1Action);
+		selectFirstSource.setBtn2Action(btn2Action);
+		selectFirstSource.showAndWait();
 	}
 
+	/**
+	 * set the log file location and initialize the logger
+	 * launch the GUI
+	 * @param args arguments given at the start
+	 */
 	public static void main(String[] args) {
-		if(System.getProperty("os.name").equals("Windows")){
+		if (System.getProperty("os.name").equals("Windows")) {
 			System.setProperty("logFilename", userHome + "/Documents/HomeFlix/app.log");
 			File logFile = new File(userHome + "/Documents/HomeFlix/app.log");
 			logFile.delete();
-		}else{
+		} else {
 			System.setProperty("logFilename", userHome + "/HomeFlix/app.log");
 			File logFile = new File(userHome + "/HomeFlix/app.log");
 			logFile.delete();
@@ -188,22 +222,10 @@ public class Main extends Application {
 		return primaryStage;
 	}
 
-	public void setPrimaryStage(Stage primaryStage) {
-		this.primaryStage = primaryStage;
-	}
-	
-	public AnchorPane getPane( ) {
+	public AnchorPane getPane() {
 		return pane;
 	}
 
-	public String getFONT_FAMILY() {
-		return FONT_FAMILY;
-	}
-
-	public void setFONT_FAMILY(String FONT_FAMILY) {
-		this.FONT_FAMILY = FONT_FAMILY;
-	}
-	
 	public File getDirectory() {
 		return directory;
 	}

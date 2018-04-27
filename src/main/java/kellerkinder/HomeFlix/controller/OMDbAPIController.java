@@ -19,7 +19,6 @@
  * MA 02110-1301, USA.
  * 
  */
-
 package kellerkinder.HomeFlix.controller;
 
 import java.awt.image.BufferedImage;
@@ -35,6 +34,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonValue;
 
 import javafx.application.Platform;
 import kellerkinder.HomeFlix.application.Main;
@@ -49,6 +49,12 @@ public class OMDbAPIController implements Runnable {
 	private String URL = "https://www.omdbapi.com/?apikey=";
 	private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	
+	/**
+	 * constructor for the OMDbAPIController
+	 * @param mainWindowController	the MainWindowController object
+	 * @param dbController			the DBController object
+	 * @param main					the Main object
+	 */
 	public OMDbAPIController(MainWindowController mainWindowController, DBController dbController, Main main){
 		this.mainWindowController = mainWindowController;
 		this.dbController = dbController;
@@ -62,23 +68,61 @@ public class OMDbAPIController implements Runnable {
     	String output = null;
     	String posterPath = null;
 		
-		// get by title, TODO implement search
+		// get information by title
 		try {
 			URL apiUrl = new URL(URL + mainWindowController.getOmdbAPIKey() + "&t="
-					+ mainWindowController.getTitle().replace(" ", "%20"));
+					+ mainWindowController.getCurrentTitle().replace(" ", "%20"));
 			BufferedReader ina = new BufferedReader(new InputStreamReader(apiUrl.openStream()));
 			output = ina.readLine();
 			ina.close();
-			LOGGER.info("response from " + URL + " was valid");
-			LOGGER.info(output);
+			System.out.println(apiUrl);
+			LOGGER.info("response from '" + URL + "&t=" + mainWindowController.getCurrentTitle() + "' was:" + output);
 		} catch (IOException e) {
 			LOGGER.error("error while making api request or reading response");
-			LOGGER.error("response from " + URL + " was: \n" + output, e);
+			LOGGER.error("response from '" + URL + "&t=" + mainWindowController.getCurrentTitle() + "' was:" + output, e);
 			return;
 		}
 		
 		JsonObject object = Json.parse(output).asObject();
 		
+		if (object.getString("Error", "").equals("Movie not found!")) {
+			// if the movie was not found try to search it
+			LOGGER.warn("Movie was not found at first try, searching again!");
+			/** TODO 
+			 * split the name intelligent as it may contain the film title
+			 * search for English name
+			 * use tmdb
+			 */
+			try {
+				URL apiUrl = new URL(URL + mainWindowController.getOmdbAPIKey() + "&s="
+						+ mainWindowController.getCurrentTitle().replace(" ", "%20"));
+				BufferedReader ina = new BufferedReader(new InputStreamReader(apiUrl.openStream()));
+				output = ina.readLine();
+				ina.close();
+				LOGGER.info("response from '" + URL + "&s=" + mainWindowController.getCurrentTitle() + "' was:" + output);
+			} catch (Exception e) {
+				LOGGER.error("error while making api request or reading response");
+				LOGGER.error("response from '" + URL + "&s=" + mainWindowController.getCurrentTitle() + "' was:" + output, e);
+				return;
+			}
+			
+			JsonObject searchObject = Json.parse(output).asObject();
+			if (searchObject.getString("Response", "").equals("True")) {
+				for (JsonValue movie : searchObject.get("Search").asArray()) {
+					// get first entry from the array and set object = movie
+					object = (JsonObject) movie;
+					System.out.println(movie.toString());
+					break;
+
+				}
+				System.out.println(object.getString("Title", ""));
+			} else {
+				LOGGER.warn("Movie not found! Not adding cache!");
+				return;
+			}
+		}
+		
+		// add the response to the responseString[]
 		responseString[0] = object.getString("Title", "");
 		responseString[1] = object.getString("Year", "");
 		responseString[2] = object.getString("Rated", "");
@@ -103,7 +147,7 @@ public class OMDbAPIController implements Runnable {
 		//resize the image to fit in the posterImageView and add it to the cache
 	    try {
 			BufferedImage originalImage = ImageIO.read(new URL(responseString[18])); //change path to where file is located
-		    posterPath = main.getPosterCache() + "/" + mainWindowController.getTitle() + ".png";
+		    posterPath = main.getPosterCache() + "/" + mainWindowController.getCurrentTitle() + ".png";
 			ImageIO.write(originalImage, "png", new File(posterPath));
 			LOGGER.info("adding poster to cache: "+posterPath);
 		} catch (Exception e) {
@@ -111,16 +155,16 @@ public class OMDbAPIController implements Runnable {
 		}
 	    
 		// adding strings to the cache
-		dbController.addCache(mainWindowController.getStreamUrl(), responseString[0], responseString[1],
+		dbController.addCache(mainWindowController.getCurrentStreamUrl(), responseString[0], responseString[1],
 				responseString[2], responseString[3], responseString[4], responseString[5], responseString[6],
 				responseString[7], responseString[8], responseString[9], responseString[10], responseString[11],
 				responseString[12], responseString[13], responseString[14], responseString[15], responseString[16],
 				responseString[17], posterPath, responseString[19]);
-		dbController.setCached(mainWindowController.getStreamUrl());
+		dbController.setCached(mainWindowController.getCurrentStreamUrl());
 		
 		// load data to the MainWindowController
 		Platform.runLater(() -> {
-			dbController.readCache(mainWindowController.getStreamUrl());
+			dbController.readCache(mainWindowController.getCurrentStreamUrl());
 		});
 	}
 }

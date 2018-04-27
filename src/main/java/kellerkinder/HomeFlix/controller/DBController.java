@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301, USA.
  */
-
 package kellerkinder.HomeFlix.controller;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URLConnection;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -53,12 +53,7 @@ import kellerkinder.HomeFlix.datatypes.SourceDataType;
 import kellerkinder.HomeFlix.datatypes.FilmTabelDataType;
 
 public class DBController {
-
-	public DBController(Main main, MainWindowController mainWindowController) {
-		this.main = main;
-		this.mainWindowController = mainWindowController;
-	}
-
+	
 	private MainWindowController mainWindowController;
 	private Main main;
 	private String DB_PATH = System.getProperty("user.home") + "\\Documents\\HomeFlix" + "\\" + "Homeflix.db"; //path to database file
@@ -71,6 +66,22 @@ public class DBController {
 	private Connection connection = null;
 	private static final Logger LOGGER = LogManager.getLogger(DBController.class.getName());
 	
+	/**
+	 * constructor for DBController
+	 * @param main					the Main object
+	 * @param mainWindowController	the MainWindowController object
+	 */
+	public DBController(Main main, MainWindowController mainWindowController) {
+		this.main = main;
+		this.mainWindowController = mainWindowController;
+	}
+	
+	/**
+	 * initialize the {@link DBController}
+	 * initialize the database connection
+	 * check if there is a need to create a new database
+	 * refresh the database
+	 */
 	public void init() {
 		LOGGER.info("<========== starting loading sql ==========>");
 		initDatabaseConnection();
@@ -79,12 +90,16 @@ public class DBController {
 		LOGGER.info("<========== finished loading sql ==========>");
 	}
 
+	/**
+	 * create a new connection to the HomeFlix.db database
+	 * AutoCommit is set to false to prevent some issues, so manual commit is active!
+	 */
 	private void initDatabaseConnection() {
 		DB_PATH = main.getDirectory() + "/Homeflix.db";
 		try {
 			// create a database connection
 			connection = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
-			connection.setAutoCommit(false);	//AutoCommit to false -> manual commit is active
+			connection.setAutoCommit(false);
 		} catch (SQLException e) {
 			// if the error message is "out of memory", it probably means no database file is found
 			LOGGER.error("error while loading the ROM database", e);
@@ -94,12 +109,13 @@ public class DBController {
 	
 	/**
 	 * if tables don't exist create them
+	 * films table: streamUrl is primary key
 	 * cache table: streamUrl is primary key
 	 */
 	private void createDatabase() {	
 		try {
 			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("create table if not exists films (streamUrl, title, season, episode, favorite, cached)");
+			stmt.executeUpdate("create table if not exists films (streamUrl, title, season, episode, favorite, cached, currentTime)");
 			stmt.executeUpdate("create table if not exists cache ("
 					+ "streamUrl, Title, Year, Rated, Released, Runtime, Genre, Director, Writer,"
 					+ " Actors, Plot, Language, Country, Awards, Metascore, imdbRating, imdbVotes,"
@@ -110,6 +126,9 @@ public class DBController {
 		}
 	}
 	
+	/**
+	 * get all database entries
+	 */
 	private void loadDatabase() {
 		// get all entries from the table
 		try {
@@ -131,7 +150,11 @@ public class DBController {
 		LOGGER.info("filme in db: " + filmsdbStreamURL.size());
 	}
 	
-	// load the sources from sources.json
+	/**
+	 * load sources from sources.json
+	 * if mode == local, get all files and series-folder from the directory
+	 * else mode must be streaming, read all entries from the streaming file 
+	 */
 	private void loadSources() {
 		// remove sources from table
 		mainWindowController.getSourcesList().removeAll(mainWindowController.getSourcesList());
@@ -145,10 +168,9 @@ public class DBController {
 				mainWindowController.addSourceToTable(path, mode); // add source to source-table
 				if (mode.equals("local")) {
 					for (File file : new File(path).listFiles()) {
-						if (file.isFile()) {
-							// get all files (films)
+						if (file.isFile() && isVideoFile(file.getPath())) {
 							filmsStreamURL.add(file.getPath());
-						} else {
+						} else if(file.isDirectory()) {
 							// get all folders (series)
 							for (File season : file.listFiles()) {
 								if (season.isDirectory()) {
@@ -181,7 +203,10 @@ public class DBController {
 		}
 	}
 	
-	// loading data from database to mainWindowController 
+	/**
+	 * load the data to the mainWindowController
+	 * order entries by title
+	 */
 	private void loadDataToMWC() {
 		LOGGER.info("loading data to mwc ...");
 		try {
@@ -207,11 +232,11 @@ public class DBController {
 		}
 		
 		LOGGER.info("loading data to the GUI ...");
-		mainWindowController.addDataUI();
+		mainWindowController.addDataUI(mainWindowController.getFilmsList());
 	}
 	
 	/**
-	 * refresh data in mainWindowController localFilms and streamingFilms
+	 * refresh data in mainWindowController for one element
 	 * @param streamUrl of the film
 	 * @param index of the film in LocalFilms list
 	 */
@@ -221,16 +246,17 @@ public class DBController {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE streamUrl = \"" + streamUrl + "\";");
 			
-			if (rs.getBoolean("favorite") == true) {
-				mainWindowController.getFilmsList().set(indexList, new FilmTabelDataType(rs.getString("streamUrl"),
-						rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
-						rs.getBoolean("cached"), new ImageView(favorite_black)));
-			} else {
-				mainWindowController.getFilmsList().set(indexList, new FilmTabelDataType(rs.getString("streamUrl"),
-						rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
-						rs.getBoolean("cached"), new ImageView(favorite_border_black)));
+			while (rs.next()) {
+				if (rs.getBoolean("favorite") == true) {
+					mainWindowController.getFilmsList().set(indexList, new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+							rs.getBoolean("cached"), new ImageView(favorite_black)));
+				} else {
+					mainWindowController.getFilmsList().set(indexList, new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+							rs.getBoolean("cached"), new ImageView(favorite_border_black)));
+				}
 			}
-			
 			rs.close();
 			stmt.close();
 		} catch (Exception e) {
@@ -247,14 +273,13 @@ public class DBController {
 		LOGGER.info("refreshing the Database ...");
 		
 		// clean all ArraLists
-		filmsdbAll.removeAll(filmsdbAll);
-		filmsdbDir.removeAll(filmsdbDir);
-		filmsdbStreamURL.removeAll(filmsdbStreamURL);
-		filmsStreamURL.removeAll(filmsStreamURL);
+		filmsdbAll.clear();
+		filmsdbDir.clear();
+		filmsdbStreamURL.clear();
+		filmsStreamURL.clear();
 		
 		loadSources(); // reload all sources
 		loadDatabase(); // reload all films saved in the DB
-		
 		
 		try {
 			checkAddEntry();
@@ -275,14 +300,12 @@ public class DBController {
 	 */
 	private void checkRemoveEntry() {
 		LOGGER.info("checking for entrys to remove to DB ...");
-		
 		try {
 			Statement stmt = connection.createStatement();
 			
 			for (String entry : filmsdbStreamURL) {
+				// if the directory doen't contain the entry form the db, remove it
 				if (!filmsStreamURL.contains(entry)) {
-					System.out.println(filmsdbStreamURL + "\n");
-					System.out.println(filmsStreamURL);
 					stmt.executeUpdate("delete from films where streamUrl = \"" + entry + "\"");
 					connection.commit();
 					LOGGER.info("removed \"" + entry + "\" from database");
@@ -303,7 +326,7 @@ public class DBController {
 	 */
 	private void checkAddEntry() throws SQLException, FileNotFoundException, IOException {
 		Statement stmt = connection.createStatement();
-		PreparedStatement ps = connection.prepareStatement("insert into films values (?, ?, ?, ?, ?, ?)");
+		PreparedStatement ps = connection.prepareStatement("insert into films values (?, ?, ?, ?, ?, ?, ?)");
 		LOGGER.info("checking for entrys to add to DB ...");
 		
 		// source is a single source of the sources list
@@ -311,19 +334,20 @@ public class DBController {
 			// if it's a local source check the folder for new film
 			if (source.getMode().equals("local")) {
 				for (File file : new File(source.getPath()).listFiles()) {
-					
-					if (file.isFile()) {
+					String mimeType = URLConnection.guessContentTypeFromName(file.getPath());
+					// if file is file and has mime type "video"
+					if (file.isFile() && mimeType != null && mimeType.contains("video")) {
 						// get all files (films)
 						if (!filmsdbStreamURL.contains(file.getPath())) {
 							stmt.executeUpdate("insert into films values ("
 									+ "'" + file.getPath() + "',"
-									+ "'" + cutOffEnd(file.getName()) + "', '', '', 0, 0)");
+									+ "'" + cutOffEnd(file.getName()) + "', '', '', 0, 0, 0.0)");
 							connection.commit();
 							stmt.close();
 							LOGGER.info("Added \"" + file.getName() + "\" to database");
 							filmsdbStreamURL.add(file.getPath());
 						}
-					} else {
+					} else if (file.isDirectory()) {
 						// get all folders (series)
 						int sn = 1;
 						for (File season : file.listFiles()) {
@@ -333,8 +357,8 @@ public class DBController {
 									if (!filmsdbStreamURL.contains(episode.getPath())) {
 										LOGGER.info("Added \"" + file.getName() + "\", Episode: " + episode.getName() + " to database");
 										stmt.executeUpdate("insert into films values ("
-										+ "'" + episode.getPath() + "',"
-										+ "'" + cutOffEnd(file.getName()) + "','" + sn + "','" + ep + "', 0, 0)");
+										+ "'" + episode.getPath().replace("'", "''") + "',"
+										+ "'" + cutOffEnd(file.getName()) + "','" + sn + "','" + ep + "', 0, 0, 0.0)");
 										connection.commit();
 										stmt.close();
 										filmsStreamURL.add(episode.getPath());
@@ -366,6 +390,7 @@ public class DBController {
 								ps.setString(4, item.asObject().getString("episode", ""));
 								ps.setInt(5, 0);
 								ps.setBoolean(6, false);
+								ps.setDouble(7, 0);
 								ps.addBatch(); // adds the entry
 								LOGGER.info("Added \"" + title + "\" to database");
 								filmsdbStreamURL.add(streamUrl);
@@ -380,7 +405,10 @@ public class DBController {
 		}
 	}
 	
-	// prints all entries from the database to the console
+	/**
+	 * DEBUG
+	 * prints all entries from the database to the console
+	 */
 	public void printAllDBEntriesDEBUG() {
 		System.out.println("Outputting all entries ... \n");
 		try {
@@ -392,7 +420,8 @@ public class DBController {
 				System.out.println(rs.getString("season"));
 				System.out.println(rs.getString("episode"));
 				System.out.println(rs.getString("rating"));
-				System.out.println(rs.getString("cached") + "\n");
+				System.out.println(rs.getString("cached"));
+				System.out.println(rs.getString("currentTime") + "\n");
 			}
 			stmt.close();
 			rs.close();
@@ -514,18 +543,38 @@ public class DBController {
 	}
 	
 	/**
+	 * checks if there is already a entry with the given streamUrl in the cache
+	 * @param streamUrl URL of the element
+	 * @return true if the element is already cached, else false
+	 */
+	public boolean searchCache(String streamUrl) {
+		boolean retValue = false;
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM cache WHERE streamUrl = \"" + streamUrl + "\";");
+			retValue = rs.next();
+			rs.close();
+			stmt.close();
+		} catch (Exception e) {
+			LOGGER.error("Ups! error while getting the current time!", e);
+		}
+		
+		return retValue;
+	}
+	
+	/**
 	 * sets the cached data to mwc's TextFlow
 	 * @param streamUrl URL of the film
 	 */
 	public void readCache(String streamUrl) {
 		try {
+			
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM cache WHERE streamUrl=\"" + streamUrl + "\";");
 			ArrayList<Text> nameText = new ArrayList<Text>();
 			ArrayList<Text> responseText = new ArrayList<Text>();
-			String fontFamily = main.getFONT_FAMILY();
 			Image im;
-			int fontSize = (int) Math.round(mainWindowController.size);
+			int fontSize = (int) Math.round(mainWindowController.getFontSize());
 			int j = 2;
 
 			nameText.add(0, new Text(mainWindowController.getBundle().getString("title") + ": "));
@@ -549,6 +598,7 @@ public class DBController {
 				responseText.add(new Text(rs.getString(j) + "\n"));
 				j++;
 			}
+			
 			responseText.add(new Text(rs.getString(19) + "\n"));
 			im = new Image(new File(rs.getString(20)).toURI().toString());
 
@@ -556,8 +606,8 @@ public class DBController {
 			rs.close();
 
 			for (int i = 0; i < nameText.size(); i++) {
-				nameText.get(i).setFont(Font.font(fontFamily, FontWeight.BOLD, fontSize));
-				responseText.get(i).setFont(Font.font(fontFamily, fontSize));
+				nameText.get(i).setFont(Font.font("System", FontWeight.BOLD, fontSize));
+				responseText.get(i).setFont(Font.font("System", fontSize));
 			}
 
 			mainWindowController.getTextFlow().getChildren().remove(0,
@@ -579,12 +629,170 @@ public class DBController {
 		}
 	}
 	
+	/**
+	 * return the currentTime in ms saved in the database
+	 * @param streamUrl URL of the film
+	 * @return {@link Double} currentTime in ms
+	 */
+	public double getCurrentTime(String streamUrl) {
+		LOGGER.info("currentTime: " + streamUrl);
+		double currentTime = 0;
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE streamUrl = \"" + streamUrl + "\";");
+			currentTime = rs.getDouble("currentTime");
+			rs.close();
+			stmt.close();
+		} catch (Exception e) {
+			LOGGER.error("Ups! error while getting the current time!", e);
+		} 
+		
+		return currentTime;
+	}
+	
+	/**
+	 * save the currentTime to the database
+	 * @param streamUrl		URL of the film
+	 * @param currentTime	currentTime in ms of the film
+	 */
+	public void setCurrentTime(String streamUrl, double currentTime) {
+		LOGGER.info("currentTime: " + streamUrl);
+		try {
+			Statement stmt = connection.createStatement();
+			stmt.executeUpdate("UPDATE films SET currentTime=" + currentTime + " WHERE streamUrl=\"" + streamUrl + "\";");
+			connection.commit();
+			stmt.close();
+		} catch (SQLException e) {
+			LOGGER.error("Ups! an error occured!", e);
+		}
+	}
+	
+	/**
+	 * get the next episode of a 
+	 * @param title	URL of the film
+	 * @param nextEp	number of the next episode
+	 * @return {@link FilmTabelDataType} the next episode as object
+	 */
+	public FilmTabelDataType getNextEpisode(String title, int episode, int season) {
+		FilmTabelDataType nextFilm = null;
+		ResultSet rs;
+		int nextEpisode = 3000;
+		
+		try {
+			Statement stmt = connection.createStatement();
+			
+			rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\" AND season = \"" + season + "\";");
+			while(rs.next()) {
+				int rsEpisode = Integer.parseInt(rs.getString("episode"));
+				if (rsEpisode > episode && rsEpisode < nextEpisode) {
+					// fitting episode found in current season, if rsEpisode < nextEpisode -> nextEpisode = rsEpisode
+					nextEpisode = rsEpisode;
+					System.out.println("next episode is: " + nextEpisode);
+					// favorite image is black
+					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
+							rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+							rs.getBoolean("cached"), new ImageView(favorite_black));
+				}
+			}
+			
+			if (nextFilm == null) {
+				int nextSeason = 3000;
+				System.out.println("searching next season");
+				rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\";");
+				while(rs.next()) {
+					int rsSeason = Integer.parseInt(rs.getString("season"));
+					if (rsSeason > season && rsSeason < nextSeason) {
+						nextSeason = rsSeason;
+					}
+				}
+				
+				if (nextSeason != 3000) {
+					System.out.println("next season is: " + nextSeason);
+					rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\" AND season = \"" + season + "\";");
+					while(rs.next()) {
+						int rsEpisode = Integer.parseInt(rs.getString("episode"));
+						if (rsEpisode > episode && rsEpisode < nextEpisode) {
+							// fitting episode found in current season, if rsEpisode < nextEpisode -> nextEpisode = rsEpisode
+							nextEpisode = rsEpisode;
+							System.out.println("next episode is: " + nextEpisode);
+							// favorite image is black
+							nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
+									rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+									rs.getBoolean("cached"), new ImageView(favorite_black));
+						}
+					}
+				}
+			}
+			rs.close();
+			stmt.close();
+		} catch (Exception e) {
+			LOGGER.error("Ups! error while getting next episode!", e);
+		}
+		return nextFilm;
+	}
+	
+	/** TODO check if we relay need to separate between favorites and none favorites
+	 * get the last watched episode
+	 * @param title the title of the series
+	 * @return the last watched episode as {@link FilmTabelDataType} object
+	 */
+	public FilmTabelDataType getLastWatchedEpisode(String title) {
+		LOGGER.info("last watched episode of: " + title);
+		FilmTabelDataType nextFilm = null;
+		double lastCurrentTime = 0;
+		
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\";");
+			while (rs.next()) {
+				if (rs.getBoolean("favorite") == true) {
+					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getString("season"), rs.getString("episode") ,rs.getBoolean("favorite"),
+							rs.getBoolean("cached"), new ImageView(favorite_black));
+				} else {
+					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
+							rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+							rs.getBoolean("cached"), new ImageView(favorite_border_black));
+				}
+				if (rs.getDouble("currentTime") > lastCurrentTime) {
+					lastCurrentTime = rs.getDouble("currentTime");
+					if (rs.getBoolean("favorite") == true) {
+						nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
+								rs.getString("title"), rs.getString("season"), rs.getString("episode") ,rs.getBoolean("favorite"),
+								rs.getBoolean("cached"), new ImageView(favorite_black));
+					} else {
+						nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
+								rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+								rs.getBoolean("cached"), new ImageView(favorite_border_black));
+					}
+					break;
+				}
+			}
+			rs.close();
+			stmt.close();
+		} catch (Exception e) {
+			LOGGER.error("Ups! error while getting the last watched episode!", e);
+		} 
+		
+		return nextFilm;
+	}
+	
 	// removes the ending
 	private String cutOffEnd(String str) {
 		if (str == null) return null;
 		int pos = str.lastIndexOf(".");
 		if (pos == -1) return str;
 		return str.substring(0, pos);
+	}
+	
+	/**
+	 * check if a file is a video
+	 * @param path the path to the file
+	 * @return true if the file is a video, else false
+	 */
+	public static boolean isVideoFile(String path) {
+	    String mimeType = URLConnection.guessContentTypeFromName(path);    
+	    return mimeType != null && mimeType.startsWith("video");
 	}
 	
 }

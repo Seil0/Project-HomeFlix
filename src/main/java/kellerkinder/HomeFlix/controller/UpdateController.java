@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301, USA.
  */
-
 package kellerkinder.HomeFlix.controller;
 
 import java.io.BufferedReader;
@@ -61,6 +60,9 @@ public class UpdateController implements Runnable {
 
 	/**
 	 * updater for Project HomeFlix based on cemu_UIs, checks for Updates and download it
+	 * @param mwc			the MainWindowController object
+	 * @param buildNumber	the buildNumber of the used HomeFlix version
+	 * @param useBeta		if the updater should query the beta channel
 	 */
 	public UpdateController(MainWindowController mwc, String buildNumber, boolean useBeta) {
 		mainWindowController = mwc;
@@ -149,8 +151,8 @@ public class UpdateController implements Runnable {
 				FileUtils.copyInputStreamToFile(pmis, new File("ProjectHomeFlix_update.jar")); // download update
 				org.apache.commons.io.FileUtils.copyFile(new File("ProjectHomeFlix_update.jar"), new File("ProjectHomeFlix.jar"));
 				org.apache.commons.io.FileUtils.deleteQuietly(new File("ProjectHomeFlix_update.jar")); // delete update
-				Runtime.getRuntime().exec("java -jar ProjectHomeFlix.jar"); // start again TODO consider ProcessBuilder to execute
-				System.exit(0); // finishes itself
+				new ProcessBuilder("java", "-jar", "ProjectHomeFlix.jar").start(); // start the new application
+				System.exit(0); // close the current application
 			} catch (IOException e) {
 				Platform.runLater(() -> {
 					LOGGER.info("could not download update files", e);

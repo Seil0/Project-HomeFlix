@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXSlider?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.media.MediaView?>
+
+<AnchorPane prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kellerkinder.HomeFlix.player.PlayerController">
+   <children>
+      <HBox alignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <MediaView fx:id="mediaView" />
+         </children>
+      </HBox>
+      <VBox fx:id="bottomVBox" alignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+         <children>
+            <JFXSlider fx:id="timeSlider">
+               <padding>
+                  <Insets left="5.0" right="5.0" />
+               </padding>
+            </JFXSlider>
+            <HBox fx:id="controlsHBox" alignment="CENTER" spacing="10.0">
+               <children>
+                  <JFXButton fx:id="stopBtn" buttonType="RAISED" onAction="#stopBtnAction" prefHeight="39.0" style="-fx-background-color: white;" />
+                  <JFXButton fx:id="playBtn" buttonType="RAISED" onAction="#playBtnAction" prefHeight="39.0" style="-fx-background-color: white;" />
+                  <JFXButton fx:id="fullscreenBtn" buttonType="RAISED" onAction="#fullscreenBtnAction" prefHeight="39.0" style="-fx-background-color: white;" />
+               </children>
+               <padding>
+                  <Insets bottom="5.0" top="5.0" />
+               </padding>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>
