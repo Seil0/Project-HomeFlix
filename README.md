@@ -1,4 +1,5 @@
 ![Total Downloads](https://img.shields.io/github/downloads/Seil0/Project-HomeFlix/total.svg?style=flat-square)
+[![](https://img.shields.io/travis/Seil0/Project-HomeFlix/dev.svg?style=flat-square)](https://travis-ci.org/Seil0/Project-HomeFlix)
 [![Latest](https://img.shields.io/github/release/Seil0/Project-HomeFlix/all.svg?style=flat-square)](https://github.com/Seil0/Project-HomeFlix/releases)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
 
