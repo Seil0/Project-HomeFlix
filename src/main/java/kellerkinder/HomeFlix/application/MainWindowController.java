@@ -550,17 +550,6 @@ public class MainWindowController {
 		}
 	}
 	
-	/**
-	 * check if a film is supported by the HomeFlixPlayer or not
-	 * this is the case if the mime type is mp4
-	 * @param entry the film you want to check
-	 * @return true if so, false if not
-	 */
-	private boolean isSupportedFormat(FilmTabelDataType film) {
-		 String mimeType = URLConnection.guessContentTypeFromName(film.getStreamUrl());
-		 return mimeType != null && (mimeType.contains("mp4") || mimeType.contains("vp6"));
-	}
-	
 	@FXML
 	private void openfolderbtnclicked() {
 		String dest = new File(getCurrentStreamUrl()).getParentFile().getAbsolutePath();
@@ -629,13 +618,14 @@ public class MainWindowController {
 	}
 	
 	@FXML
-	private void colorPickerAction(){
-		editColor(colorPicker.getValue().toString());
+	private void colorPickerAction() {
+		setColor(colorPicker.getValue().toString().substring(2, 10));
+		saveSettings();
 		applyColor();
 	}
 	
 	@FXML
-	private void updateBtnAction(){
+	private void updateBtnAction() {
 		updateController = new UpdateController(this, buildNumber, useBeta);
 		Thread updateThread = new Thread(updateController);
 		updateThread.setName("Updater");
@@ -757,9 +747,12 @@ public class MainWindowController {
 			openfolderbtn.setStyle(btnStyleWhite);
 			returnBtn.setStyle(btnStyleWhite);
 			forwardBtn.setStyle(btnStyleWhite);
+			
 			playbtn.setGraphic(play_arrow_white);
 			returnBtn.setGraphic(skip_previous_white);
 			forwardBtn.setGraphic(skip_next_white);
+			
+			menuHam.getStyleClass().clear();
 			menuHam.getStyleClass().add("jfx-hamburgerW");
 		} else {
 			dialogBtnStyle = btnStyleBlack;
@@ -772,9 +765,12 @@ public class MainWindowController {
 			openfolderbtn.setStyle(btnStyleBlack);
 			returnBtn.setStyle(btnStyleBlack);
 			forwardBtn.setStyle(btnStyleBlack);
+			
 			playbtn.setGraphic(play_arrow_black);
 			returnBtn.setGraphic(skip_previous_black);
 			forwardBtn.setGraphic(skip_next_black);
+			
+			menuHam.getStyleClass().clear();
 			menuHam.getStyleClass().add("jfx-hamburgerB");
 		}
 	}
@@ -953,13 +949,17 @@ public class MainWindowController {
 		}
 	}
 	
-	// cuts 0x of the Color-pickers return value
-	private void editColor(String input) {
-		StringBuilder sb = new StringBuilder(input);
-		sb.delete(0, 2);
-		this.color = sb.toString();
-		saveSettings();
+	/**
+	 * check if a film is supported by the HomeFlixPlayer or not
+	 * this is the case if the mime type is mp4
+	 * @param entry the film you want to check
+	 * @return true if so, false if not
+	 */
+	private boolean isSupportedFormat(FilmTabelDataType film) {
+		 String mimeType = URLConnection.guessContentTypeFromName(film.getStreamUrl());
+		 return mimeType != null && (mimeType.contains("mp4") || mimeType.contains("vp6"));
 	}
+
 
 	// getter and setter
 	public DBController getDbController() {

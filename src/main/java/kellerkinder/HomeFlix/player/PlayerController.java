@@ -92,7 +92,7 @@ public class PlayerController {
 	private ImageView fullscreen_black = new ImageView(new Image("icons/ic_fullscreen_black_24dp_1x.png"));
 	private ImageView fullscreen_exit_black = new ImageView(new Image("icons/ic_fullscreen_exit_black_24dp_1x.png"));
 
-	/** FIXME double set currentTime(
+	/** FIXME double set currentTime()
 	 * initialize the new PlayerWindow
 	 * @param entry			the film object
 	 * @param player		the player object (needed for closing action)

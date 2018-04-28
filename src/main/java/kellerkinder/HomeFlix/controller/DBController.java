@@ -731,7 +731,7 @@ public class DBController {
 		return nextFilm;
 	}
 	
-	/** TODO check if we relay need to separate between favorites and none favorites
+	/**
 	 * get the last watched episode
 	 * @param title the title of the series
 	 * @return the last watched episode as {@link FilmTabelDataType} object
@@ -745,26 +745,16 @@ public class DBController {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\";");
 			while (rs.next()) {
-				if (rs.getBoolean("favorite") == true) {
-					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
-							rs.getString("title"), rs.getString("season"), rs.getString("episode") ,rs.getBoolean("favorite"),
-							rs.getBoolean("cached"), new ImageView(favorite_black));
-				} else {
-					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
-							rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
-							rs.getBoolean("cached"), new ImageView(favorite_border_black));
-				}
+				// favorite image is black
+				nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
+						rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+						rs.getBoolean("cached"), new ImageView(favorite_black));
 				if (rs.getDouble("currentTime") > lastCurrentTime) {
 					lastCurrentTime = rs.getDouble("currentTime");
-					if (rs.getBoolean("favorite") == true) {
-						nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
-								rs.getString("title"), rs.getString("season"), rs.getString("episode") ,rs.getBoolean("favorite"),
-								rs.getBoolean("cached"), new ImageView(favorite_black));
-					} else {
-						nextFilm = new FilmTabelDataType(rs.getString("streamUrl"),
-								rs.getString("title"), rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
-								rs.getBoolean("cached"), new ImageView(favorite_border_black));
-					}
+					// favorite image is black
+					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
+							rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
+							rs.getBoolean("cached"), new ImageView(favorite_black));
 					break;
 				}
 			}
