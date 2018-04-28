@@ -200,30 +200,30 @@ public class MainWindowController {
 	private TableColumn<SourceDataType, String> sourceColumn;
 	@FXML
 	private TableColumn<SourceDataType, String> modeColumn;
-
+	
+	private Main main;
+	private MainWindowController mainWindowController;
+	private UpdateController updateController;
+	private OMDbAPIController omdbAPIController;
+	private DBController dbController;
+	private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
+	
 	private boolean menuTrue = false;
 	private boolean settingsTrue = false;
 	private boolean autoUpdate = false;
 	private boolean useBeta = false;
 	private boolean autoplay = false;
-	private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
-	private int hashA = -647380320;
 
 	private final String version = "0.7.0";
 	private final String buildNumber = "151";
 	private final String versionName = "toothless dragon";
-	private String dialogBtnStyle;
+	private String btnStyle;
 	private String color;
 	private String local;
 	private String omdbAPIKey;
 	
-	// text strings
-	private String errorLoad;
-	private String errorSave;
-	private String infoText;
-	private String vlcNotInstalled;
-	
 	private double fontSize;
+	private final int hashA = -647380320;
 	private int last;
 	private int indexTable;
 	private int indexList;
@@ -247,12 +247,6 @@ public class MainWindowController {
 	private ContextMenu menu = new ContextMenu(like, dislike);
 	private Properties props = new Properties();
 	
-	private Main main;
-	private MainWindowController mainWindowController;
-	private UpdateController updateController;
-	private OMDbAPIController omdbAPIController;
-	private DBController dbController;
-	
 	/**
 	 * "Main" Method called in Main.java main() when starting
 	 * Initialize other objects: Updater, dbController and ApiQuery
@@ -272,6 +266,28 @@ public class MainWindowController {
 		initTabel();
 		initUI();
 		initActions();
+	}
+	
+	// Initialize UI elements
+	private void initUI() {
+		versionLbl.setText("Version: " + version + " (Build: " + buildNumber + ")");
+		fontsizeSlider.setValue(getFontSize());
+		colorPicker.setValue(Color.valueOf(getColor()));
+
+		updateBtn.setFont(Font.font("System", 12));
+		autoUpdateToggleBtn.setSelected(isAutoUpdate());
+		autoplayToggleBtn.setSelected(isAutoplay());
+		languageChoisBox.setItems(languages);
+		branchChoisBox.setItems(branches);
+		
+		if (isUseBeta()) {
+			branchChoisBox.getSelectionModel().select(1);
+		} else {
+			branchChoisBox.getSelectionModel().select(0);
+		}
+		
+		setLocalUI();
+		applyColor();
 	}
 	
 	// Initialize the tables (treeTableViewfilm and sourcesTable)
@@ -402,7 +418,7 @@ public class MainWindowController {
 			public void handle(ActionEvent event) {
 				dbController.like(getCurrentStreamUrl());
 				dbController.refresh(getCurrentStreamUrl(), indexList);
-				refreshTable();
+				refreshTableElement();
 			}
 		});
         
@@ -411,7 +427,7 @@ public class MainWindowController {
 			public void handle(ActionEvent event) {
 				dbController.dislike(getCurrentStreamUrl());
 				dbController.refresh(getCurrentStreamUrl(), indexList);
-				refreshTable();
+				refreshTableElement();
 			}
 		});
         
@@ -479,28 +495,6 @@ public class MainWindowController {
 		});
 	}
 	
-	// initialize UI elements
-	private void initUI() {
-		versionLbl.setText("Version: " + version + " (Build: " + buildNumber + ")");
-		fontsizeSlider.setValue(getFontSize());
-		colorPicker.setValue(Color.valueOf(getColor()));
-
-		updateBtn.setFont(Font.font("System", 12));
-		autoUpdateToggleBtn.setSelected(isAutoUpdate());
-		autoplayToggleBtn.setSelected(isAutoplay());
-		languageChoisBox.setItems(languages);
-		branchChoisBox.setItems(branches);
-		
-		if (isUseBeta()) {
-			branchChoisBox.getSelectionModel().select(1);
-		} else {
-			branchChoisBox.getSelectionModel().select(0);
-		}
-		
-		setLocalUI();
-		applyColor();
-	}
-	
 	@FXML
 	private void playbtnclicked() {
 		if (currentTableFilm.getStreamUrl().contains("_rootNode")) {
@@ -528,7 +522,7 @@ public class MainWindowController {
 					e1.printStackTrace();
 				}
 				if (output.contains("which: no vlc") || output == "") {
-					JFXInfoAlert vlcInfoAlert = new JFXInfoAlert("Info", vlcNotInstalled, dialogBtnStyle, main.getPrimaryStage());
+					JFXInfoAlert vlcInfoAlert = new JFXInfoAlert("Info", getBundle().getString("vlcNotInstalled"), btnStyle, main.getPrimaryStage());
 					vlcInfoAlert.showAndWait();
 				} else {
 					try {
@@ -575,8 +569,8 @@ public class MainWindowController {
 	@FXML
 	private void aboutBtnAction() {
 		String bodyText = "cemu_UI by @Seil0 \nVersion: " + version + " (Build: " + buildNumber + ")  \""
-				+ versionName + "\" \n" + infoText;
-		JFXInfoAlert infoAlert = new JFXInfoAlert("Project HomeFlix", bodyText, dialogBtnStyle, main.getPrimaryStage());
+				+ versionName + "\" \n" + getBundle().getString("infoText");
+		JFXInfoAlert infoAlert = new JFXInfoAlert("Project HomeFlix", bodyText, btnStyle, main.getPrimaryStage());
 		infoAlert.showAndWait();
 	}
 	
@@ -634,26 +628,18 @@ public class MainWindowController {
 	
 	@FXML
 	private void autoUpdateToggleBtnAction(){
-		if (isAutoUpdate()) {
-			setAutoUpdate(false);
-		} else {
-			setAutoUpdate(true);
-		}
+		autoUpdate = isAutoUpdate() ? false : true;
 		saveSettings();
 	}
 	
 	@FXML
 	private void autoplayToggleBtnAction(){
-		if (isAutoplay()) {
-			setAutoplay(false);
-		} else {
-			setAutoplay(true);
-		}
+		autoplay = isAutoplay() ? false : true;
 		saveSettings();
 	}
 	
 	// refresh the selected child of the root node
-	private void refreshTable() {
+	private void refreshTableElement() {
 		filmRoot.getChildren().get(indexTable).setValue(filmsList.get(indexList));
 	}
 	
@@ -726,27 +712,15 @@ public class MainWindowController {
 	 * if usedColor is less than checkColor set text fill white, else black
 	 */
 	private void applyColor() {
-		String style = "-fx-background-color: #" + getColor() + ";";
+		String menuBtnStyle;
 		String btnStyleBlack = "-fx-button-type: RAISED; -fx-background-color: #" + getColor() + "; -fx-text-fill: BLACK;";
 		String btnStyleWhite = "-fx-button-type: RAISED; -fx-background-color: #" + getColor() + "; -fx-text-fill: WHITE;";
 		BigInteger usedColor = new BigInteger(getColor(), 16);
 		BigInteger checkColor = new BigInteger("78909cff", 16);
 
-		sideMenuVBox.setStyle(style);
-		topHBox.setStyle(style);
-		searchTextField.setFocusColor(Color.valueOf(getColor()));
-
 		if (usedColor.compareTo(checkColor) == -1) {
-			dialogBtnStyle = btnStyleWhite;
-			settingsBtn.setStyle("-fx-text-fill: WHITE;");
-			aboutBtn.setStyle("-fx-text-fill: WHITE;");
-			addDirectoryBtn.setStyle(btnStyleWhite);
-			addStreamSourceBtn.setStyle(btnStyleWhite);
-			updateBtn.setStyle(btnStyleWhite);
-			playbtn.setStyle(btnStyleWhite);
-			openfolderbtn.setStyle(btnStyleWhite);
-			returnBtn.setStyle(btnStyleWhite);
-			forwardBtn.setStyle(btnStyleWhite);
+			btnStyle = btnStyleWhite;
+			menuBtnStyle = "-fx-text-fill: WHITE;";
 			
 			playbtn.setGraphic(play_arrow_white);
 			returnBtn.setGraphic(skip_previous_white);
@@ -755,16 +729,8 @@ public class MainWindowController {
 			menuHam.getStyleClass().clear();
 			menuHam.getStyleClass().add("jfx-hamburgerW");
 		} else {
-			dialogBtnStyle = btnStyleBlack;
-			settingsBtn.setStyle("-fx-text-fill: BLACK;");
-			aboutBtn.setStyle("-fx-text-fill: BLACK;");
-			addDirectoryBtn.setStyle(btnStyleBlack);
-			addStreamSourceBtn.setStyle(btnStyleBlack);
-			updateBtn.setStyle(btnStyleBlack);
-			playbtn.setStyle(btnStyleBlack);
-			openfolderbtn.setStyle(btnStyleBlack);
-			returnBtn.setStyle(btnStyleBlack);
-			forwardBtn.setStyle(btnStyleBlack);
+			btnStyle = btnStyleBlack;
+			menuBtnStyle = "-fx-text-fill: BLACK;";
 			
 			playbtn.setGraphic(play_arrow_black);
 			returnBtn.setGraphic(skip_previous_black);
@@ -773,6 +739,24 @@ public class MainWindowController {
 			menuHam.getStyleClass().clear();
 			menuHam.getStyleClass().add("jfx-hamburgerB");
 		}
+		
+		// boxes and TextFields
+		sideMenuVBox.setStyle("-fx-background-color: #" + getColor() + ";");
+		topHBox.setStyle("-fx-background-color: #" + getColor() + ";");
+		searchTextField.setFocusColor(Color.valueOf(getColor()));
+		
+		// normal buttons
+		addDirectoryBtn.setStyle(btnStyle);
+		addStreamSourceBtn.setStyle(btnStyle);
+		updateBtn.setStyle(btnStyle);
+		playbtn.setStyle(btnStyle);
+		openfolderbtn.setStyle(btnStyle);
+		returnBtn.setStyle(btnStyle);
+		forwardBtn.setStyle(btnStyle);
+		
+		// menu buttons
+		settingsBtn.setStyle(menuBtnStyle);
+		aboutBtn.setStyle(menuBtnStyle);
 	}
 	
 	// slide in in 400ms
@@ -829,10 +813,6 @@ public class MainWindowController {
 		columnSeason.setText(getBundle().getString("columnSeason"));
 		columnEpisode.setText(getBundle().getString("columnEpisode"));
 		columnFavorite.setText(getBundle().getString("columnFavorite"));
-		errorLoad = getBundle().getString("errorLoad");
-		errorSave = getBundle().getString("errorSave");
-		infoText = getBundle().getString("infoText");
-		vlcNotInstalled = getBundle().getString("vlcNotInstalled");
 	}
 	
 	/**
@@ -853,7 +833,7 @@ public class MainWindowController {
 			props.storeToXML(outputStream, "Project HomeFlix settings"); // write new .xml
 			outputStream.close();
 		} catch (IOException e) {
-			LOGGER.error(errorLoad, e);
+			LOGGER.error("An error occurred while saving the settings!", e);
 		}
 	}
 	
@@ -872,7 +852,7 @@ public class MainWindowController {
 				setColor(props.getProperty("color"));
 			} catch (Exception e) {
 				LOGGER.error("cloud not load color", e);
-				setColor("");
+				setColor("00a8cc");
 			}
 
 			try {
@@ -912,7 +892,7 @@ public class MainWindowController {
 
 			inputStream.close();
 		} catch (IOException e) {
-			LOGGER.error(errorSave, e);
+			LOGGER.error("An error occurred while loading the settings!", e);
 		}
 		
 		// try loading the omdbAPI key
@@ -966,12 +946,12 @@ public class MainWindowController {
 		return dbController;
 	}
 
-	public void setColor(String input) {
-		this.color = input;
-	}
-
 	public String getColor() {
 		return color;
+	}
+	
+	public void setColor(String input) {
+		this.color = input;
 	}
 	
 	public FilmTabelDataType getCurrentTableFilm() {
@@ -986,12 +966,12 @@ public class MainWindowController {
 		return currentTableFilm.getStreamUrl();
 	}
 
-	public void setFontSize(Double input) {
-		this.fontSize = input;
-	}
-
 	public Double getFontSize() {
 		return fontSize;
+	}
+	
+	public void setFontSize(Double input) {
+		this.fontSize = input;
 	}
 
 	public int getIndexTable() {
@@ -1002,12 +982,12 @@ public class MainWindowController {
 		return indexList;
 	}
 
-	public void setAutoUpdate(boolean input) {
-		this.autoUpdate = input;
-	}
-
 	public boolean isAutoUpdate() {
 		return autoUpdate;
+	}
+	
+	public void setAutoUpdate(boolean input) {
+		this.autoUpdate = input;
 	}
 
 	public boolean isUseBeta() {
@@ -1026,12 +1006,12 @@ public class MainWindowController {
 		this.autoplay = autoplay;
 	}
 
-	public void setLocal(String input) {
-		this.local = input;
-	}
-
 	public String getLocal() {
 		return local;
+	}
+	
+	public void setLocal(String input) {
+		this.local = input;
 	}
 
 	public String getOmdbAPIKey() {

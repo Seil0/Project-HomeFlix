@@ -40,7 +40,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
 public class Main extends Application {
 
@@ -56,8 +55,7 @@ public class Main extends Application {
 	private static String javaVers = System.getProperty("java.version");
 	private static String javaVend = System.getProperty("java.vendor");
 	private static String local = System.getProperty("user.language") + "_" + System.getProperty("user.country");
-	private String dirWin = userHome + "/Documents/HomeFlix"; // Windows: C:/Users/"User"/Documents/HomeFlix
-	private String dirLinux = userHome + "/HomeFlix"; // Linux: /home/"User"/HomeFlix
+	private static String dirHomeFlix;
 	private File directory;
 	private File configFile;
 	private File posterCache;
@@ -88,26 +86,14 @@ public class Main extends Application {
 			primaryStage.setResizable(false);
 			primaryStage.setTitle("Project HomeFlix");
 			primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/icons/Homeflix_Icon_64x64.png"))); //adds application icon	
-			primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-				public void handle(WindowEvent we) {
-					System.exit(1);
-				}
-			});
+			primaryStage.setOnCloseRequest(event -> System.exit(1));
 			
 			mainWindowController = loader.getController();	//Link of FXMLController and controller class
 			mainWindowController.setMain(this);	//call setMain
 
-			
-			// get OS and the specific paths
-			if (osName.contains("Windows")) {
-				directory = new File(dirWin);
-				configFile = new File(dirWin + "/config.xml");
-				posterCache = new File(dirWin + "/posterCache");
-			} else {
-				directory = new File(dirLinux);
-				configFile = new File(dirLinux + "/config.xml");
-				posterCache = new File(dirLinux + "/posterCache");
-			}
+			directory = new File(dirHomeFlix);
+			configFile = new File(dirHomeFlix + "/config.xml");
+			posterCache = new File(dirHomeFlix + "/posterCache");
 			
 			// generate window
 			scene = new Scene(pane); // create new scene, append pane to scene
@@ -117,7 +103,8 @@ public class Main extends Application {
 			
 			// startup checks
 			if (!configFile.exists()) {
-				directory.mkdir();		
+				directory.mkdir();
+
 				addFirstSource();
 				mainWindowController.setColor("ee3523");
 				mainWindowController.setFontSize(17.0);
@@ -130,7 +117,7 @@ public class Main extends Application {
 				posterCache.mkdir();
 			}
 			
-			// init here as it loads the games to the mwc and the gui, therefore the window must exist
+			// initialize here as it loads the games to the mwc and the GUI, therefore the window must exist
 			mainWindowController.init();
 			mainWindowController.getDbController().init();
 		} catch (IOException e) {
@@ -148,7 +135,7 @@ public class Main extends Application {
 			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US); // us_english
 			break;
 		case "de_DE":
-			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.GERMAN); // German
+			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.GERMAN); // de_german
 			break;
 		default:
 			bundle = ResourceBundle.getBundle("locals.HomeFlix-Local", Locale.US); // default local
@@ -200,20 +187,20 @@ public class Main extends Application {
 	}
 
 	/**
-	 * set the log file location and initialize the logger
-	 * launch the GUI
+	 * set the log file location and initialize the logger launch the GUI
 	 * @param args arguments given at the start
 	 */
 	public static void main(String[] args) {
-		if (System.getProperty("os.name").equals("Windows")) {
-			System.setProperty("logFilename", userHome + "/Documents/HomeFlix/app.log");
-			File logFile = new File(userHome + "/Documents/HomeFlix/app.log");
-			logFile.delete();
+
+		if (osName.contains("Windows")) {
+			dirHomeFlix = userHome + "/Documents/HomeFlix";
 		} else {
-			System.setProperty("logFilename", userHome + "/HomeFlix/app.log");
-			File logFile = new File(userHome + "/HomeFlix/app.log");
-			logFile.delete();
+			dirHomeFlix = userHome + "/HomeFlix";
 		}
+
+		System.setProperty("logFilename", dirHomeFlix + "/app.log");
+		File logFile = new File(dirHomeFlix + "/app.log");
+		logFile.delete();
 		LOGGER = LogManager.getLogger(Main.class.getName());
 		launch(args);
 	}
