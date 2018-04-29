@@ -65,6 +65,7 @@ public class OMDbAPIController implements Runnable {
 
 	@Override
 	public void run() {
+		LOGGER.info("Querying omdbAPI ...");
 		JsonObject object;
 		object = getByTitle(mainWindowController.getCurrentTitle());
 		if (object == null) return;
@@ -179,6 +180,7 @@ public class OMDbAPIController implements Runnable {
 		if (searchObject.getString("Response", "").equals("True")) {
 			for (JsonValue movie : searchObject.get("Search").asArray()) {
 				// get first entry from the array and set object = movie
+				// TODO if the search was successful, we should add the wrong and correct title to a list, for later speedup
 				return movie.asObject().getString("Title", "");
 			}
 		} else {
