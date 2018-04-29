@@ -215,7 +215,7 @@ public class MainWindowController {
 	private boolean autoplay = false;
 
 	private final String version = "0.7.0";
-	private final String buildNumber = "151";
+	private final String buildNumber = "155";
 	private final String versionName = "toothless dragon";
 	private String btnStyle;
 	private String color;
@@ -482,7 +482,7 @@ public class MainWindowController {
 				last = indexTable - 1;
 				next = indexTable + 1;
 				
-				if (currentTableFilm.getCached() || dbController.searchCache(getCurrentStreamUrl())) {
+				if (currentTableFilm.getCached() || dbController.searchCacheByURL(getCurrentStreamUrl())) {
 					LOGGER.info("loading from cache: " + getCurrentTitle());
 					dbController.readCache(getCurrentStreamUrl());
 				} else {			

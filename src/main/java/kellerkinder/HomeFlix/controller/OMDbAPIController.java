@@ -39,13 +39,13 @@ import com.eclipsesource.json.JsonValue;
 import javafx.application.Platform;
 import kellerkinder.HomeFlix.application.Main;
 import kellerkinder.HomeFlix.application.MainWindowController;
+import kellerkinder.HomeFlix.datatypes.OMDbAPIResponseDataType;
 
 public class OMDbAPIController implements Runnable {
 	
 	private MainWindowController mainWindowController;
 	private DBController dbController;
 	private Main main;
-	private String[] responseString = new String[20];
 	private String URL = "https://www.omdbapi.com/?apikey=";
 	private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	
@@ -65,106 +65,125 @@ public class OMDbAPIController implements Runnable {
 
 	@Override
 	public void run() {
-    	String output = null;
-    	String posterPath = null;
+		JsonObject object;
+		object = getByTitle(mainWindowController.getCurrentTitle());
+		if (object == null) return;
 		
-		// get information by title
-		try {
-			URL apiUrl = new URL(URL + mainWindowController.getOmdbAPIKey() + "&t="
-					+ mainWindowController.getCurrentTitle().replace(" ", "%20"));
-			BufferedReader ina = new BufferedReader(new InputStreamReader(apiUrl.openStream()));
-			output = ina.readLine();
-			ina.close();
-			System.out.println(apiUrl);
-			LOGGER.info("response from '" + URL + "&t=" + mainWindowController.getCurrentTitle() + "' was:" + output);
-		} catch (IOException e) {
-			LOGGER.error("error while making api request or reading response");
-			LOGGER.error("response from '" + URL + "&t=" + mainWindowController.getCurrentTitle() + "' was:" + output, e);
-			return;
-		}
-		
-		JsonObject object = Json.parse(output).asObject();
-		
-		if (object.getString("Error", "").equals("Movie not found!")) {
-			// if the movie was not found try to search it
-			LOGGER.warn("Movie was not found at first try, searching again!");
-			/** TODO 
-			 * split the name intelligent as it may contain the film title
-			 * search for English name
-			 * use tmdb
-			 */
-			try {
-				URL apiUrl = new URL(URL + mainWindowController.getOmdbAPIKey() + "&s="
-						+ mainWindowController.getCurrentTitle().replace(" ", "%20"));
-				BufferedReader ina = new BufferedReader(new InputStreamReader(apiUrl.openStream()));
-				output = ina.readLine();
-				ina.close();
-				LOGGER.info("response from '" + URL + "&s=" + mainWindowController.getCurrentTitle() + "' was:" + output);
-			} catch (Exception e) {
-				LOGGER.error("error while making api request or reading response");
-				LOGGER.error("response from '" + URL + "&s=" + mainWindowController.getCurrentTitle() + "' was:" + output, e);
-				return;
-			}
-			
-			JsonObject searchObject = Json.parse(output).asObject();
-			if (searchObject.getString("Response", "").equals("True")) {
-				for (JsonValue movie : searchObject.get("Search").asArray()) {
-					// get first entry from the array and set object = movie
-					object = (JsonObject) movie;
-					System.out.println(movie.toString());
-					break;
-
-				}
-				System.out.println(object.getString("Title", ""));
+		if (object.getString("Error", "").contains("not found!")) {
+			String title = searchByTitle(mainWindowController.getCurrentTitle());
+			if (title.length() > 0) {
+				object = getByTitle(title);
 			} else {
-				LOGGER.warn("Movie not found! Not adding cache!");
 				return;
 			}
 		}
 		
-		// add the response to the responseString[]
-		responseString[0] = object.getString("Title", "");
-		responseString[1] = object.getString("Year", "");
-		responseString[2] = object.getString("Rated", "");
-		responseString[3] = object.getString("Released", "");
-		responseString[4] = object.getString("Runtime", "");
-		responseString[5] = object.getString("Genre", "");
-		responseString[6] = object.getString("Director", "");
-		responseString[7] = object.getString("Writer", "");
-		responseString[8] = object.getString("Actors", "");
-		responseString[9] = object.getString("Plot", "");
-		responseString[10] = object.getString("Language", "");
-		responseString[11] = object.getString("Country", "");
-		responseString[12] = object.getString("Awards", "");
-		responseString[13] = object.getString("Metascore", "");
-		responseString[14] = object.getString("imdbRating", "");
-		responseString[15] = object.getString("Type", "");
-		responseString[16] = object.getString("imdbVotes", "");
-		responseString[17] = object.getString("imdbID", "");
-		responseString[18] = object.getString("Poster", "");
-		responseString[19] = object.getString("Response", "");
-		
-		//resize the image to fit in the posterImageView and add it to the cache
-	    try {
-			BufferedImage originalImage = ImageIO.read(new URL(responseString[18])); //change path to where file is located
-		    posterPath = main.getPosterCache() + "/" + mainWindowController.getCurrentTitle() + ".png";
-			ImageIO.write(originalImage, "png", new File(posterPath));
-			LOGGER.info("adding poster to cache: "+posterPath);
+		OMDbAPIResponseDataType omdbResponse = new OMDbAPIResponseDataType();
+		omdbResponse.setTitle(object.getString("Title", ""));
+		omdbResponse.setYear(object.getString("Year", ""));
+		omdbResponse.setRated(object.getString("Rated", ""));
+		omdbResponse.setReleased(object.getString("Release", ""));
+		omdbResponse.setSeason(object.getString("Season", ""));
+		omdbResponse.setEpisode(object.getString("Episode", ""));
+		omdbResponse.setRuntime(object.getString("Runtime", ""));
+		omdbResponse.setGenre(object.getString("Genre", ""));
+		omdbResponse.setDirector(object.getString("Director", ""));
+		omdbResponse.setWriter(object.getString("Writer", ""));
+		omdbResponse.setActors(object.getString("Actors", ""));
+		omdbResponse.setPlot(object.getString("Plot", ""));
+		omdbResponse.setLanguage(object.getString("Language", ""));
+		omdbResponse.setCountry(object.getString("Country", ""));
+		omdbResponse.setAwards(object.getString("Awards", ""));
+		omdbResponse.setMetascore(object.getString("Metascore", ""));
+		omdbResponse.setImdbRating(object.getString("imdbRating", ""));
+		omdbResponse.setImdbVotes(object.getString("imdbVotes", ""));
+		omdbResponse.setImdbID(object.getString("imdbID", ""));
+		omdbResponse.setType(object.getString("Type", ""));
+		omdbResponse.setDvd(object.getString("DVD", ""));
+		omdbResponse.setBoxOffice(object.getString("BoxOffice", ""));
+		omdbResponse.setProduction(object.getString("Production", ""));
+		omdbResponse.setWebsite(object.getString("Website", ""));
+		omdbResponse.setResponse(object.getString("Response", ""));
+
+		// resize the image to fit in the posterImageView and add it to the cache
+		try {
+			BufferedImage originalImage = ImageIO.read(new URL(object.getString("Poster", "")));
+			// change path to where file is located
+			omdbResponse.setPoster(main.getPosterCache() + "/" + mainWindowController.getCurrentTitle() + ".png");
+			ImageIO.write(originalImage, "png", new File(omdbResponse.getPoster()));
+			LOGGER.info("adding poster to cache: " + omdbResponse.getPoster());
 		} catch (Exception e) {
 			LOGGER.error(e);
 		}
-	    
-		// adding strings to the cache
-		dbController.addCache(mainWindowController.getCurrentStreamUrl(), responseString[0], responseString[1],
-				responseString[2], responseString[3], responseString[4], responseString[5], responseString[6],
-				responseString[7], responseString[8], responseString[9], responseString[10], responseString[11],
-				responseString[12], responseString[13], responseString[14], responseString[15], responseString[16],
-				responseString[17], posterPath, responseString[19]);
+		
+		// adding to cache
+		dbController.addCache(mainWindowController.getCurrentStreamUrl(), omdbResponse);
 		dbController.setCached(mainWindowController.getCurrentStreamUrl());
 		
 		// load data to the MainWindowController
 		Platform.runLater(() -> {
 			dbController.readCache(mainWindowController.getCurrentStreamUrl());
 		});
+		
+		return;
+	}
+	
+	private JsonObject getByTitle(String title) {
+		String output = null;
+		URL apiUrl;
+		try {		
+			if (mainWindowController.getCurrentTableFilm().getSeason().length() > 0) {
+				apiUrl = new URL(URL + mainWindowController.getOmdbAPIKey() + "&t="
+						+ title.replace(" ", "%20")
+						+ "&Season=" + mainWindowController.getCurrentTableFilm().getSeason()
+						+ "&Episode=" + mainWindowController.getCurrentTableFilm().getEpisode());
+			} else {
+				apiUrl = new URL(URL + mainWindowController.getOmdbAPIKey() + "&t="
+					+ title.replace(" ", "%20"));
+			}
+
+			BufferedReader ina = new BufferedReader(new InputStreamReader(apiUrl.openStream()));
+			output = ina.readLine();
+			ina.close();
+			LOGGER.info("response from '" + URL + "&t=" + title + "' was:" + output);
+		} catch (IOException e) {
+			LOGGER.error("error while making api request or reading response");
+			LOGGER.error("response from '" + URL + "&t=" + title + "' was:" + output, e);
+			return null;
+		}
+		
+		return Json.parse(output).asObject();
+	}
+	
+	private String searchByTitle(String title) {
+		String output = null;
+		// if the movie was not found try to search it
+		LOGGER.warn("Movie was not found at first try, searching again!");
+		/**
+		 * TODO split the name intelligent as it may contain the film title search for
+		 * English name use tmdb
+		 */
+		try {
+			URL apiUrl = new URL(URL + mainWindowController.getOmdbAPIKey() + "&s=" + title.replace(" ", "%20"));
+			BufferedReader ina = new BufferedReader(new InputStreamReader(apiUrl.openStream()));
+			output = ina.readLine();
+			ina.close();
+			LOGGER.info("response from '" + URL + "&s=" + title + "' was:" + output);
+		} catch (Exception e) {
+			LOGGER.error("error while making api request or reading response");
+			LOGGER.error("response from '" + URL + "&s=" + title + "' was:" + output, e);
+			return "";
+		}
+
+		JsonObject searchObject = Json.parse(output).asObject();
+		if (searchObject.getString("Response", "").equals("True")) {
+			for (JsonValue movie : searchObject.get("Search").asArray()) {
+				// get first entry from the array and set object = movie
+				return movie.asObject().getString("Title", "");
+			}
+		} else {
+			LOGGER.warn("Movie not found! Not adding cache!");
+		}
+		return "";
 	}
 }

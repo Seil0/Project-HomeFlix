@@ -42,6 +42,8 @@ import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
@@ -51,6 +53,7 @@ import kellerkinder.HomeFlix.application.Main;
 import kellerkinder.HomeFlix.application.MainWindowController;
 import kellerkinder.HomeFlix.datatypes.SourceDataType;
 import kellerkinder.HomeFlix.datatypes.FilmTabelDataType;
+import kellerkinder.HomeFlix.datatypes.OMDbAPIResponseDataType;
 
 public class DBController {
 	
@@ -112,14 +115,14 @@ public class DBController {
 	 * films table: streamUrl is primary key
 	 * cache table: streamUrl is primary key
 	 */
-	private void createDatabase() {	
+	private void createDatabase() {
 		try {
 			Statement stmt = connection.createStatement();
 			stmt.executeUpdate("create table if not exists films (streamUrl, title, season, episode, favorite, cached, currentTime)");
 			stmt.executeUpdate("create table if not exists cache ("
-					+ "streamUrl, Title, Year, Rated, Released, Runtime, Genre, Director, Writer,"
-					+ " Actors, Plot, Language, Country, Awards, Metascore, imdbRating, imdbVotes,"
-					+ " imdbID, Type, Poster, Response)");
+					+ "streamUrl, Title, Year, Rated, Released, Season, Episode ,Runtime, Genre, Director, Writer,"
+					+ " Actors, Plot, Language, Country, Awards, Poster, Metascore, imdbRating, imdbVotes,"
+					+ " imdbID, Type, dvd, BoxOffice, Website, Response)");
 			stmt.close();
 		} catch (SQLException e) {
 			LOGGER.error(e);
@@ -481,62 +484,45 @@ public class DBController {
 	
 	/**
 	 * add the received data to the cache table
-	 * @param streamUrl URL of the film
-	 * @param Title
-	 * @param Year
-	 * @param Rated
-	 * @param Released
-	 * @param Runtime
-	 * @param Genre
-	 * @param Director
-	 * @param Writer
-	 * @param Actors
-	 * @param Plot
-	 * @param Language
-	 * @param Country
-	 * @param Awards
-	 * @param Metascore
-	 * @param imdbRating
-	 * @param Type
-	 * @param imdbVotes
-	 * @param imdbID
-	 * @param Poster
-	 * @param Response
-	 * @throws SQLException
+	 * @param streamUrl 	URL of the film
+	 * @param omdbResponse	the response data from omdbAPI
 	 */
-	void addCache(	String streamUrl, String Title, String Year, String Rated, String Released, String Runtime, String Genre, String Director,
-					String Writer, String Actors, String Plot, String Language, String Country, String Awards, String Metascore, String imdbRating,
-					String Type, String imdbVotes, String imdbID, String Poster, String Response) {
+	void addCache(String streamUrl, OMDbAPIResponseDataType omdbResponse) {
 		try {
-			PreparedStatement ps = connection.prepareStatement("insert into cache values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+			PreparedStatement ps = connection.prepareStatement("insert into cache values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 			
-			LOGGER.info("adding to cache: " + Title);
+			LOGGER.info("adding to cache: " + omdbResponse.getTitle());
 			ps.setString(1,streamUrl);
-			ps.setString(2,Title);
-			ps.setString(3,Year);
-			ps.setString(4,Rated);
-			ps.setString(5,Released);
-			ps.setString(6,Runtime);
-			ps.setString(7,Genre);
-			ps.setString(8,Director);
-			ps.setString(9,Writer);
-			ps.setString(10,Actors);
-			ps.setString(11,Plot);
-			ps.setString(12,Language);
-			ps.setString(13,Country);
-			ps.setString(14,Awards);
-			ps.setString(15,Metascore);
-			ps.setString(16,imdbRating);
-			ps.setString(17,imdbVotes);
-			ps.setString(18,imdbID);
-			ps.setString(19,Type);
-			ps.setString(20,Poster);
-			ps.setString(21,Response);
+			ps.setString(2,omdbResponse.getTitle());
+			ps.setString(3,omdbResponse.getYear());
+			ps.setString(4,omdbResponse.getRated());
+			ps.setString(5,omdbResponse.getReleased());
+			ps.setString(6,omdbResponse.getSeason());
+			ps.setString(7,omdbResponse.getEpisode());
+			ps.setString(8,omdbResponse.getRuntime());
+			ps.setString(9,omdbResponse.getGenre());
+			ps.setString(10,omdbResponse.getDirector());
+			ps.setString(11,omdbResponse.getWriter());
+			ps.setString(12,omdbResponse.getActors());
+			ps.setString(13,omdbResponse.getPlot());
+			ps.setString(14,omdbResponse.getLanguage());
+			ps.setString(15,omdbResponse.getCountry());
+			ps.setString(16,omdbResponse.getAwards());
+			ps.setString(17,omdbResponse.getPoster());
+			ps.setString(18,omdbResponse.getMetascore());
+			ps.setString(19,omdbResponse.getImdbRating());
+			ps.setString(20,omdbResponse.getImdbVotes());
+			ps.setString(21,omdbResponse.getImdbID());		
+			ps.setString(22,omdbResponse.getType());
+			ps.setString(23,omdbResponse.getDvd());
+			ps.setString(24,omdbResponse.getBoxOffice());
+			ps.setString(25,omdbResponse.getWebsite());
+			ps.setString(26,omdbResponse.getResponse());
+			
 			ps.addBatch();
 			ps.executeBatch();			
 			connection.commit();
 			ps.close();
-			LOGGER.info("done!");
 		} catch (Exception e) {
 			LOGGER.error(e);
 		}
@@ -547,7 +533,7 @@ public class DBController {
 	 * @param streamUrl URL of the element
 	 * @return true if the element is already cached, else false
 	 */
-	public boolean searchCache(String streamUrl) {
+	public boolean searchCacheByURL(String streamUrl) {
 		boolean retValue = false;
 		try {
 			Statement stmt = connection.createStatement();
@@ -568,62 +554,73 @@ public class DBController {
 	 */
 	public void readCache(String streamUrl) {
 		try {
-			
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM cache WHERE streamUrl=\"" + streamUrl + "\";");
+			Font font = Font.font("System", FontWeight.BOLD, (int) Math.round(mainWindowController.getFontSize()));
+			ObservableList<Node> textFlow = mainWindowController.getTextFlow().getChildren();	
 			ArrayList<Text> nameText = new ArrayList<Text>();
-			ArrayList<Text> responseText = new ArrayList<Text>();
-			Image im;
-			int fontSize = (int) Math.round(mainWindowController.getFontSize());
-			int j = 2;
-
-			nameText.add(0, new Text(mainWindowController.getBundle().getString("title") + ": "));
-			nameText.add(1, new Text(mainWindowController.getBundle().getString("year") + ": "));
-			nameText.add(2, new Text(mainWindowController.getBundle().getString("rating") + ": "));
-			nameText.add(3, new Text(mainWindowController.getBundle().getString("publishedOn") + ": "));
-			nameText.add(4, new Text(mainWindowController.getBundle().getString("duration") + ": "));
-			nameText.add(5, new Text(mainWindowController.getBundle().getString("genre") + ": "));
-			nameText.add(6, new Text(mainWindowController.getBundle().getString("director") + ": "));
-			nameText.add(7, new Text(mainWindowController.getBundle().getString("writer") + ": "));
-			nameText.add(8, new Text(mainWindowController.getBundle().getString("actors") + ": "));
-			nameText.add(9, new Text(mainWindowController.getBundle().getString("plot") + ": "));
-			nameText.add(10, new Text(mainWindowController.getBundle().getString("language") + ": "));
-			nameText.add(11, new Text(mainWindowController.getBundle().getString("country") + ": "));
-			nameText.add(12, new Text(mainWindowController.getBundle().getString("awards") + ": "));
-			nameText.add(13, new Text(mainWindowController.getBundle().getString("metascore") + ": "));
-			nameText.add(14, new Text(mainWindowController.getBundle().getString("imdbRating") + ": "));
-			nameText.add(15, new Text(mainWindowController.getBundle().getString("type") + ": "));
 			
-			for (int i = 0; i < 15; i++) {
-				responseText.add(new Text(rs.getString(j) + "\n"));
-				j++;
+			nameText.add(new Text(mainWindowController.getBundle().getString("title") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("year") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("rated") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("released") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("season") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("episode") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("runtime") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("genre") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("director") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("writer") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("actors") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("plot") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("language") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("country") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("awards") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("metascore") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("imdbRating") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("type") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("boxOffice") + ": "));
+			nameText.add(new Text(mainWindowController.getBundle().getString("website") + ": "));
+			
+			// set the correct font for the  nameText
+			for (Text text : nameText) {
+				text.setFont(font);
 			}
 			
-			responseText.add(new Text(rs.getString(19) + "\n"));
-			im = new Image(new File(rs.getString(20)).toURI().toString());
-
-			stmt.close();
-			rs.close();
-
-			for (int i = 0; i < nameText.size(); i++) {
-				nameText.get(i).setFont(Font.font("System", FontWeight.BOLD, fontSize));
-				responseText.get(i).setFont(Font.font("System", fontSize));
-			}
-
-			mainWindowController.getTextFlow().getChildren().remove(0,
-					mainWindowController.getTextFlow().getChildren().size());
-
-			for (int i = 0; i < nameText.size(); i++) {
-				mainWindowController.getTextFlow().getChildren().addAll(nameText.get(i), responseText.get(i));
-			}
-
+			// clear the textFlow and all the new text
+			textFlow.clear();
+			textFlow.addAll(nameText.get(0), new Text(rs.getString("Title") + "\n"));
+			textFlow.addAll(nameText.get(1), new Text(rs.getString("Year") + "\n"));
+			textFlow.addAll(nameText.get(2), new Text(rs.getString("Rated") + "\n"));
+			textFlow.addAll(nameText.get(3), new Text(rs.getString("Released") + "\n"));
+			textFlow.addAll(nameText.get(4), new Text(rs.getString("Season") + "\n"));
+			textFlow.addAll(nameText.get(5), new Text(rs.getString("Episode") + "\n"));
+			textFlow.addAll(nameText.get(6), new Text(rs.getString("Runtime") + "\n"));
+			textFlow.addAll(nameText.get(7), new Text(rs.getString("Genre") + "\n"));
+			textFlow.addAll(nameText.get(8), new Text(rs.getString("Director") + "\n"));
+			textFlow.addAll(nameText.get(9), new Text(rs.getString("Writer") + "\n"));
+			textFlow.addAll(nameText.get(10), new Text(rs.getString("Actors") + "\n"));
+			textFlow.addAll(nameText.get(11), new Text(rs.getString("Plot") + "\n"));
+			textFlow.addAll(nameText.get(12), new Text(rs.getString("Language") + "\n"));
+			textFlow.addAll(nameText.get(13), new Text(rs.getString("Country") + "\n"));
+			textFlow.addAll(nameText.get(14), new Text(rs.getString("Awards") + "\n"));
+			textFlow.addAll(nameText.get(15), new Text(rs.getString("metascore") + "\n"));
+			textFlow.addAll(nameText.get(16), new Text(rs.getString("imdbRating") + "\n"));
+			textFlow.addAll(nameText.get(17), new Text(rs.getString("Type") + "\n"));
+			textFlow.addAll(nameText.get(18), new Text(rs.getString("BoxOffice") + "\n"));
+			textFlow.addAll(nameText.get(19), new Text(rs.getString("Website") + "\n"));
+			
+			mainWindowController.getTextFlow().setStyle("-fx-font-size : " + ((int) Math.round(mainWindowController.getFontSize()) + 1) + "px;");
+			
+			// add the image
 			try {
-				mainWindowController.getPosterImageView().setImage(im);
+				mainWindowController.getPosterImageView().setImage(new Image(new File(rs.getString("Poster")).toURI().toString()));
 			} catch (Exception e) {
 				mainWindowController.getPosterImageView().setImage(new Image("resources/icons/close_black_2048x2048.png"));
 				LOGGER.error(e);
 			}
-
+			
+			stmt.close();
+			rs.close();
 		} catch (SQLException e) {
 			LOGGER.error("Ups! an error occured!", e);
 		}
