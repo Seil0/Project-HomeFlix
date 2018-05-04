@@ -110,7 +110,7 @@ public class OMDbAPIController implements Runnable {
 		try {
 			BufferedImage originalImage = ImageIO.read(new URL(object.getString("Poster", "")));
 			// change path to where file is located
-			omdbResponse.setPoster(main.getPosterCache() + "/" + mainWindowController.getCurrentTitle() + ".png");
+			omdbResponse.setPoster(main.getPosterCache() + "/" + omdbResponse.getTitle() + ".png");
 			ImageIO.write(originalImage, "png", new File(omdbResponse.getPoster()));
 			LOGGER.info("adding poster to cache: " + omdbResponse.getPoster());
 		} catch (Exception e) {
@@ -146,6 +146,7 @@ public class OMDbAPIController implements Runnable {
 			BufferedReader ina = new BufferedReader(new InputStreamReader(apiUrl.openStream()));
 			output = ina.readLine();
 			ina.close();
+			System.out.println(apiUrl.toString());
 			LOGGER.info("response from '" + URL + "&t=" + title + "' was:" + output);
 		} catch (IOException e) {
 			LOGGER.error("error while making api request or reading response");
@@ -156,6 +157,11 @@ public class OMDbAPIController implements Runnable {
 		return Json.parse(output).asObject();
 	}
 	
+	/** TODO if responser == false & isSereis, query without series
+	 * search for a movie/series title
+	 * @param title the movie/series title
+	 * @return the correct title if found
+	 */
 	private String searchByTitle(String title) {
 		String output = null;
 		// if the movie was not found try to search it

@@ -615,8 +615,8 @@ public class DBController {
 			try {
 				mainWindowController.getPosterImageView().setImage(new Image(new File(rs.getString("Poster")).toURI().toString()));
 			} catch (Exception e) {
-				mainWindowController.getPosterImageView().setImage(new Image("resources/icons/close_black_2048x2048.png"));
-				LOGGER.error(e);
+				mainWindowController.getPosterImageView().setImage(new Image("icons/close_black_2048x2048.png"));
+				LOGGER.error("No Poster found, useing default.");
 			}
 			
 			stmt.close();
