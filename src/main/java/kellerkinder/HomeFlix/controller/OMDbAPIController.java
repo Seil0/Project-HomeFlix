@@ -152,7 +152,6 @@ public class OMDbAPIController implements Runnable {
 			BufferedReader ina = new BufferedReader(new InputStreamReader(apiUrl.openStream()));
 			output = ina.readLine();
 			ina.close();
-			System.out.println(apiUrl.toString());
 			LOGGER.info("response from '" + URL + "&t=" + title + "' was:" + output);
 		} catch (IOException e) {
 			LOGGER.error("error while making api request or reading response");

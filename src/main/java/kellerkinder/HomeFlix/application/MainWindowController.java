@@ -215,7 +215,7 @@ public class MainWindowController {
 	private boolean autoplay = false;
 
 	private final String version = "0.7.0";
-	private final String buildNumber = "155";
+	private final String buildNumber = "157";
 	private final String versionName = "toothless dragon";
 	private String btnStyle;
 	private String color;
@@ -236,12 +236,6 @@ public class MainWindowController {
 	private ObservableList<FilmTabelDataType> filterData = FXCollections.observableArrayList();
 	private ObservableList<FilmTabelDataType> filmsList = FXCollections.observableArrayList();
 	private ObservableList<SourceDataType> sourcesList = FXCollections.observableArrayList();
-	private ImageView skip_previous_white = new ImageView(new Image("icons/ic_skip_previous_white_18dp_1x.png"));
-	private ImageView skip_previous_black = new ImageView(new Image("icons/ic_skip_previous_black_18dp_1x.png"));
-	private ImageView skip_next_white = new ImageView(new Image("icons/ic_skip_next_white_18dp_1x.png"));
-	private ImageView skip_next_black = new ImageView(new Image("icons/ic_skip_next_black_18dp_1x.png"));
-	private ImageView play_arrow_white = new ImageView(new Image("icons/ic_play_arrow_white_18dp_1x.png"));
-	private ImageView play_arrow_black = new ImageView(new Image("icons/ic_play_arrow_black_18dp_1x.png"));
 	private MenuItem like = new MenuItem("like");
 	private MenuItem dislike = new MenuItem("dislike"); // TODO one option (like or dislike)
 	private ContextMenu menu = new ContextMenu(like, dislike);
@@ -408,7 +402,6 @@ public class MainWindowController {
 				if (!getCurrentTitle().isEmpty()) {
 					dbController.readCache(getCurrentStreamUrl());
 				}
-				// ta1.setFont(Font.font("System", size));
 				saveSettings();
 			}
 		});
@@ -459,7 +452,7 @@ public class MainWindowController {
 					}
 				}
 				
-				addDataUI(filterData);
+				addFilmsToTable(filterData);
 			}
 		});
         
@@ -646,7 +639,7 @@ public class MainWindowController {
 	/**
 	 * add data from films-list to films-table
 	 */
-	public void addDataUI(ObservableList<FilmTabelDataType> elementsList) {
+	public void addFilmsToTable(ObservableList<FilmTabelDataType> elementsList) {
 
 		for (FilmTabelDataType element : elementsList) {
 			
@@ -713,28 +706,26 @@ public class MainWindowController {
 	 */
 	private void applyColor() {
 		String menuBtnStyle;
-		String btnStyleBlack = "-fx-button-type: RAISED; -fx-background-color: #" + getColor() + "; -fx-text-fill: BLACK;";
-		String btnStyleWhite = "-fx-button-type: RAISED; -fx-background-color: #" + getColor() + "; -fx-text-fill: WHITE;";
 		BigInteger usedColor = new BigInteger(getColor(), 16);
 		BigInteger checkColor = new BigInteger("78909cff", 16);
 
 		if (usedColor.compareTo(checkColor) == -1) {
-			btnStyle = btnStyleWhite;
+			btnStyle = "-fx-button-type: RAISED; -fx-background-color: #" + getColor() + "; -fx-text-fill: WHITE;";
 			menuBtnStyle = "-fx-text-fill: WHITE;";
 			
-			playbtn.setGraphic(play_arrow_white);
-			returnBtn.setGraphic(skip_previous_white);
-			forwardBtn.setGraphic(skip_next_white);
+			playbtn.setGraphic(new ImageView(new Image("icons/ic_play_arrow_white_18dp_1x.png")));
+			returnBtn.setGraphic(new ImageView(new Image("icons/ic_skip_previous_white_18dp_1x.png")));
+			forwardBtn.setGraphic(new ImageView(new Image("icons/ic_skip_next_white_18dp_1x.png")));
 			
 			menuHam.getStyleClass().clear();
 			menuHam.getStyleClass().add("jfx-hamburgerW");
 		} else {
-			btnStyle = btnStyleBlack;
+			btnStyle = "-fx-button-type: RAISED; -fx-background-color: #" + getColor() + "; -fx-text-fill: BLACK;";
 			menuBtnStyle = "-fx-text-fill: BLACK;";
 			
-			playbtn.setGraphic(play_arrow_black);
-			returnBtn.setGraphic(skip_previous_black);
-			forwardBtn.setGraphic(skip_next_black);
+			playbtn.setGraphic(new ImageView(new Image("icons/ic_play_arrow_black_18dp_1x.png")));
+			returnBtn.setGraphic(new ImageView(new Image("icons/ic_skip_previous_black_18dp_1x.png")));
+			forwardBtn.setGraphic(new ImageView(new Image("icons/ic_skip_next_black_18dp_1x.png")));
 			
 			menuHam.getStyleClass().clear();
 			menuHam.getStyleClass().add("jfx-hamburgerB");

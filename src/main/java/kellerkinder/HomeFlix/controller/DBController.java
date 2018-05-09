@@ -235,7 +235,7 @@ public class DBController {
 		}
 		
 		LOGGER.info("loading data to the GUI ...");
-		mainWindowController.addDataUI(mainWindowController.getFilmsList());
+		mainWindowController.addFilmsToTable(mainWindowController.getFilmsList());
 	}
 	
 	/**
