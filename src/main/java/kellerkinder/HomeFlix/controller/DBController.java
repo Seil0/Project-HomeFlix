@@ -592,8 +592,12 @@ public class DBController {
 			textFlow.addAll(nameText.get(1), new Text(rs.getString("Year") + "\n"));
 			textFlow.addAll(nameText.get(2), new Text(rs.getString("Rated") + "\n"));
 			textFlow.addAll(nameText.get(3), new Text(rs.getString("Released") + "\n"));
-			textFlow.addAll(nameText.get(4), new Text(rs.getString("Season") + "\n"));
-			textFlow.addAll(nameText.get(5), new Text(rs.getString("Episode") + "\n"));
+			
+			if (rs.getString("Episode").length() > 0) {
+				textFlow.addAll(nameText.get(4), new Text(rs.getString("Season") + "\n"));
+				textFlow.addAll(nameText.get(5), new Text(rs.getString("Episode") + "\n"));
+			}
+
 			textFlow.addAll(nameText.get(6), new Text(rs.getString("Runtime") + "\n"));
 			textFlow.addAll(nameText.get(7), new Text(rs.getString("Genre") + "\n"));
 			textFlow.addAll(nameText.get(8), new Text(rs.getString("Director") + "\n"));

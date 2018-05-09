@@ -47,6 +47,7 @@ public class OMDbAPIController implements Runnable {
 	private DBController dbController;
 	private Main main;
 	private String URL = "https://www.omdbapi.com/?apikey=";
+	private boolean useEpisode = true;
 	private static final Logger LOGGER = LogManager.getLogger(MainWindowController.class.getName());
 	
 	/**
@@ -74,6 +75,11 @@ public class OMDbAPIController implements Runnable {
 			String title = searchByTitle(mainWindowController.getCurrentTitle());
 			if (title.length() > 0) {
 				object = getByTitle(title);
+				
+				if(object.getString("Error", "").contains("Series or episode not found!")) {
+					useEpisode = false;
+					object = getByTitle(title);
+				}
 			} else {
 				return;
 			}
@@ -133,7 +139,7 @@ public class OMDbAPIController implements Runnable {
 		String output = null;
 		URL apiUrl;
 		try {		
-			if (mainWindowController.getCurrentTableFilm().getSeason().length() > 0) {
+			if (mainWindowController.getCurrentTableFilm().getSeason().length() > 0 && useEpisode) {
 				apiUrl = new URL(URL + mainWindowController.getOmdbAPIKey() + "&t="
 						+ title.replace(" ", "%20")
 						+ "&Season=" + mainWindowController.getCurrentTableFilm().getSeason()
@@ -157,7 +163,7 @@ public class OMDbAPIController implements Runnable {
 		return Json.parse(output).asObject();
 	}
 	
-	/** TODO if responser == false & isSereis, query without series
+	/**
 	 * search for a movie/series title
 	 * @param title the movie/series title
 	 * @return the correct title if found
