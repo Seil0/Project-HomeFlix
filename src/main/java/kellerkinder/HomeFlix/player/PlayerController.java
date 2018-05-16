@@ -65,10 +65,8 @@ public class PlayerController {
 
 	@FXML
 	private JFXButton stopBtn;
-
 	@FXML
 	private JFXButton playBtn;
-
 	@FXML
 	private JFXButton fullscreenBtn;
 
