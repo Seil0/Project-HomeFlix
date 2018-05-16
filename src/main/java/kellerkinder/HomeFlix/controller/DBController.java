@@ -51,21 +51,19 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import kellerkinder.HomeFlix.application.Main;
 import kellerkinder.HomeFlix.application.MainWindowController;
-import kellerkinder.HomeFlix.datatypes.SourceDataType;
 import kellerkinder.HomeFlix.datatypes.FilmTabelDataType;
 import kellerkinder.HomeFlix.datatypes.OMDbAPIResponseDataType;
+import kellerkinder.HomeFlix.datatypes.SourceDataType;
 
 public class DBController {
 	
 	private MainWindowController mainWindowController;
 	private Main main;
-	private String DB_PATH = System.getProperty("user.home") + "\\Documents\\HomeFlix" + "\\" + "Homeflix.db"; //path to database file
+	private String DB_PATH;
 	private Image favorite_black = new Image("icons/ic_favorite_black_18dp_1x.png");
 	private Image favorite_border_black = new Image("icons/ic_favorite_border_black_18dp_1x.png");
-	private List<String> filmsdbAll = new ArrayList<String>();
-	private List<String> filmsdbDir = new ArrayList<String>();
-	private List<String> filmsdbStreamURL = new ArrayList<String>(); // needed
-	private List<String> filmsStreamURL = new ArrayList<String>(); // needed
+	private List<String> filmsdbStreamURL = new ArrayList<String>(); // contains all films stored in the database
+	private List<String> filmsStreamURL = new ArrayList<String>(); // contains all films from the sources
 	private Connection connection = null;
 	private static final Logger LOGGER = LogManager.getLogger(DBController.class.getName());
 	
@@ -74,7 +72,7 @@ public class DBController {
 	 * @param main					the Main object
 	 * @param mainWindowController	the MainWindowController object
 	 */
-	public DBController(Main main, MainWindowController mainWindowController) {
+	public DBController(Main main, MainWindowController mainWindowController) {	
 		this.main = main;
 		this.mainWindowController = mainWindowController;
 	}
@@ -138,7 +136,6 @@ public class DBController {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM films");
 			while (rs.next()) {
-				filmsdbDir.add(rs.getString("title"));
 				filmsdbStreamURL.add(rs.getString("streamUrl"));
 			}
 			stmt.close();
@@ -146,11 +143,6 @@ public class DBController {
 		} catch (SQLException e) {
 			LOGGER.error("Ups! an error occured!", e);
 		}
-			
-		// add all entries to filmsAll and filmsdbAl, for later comparing
-		filmsdbAll.addAll(filmsdbDir);
-		LOGGER.info("films in directory: " + filmsStreamURL.size());
-		LOGGER.info("filme in db: " + filmsdbStreamURL.size());
 	}
 	
 	/**
@@ -210,7 +202,7 @@ public class DBController {
 	 * load the data to the mainWindowController
 	 * order entries by title
 	 */
-	private void loadDataToMWC() {
+	private void loadDataToFilmsList() {
 		LOGGER.info("loading data to mwc ...");
 		try {
 			//load local Data
@@ -276,13 +268,14 @@ public class DBController {
 		LOGGER.info("refreshing the Database ...");
 		
 		// clean all ArraLists
-		filmsdbAll.clear();
-		filmsdbDir.clear();
 		filmsdbStreamURL.clear();
 		filmsStreamURL.clear();
 		
 		loadSources(); // reload all sources
 		loadDatabase(); // reload all films saved in the DB
+		
+		LOGGER.info("films in directory: " + filmsStreamURL.size());
+		LOGGER.info("filme in db: " + filmsdbStreamURL.size());
 		
 		try {
 			checkAddEntry();
@@ -291,11 +284,11 @@ public class DBController {
 			LOGGER.error("Error while refreshing the database", e);
 		}
 		
-		// remove all films from the mwc lists
-		mainWindowController.getFilmsList().removeAll(mainWindowController.getFilmsList());
-		mainWindowController.getFilmRoot().getChildren().removeAll(mainWindowController.getFilmRoot().getChildren());
+		// clear the FilmsList and FilmRoot chlidren
+		mainWindowController.getFilmsList().clear();
+		mainWindowController.getFilmRoot().getChildren().clear();
 		
-		loadDataToMWC(); // load the new data to the mwc
+		loadDataToFilmsList(); // load the new data to the FilmsList
 	}
 
 	/**
@@ -469,7 +462,7 @@ public class DBController {
 	 * update the database entry for the given film, cached = 1
 	 * @param streamUrl URL of the film
 	 */
-	void setCached(String streamUrl) {
+	public void setCached(String streamUrl) {
 		try {
 			Statement stmt = connection.createStatement();
 			stmt.executeUpdate("UPDATE films SET cached=1 WHERE streamUrl=\"" + streamUrl + "\";");
@@ -487,7 +480,7 @@ public class DBController {
 	 * @param streamUrl 	URL of the film
 	 * @param omdbResponse	the response data from omdbAPI
 	 */
-	void addCache(String streamUrl, OMDbAPIResponseDataType omdbResponse) {
+	public void addCache(String streamUrl, OMDbAPIResponseDataType omdbResponse) {
 		try {
 			PreparedStatement ps = connection.prepareStatement("insert into cache values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 			
@@ -688,17 +681,14 @@ public class DBController {
 				if (rsEpisode > episode && rsEpisode < nextEpisode) {
 					// fitting episode found in current season, if rsEpisode < nextEpisode -> nextEpisode = rsEpisode
 					nextEpisode = rsEpisode;
-					System.out.println("next episode is: " + nextEpisode);
-					// favorite image is black
 					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
 							rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
-							rs.getBoolean("cached"), new ImageView(favorite_black));
+							rs.getBoolean("cached"), new ImageView());
 				}
 			}
 			
 			if (nextFilm == null) {
 				int nextSeason = 3000;
-				System.out.println("searching next season");
 				rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\";");
 				while(rs.next()) {
 					int rsSeason = Integer.parseInt(rs.getString("season"));
@@ -708,18 +698,15 @@ public class DBController {
 				}
 				
 				if (nextSeason != 3000) {
-					System.out.println("next season is: " + nextSeason);
 					rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\" AND season = \"" + season + "\";");
 					while(rs.next()) {
 						int rsEpisode = Integer.parseInt(rs.getString("episode"));
 						if (rsEpisode > episode && rsEpisode < nextEpisode) {
 							// fitting episode found in current season, if rsEpisode < nextEpisode -> nextEpisode = rsEpisode
 							nextEpisode = rsEpisode;
-							System.out.println("next episode is: " + nextEpisode);
-							// favorite image is black
 							nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
 									rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
-									rs.getBoolean("cached"), new ImageView(favorite_black));
+									rs.getBoolean("cached"), new ImageView());
 						}
 					}
 				}
@@ -746,16 +733,14 @@ public class DBController {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM films WHERE title = \"" + title + "\";");
 			while (rs.next()) {
-				// favorite image is black
 				nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
 						rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
-						rs.getBoolean("cached"), new ImageView(favorite_black));
+						rs.getBoolean("cached"), new ImageView());
 				if (rs.getDouble("currentTime") > lastCurrentTime) {
 					lastCurrentTime = rs.getDouble("currentTime");
-					// favorite image is black
 					nextFilm = new FilmTabelDataType(rs.getString("streamUrl"), rs.getString("title"),
 							rs.getString("season"), rs.getString("episode"), rs.getBoolean("favorite"),
-							rs.getBoolean("cached"), new ImageView(favorite_black));
+							rs.getBoolean("cached"), new ImageView());
 					break;
 				}
 			}
