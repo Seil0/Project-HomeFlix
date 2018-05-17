@@ -24,19 +24,14 @@ package kellerkinder.HomeFlix.application;
 import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.Writer;
 import java.math.BigInteger;
 import java.net.URLConnection;
 import java.util.Locale;
-import java.util.Properties;
 import java.util.ResourceBundle;
 
 import org.apache.logging.log4j.LogManager;
@@ -239,27 +234,29 @@ public class MainWindowController {
 	private MenuItem like = new MenuItem("like");
 	private MenuItem dislike = new MenuItem("dislike"); // TODO one option (like or dislike)
 	private ContextMenu menu = new ContextMenu(like, dislike);
-	private Properties props = new Properties();
-	
+
 	/**
-	 * "Main" Method called in Main.java main() when starting
 	 * Initialize other objects: Updater, dbController and ApiQuery
+	 * @param main the main object
 	 */
-	void setMain(Main main) {
+	public MainWindowController(Main main) {
 		this.main = main;
 		mainWindowController = this;
 		dbController = new DBController(this.main, this);	
 		omdbAPIController = new OMDbAPIController(this, dbController, this.main);
 	}
 	
-	// call all initialize methods
-	void init() {
+	@FXML
+    public void initialize() {
 		LOGGER.info("Initializing Project-HomeFlix build " + buildNumber);
-		loadSettings();
+		main.loadSettings(); // load settings
 		checkAutoUpdate();
+		
+		// initialize the GUI and the DBController
 		initTabel();
 		initUI();
 		initActions();
+		dbController.init();
 	}
 	
 	// Initialize UI elements
@@ -328,20 +325,21 @@ public class MainWindowController {
 
 		HamburgerBackArrowBasicTransition burgerTask = new HamburgerBackArrowBasicTransition(menuHam);
 		menuHam.addEventHandler(MouseEvent.MOUSE_PRESSED, (e) -> {
-			if (menuTrue == false) {
-				sideMenuSlideIn();
-				burgerTask.setRate(1.0);
-				burgerTask.play();
-				menuTrue = true;
-			} else {
+			if (menuTrue) {
 				sideMenuSlideOut();
 				burgerTask.setRate(-1.0);
 				burgerTask.play();
 				menuTrue = false;
+
+			} else {
+				sideMenuSlideIn();
+				burgerTask.setRate(1.0);
+				burgerTask.play();
+				menuTrue = true;
 			}
-			if (settingsTrue == true) {
+			if (settingsTrue) {
 				settingsScrollPane.setVisible(false);
-				saveSettings();
+				main.saveSettings();
 				settingsTrue = false;
 			}
 		});
@@ -351,10 +349,9 @@ public class MainWindowController {
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
 				ObservableList<FilmTabelDataType> helpData;
 				filterData.clear();
-				filmRoot.getChildren().removeAll(filmRoot.getChildren());
+				filmRoot.getChildren().clear();
 
 				helpData = filmsList;
-
 
 				for (int i = 0; i < helpData.size(); i++) {
 					if (helpData.get(i).getTitle().toLowerCase().contains(searchTextField.getText().toLowerCase())) {
@@ -379,7 +376,7 @@ public class MainWindowController {
 				local = local.substring(local.length() - 6, local.length() - 1); // reading only en_US from English (en_US)
 				setLocal(local);
 				setLocalUI();
-				saveSettings();
+				main.saveSettings();
 			}
 		});
 
@@ -391,7 +388,7 @@ public class MainWindowController {
 				} else {
 					setUseBeta(false);
 				}
-				saveSettings();
+				main.saveSettings();
 			}
 		});
         
@@ -402,7 +399,7 @@ public class MainWindowController {
 				if (!getCurrentTitle().isEmpty()) {
 					dbController.readCache(getCurrentStreamUrl());
 				}
-				saveSettings();
+				main.saveSettings();
 			}
 		});
         
@@ -568,14 +565,14 @@ public class MainWindowController {
 	}
 	
 	@FXML
-	private void settingsBtnclicked(){
-		if(settingsTrue == false){
-			settingsScrollPane.setVisible(true);	
-			settingsTrue = true;
-		}else{
+	private void settingsBtnclicked() {
+		if (settingsTrue) {
 			settingsScrollPane.setVisible(false);
-			saveSettings();
+			main.saveSettings();
 			settingsTrue = false;
+		} else {
+			settingsScrollPane.setVisible(true);
+			settingsTrue = true;
 		}
 	}
 	
@@ -607,7 +604,7 @@ public class MainWindowController {
 	@FXML
 	private void colorPickerAction() {
 		setColor(colorPicker.getValue().toString().substring(2, 10));
-		saveSettings();
+		main.saveSettings();
 		applyColor();
 	}
 	
@@ -622,13 +619,13 @@ public class MainWindowController {
 	@FXML
 	private void autoUpdateToggleBtnAction(){
 		autoUpdate = isAutoUpdate() ? false : true;
-		saveSettings();
+		main.saveSettings();
 	}
 	
 	@FXML
 	private void autoplayToggleBtnAction(){
 		autoplay = isAutoplay() ? false : true;
-		saveSettings();
+		main.saveSettings();
 	}
 	
 	// refresh the selected child of the root node
@@ -806,103 +803,6 @@ public class MainWindowController {
 		columnFavorite.setText(getBundle().getString("columnFavorite"));
 	}
 	
-	/**
-	 * save the configuration to the config.xml file
-	 */
-	public void saveSettings() {
-		LOGGER.info("saving settings ...");
-		try {
-			props.setProperty("color", getColor());
-			props.setProperty("autoUpdate", String.valueOf(isAutoUpdate()));
-			props.setProperty("useBeta", String.valueOf(isUseBeta()));
-			props.setProperty("autoplay", String.valueOf(isAutoplay()));
-			props.setProperty("size", getFontSize().toString());
-			props.setProperty("local", getLocal());
-			props.setProperty("ratingSortType", columnFavorite.getSortType().toString());
-
-			OutputStream outputStream = new FileOutputStream(main.getConfigFile()); // new output-stream
-			props.storeToXML(outputStream, "Project HomeFlix settings"); // write new .xml
-			outputStream.close();
-		} catch (IOException e) {
-			LOGGER.error("An error occurred while saving the settings!", e);
-		}
-	}
-	
-	/**
-	 * load the configuration from the config.xml file
-	 * and try to load the API keys from apiKeys.json
-	 */
-	public void loadSettings() {
-		LOGGER.info("loading settings ...");
-		
-		try {
-			InputStream inputStream = new FileInputStream(main.getConfigFile());
-			props.loadFromXML(inputStream); // new input-stream from .xml
-
-			try {
-				setColor(props.getProperty("color"));
-			} catch (Exception e) {
-				LOGGER.error("cloud not load color", e);
-				setColor("00a8cc");
-			}
-
-			try {
-				setFontSize(Double.parseDouble(props.getProperty("size")));
-			} catch (Exception e) {
-				LOGGER.error("cloud not load fontsize", e);
-				setFontSize(17.0);
-			}
-
-			try {
-				setAutoUpdate(Boolean.parseBoolean(props.getProperty("autoUpdate")));
-			} catch (Exception e) {
-				LOGGER.error("cloud not load autoUpdate", e);
-				setAutoUpdate(false);
-			}
-			
-			try {
-				setUseBeta(Boolean.parseBoolean(props.getProperty("useBeta")));
-			} catch (Exception e) {
-				LOGGER.error("cloud not load autoUpdate", e);
-				setUseBeta(false);
-			}
-			
-			try {
-				setAutoplay(Boolean.parseBoolean(props.getProperty("autoplay")));
-			} catch (Exception e) {
-				LOGGER.error("cloud not load autoplay", e);
-				setAutoplay(false);
-			}
-
-			try {
-				setLocal(props.getProperty("local"));
-			} catch (Exception e) {
-				LOGGER.error("cloud not load local", e);
-				setLocal(System.getProperty("user.language") + "_" + System.getProperty("user.country"));
-			}
-
-			inputStream.close();
-		} catch (IOException e) {
-			LOGGER.error("An error occurred while loading the settings!", e);
-		}
-		
-		// try loading the omdbAPI key
-		try {
-			InputStream in = getClass().getClassLoader().getResourceAsStream("apiKeys.json");
-			if (in != null) {
-				BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-				JsonObject apiKeys = Json.parse(reader).asObject();
-				omdbAPIKey = apiKeys.getString("omdbAPIKey", "");
-				reader.close();
-				in.close();
-			} else {
-				LOGGER.warn("Cloud not load apiKeys.json. No such file");
-			}
-		} catch (Exception e) {
-			LOGGER.error("Cloud not load the omdbAPI key. Please contact the developer!", e);
-		}
-	}
-	
 	// if AutoUpdate, then check for updates
 	private void checkAutoUpdate() {
 
@@ -1007,6 +907,10 @@ public class MainWindowController {
 
 	public String getOmdbAPIKey() {
 		return omdbAPIKey;
+	}
+	
+	public void setOmdbAPIKey(String omdbAPIKey) {
+		this.omdbAPIKey = omdbAPIKey;
 	}
 
 	public ObservableList<FilmTabelDataType> getFilmsList() {
