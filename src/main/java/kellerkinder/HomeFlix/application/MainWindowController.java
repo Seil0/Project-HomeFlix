@@ -364,6 +364,7 @@ public class MainWindowController {
 				}
 				if (searchTextField.getText().hashCode() == hashA) {
 					setColor("000000");
+					colorPicker.setValue(new Color(0, 0, 0, 1));
 					applyColor();
 				}
 			}
