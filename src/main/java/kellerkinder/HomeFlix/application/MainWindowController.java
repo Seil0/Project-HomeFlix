@@ -432,6 +432,7 @@ public class MainWindowController {
 				filterData.clear();
 				
 				if (paramT2.equals(SortType.DESCENDING)) {
+					// add favorites at the top
 					for (FilmTabelDataType film : filmsList) {
 						if (film.getFavorite()) {
 							filterData.add(0, film);
@@ -440,7 +441,7 @@ public class MainWindowController {
 						}
 					}
 				} else {
-//					System.out.println("ascending");
+					// add favorites at the bottom
 					for (FilmTabelDataType film : filmsList) {
 						if (!film.getFavorite()) {
 							filterData.add(0, film);
